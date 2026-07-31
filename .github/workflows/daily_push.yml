@@ -1,0 +1,35 @@
+name: 可转债上市提醒 - 每日推送
+
+on:
+  schedule:
+    # GitHub Actions 用 UTC 时间。北京时间 08:30 = UTC 00:30
+    # 说明：GitHub 免费版 cron 有 5~20 分钟的排队延迟，实际到达时间约 8:30-8:50，属正常。
+    - cron: '30 0 * * *'
+    # 保险起见再加一次 北京时间 12:00 = UTC 04:00（万一早上那次被 GitHub 丢了）
+    - cron: '0 4 * * *'
+  workflow_dispatch:      # 允许在网页上手动点「Run workflow」立即测试
+    inputs:
+      force:
+        description: '强制推送（忽略上市日判断，用于测试）'
+        required: false
+        default: 'false'
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 执行推送脚本
+        env:
+          PA_BASE: ${{ secrets.PA_BASE }}
+          CRON_KEY: ${{ secrets.CRON_KEY }}
+          DAILY_PUSH_FORCE: ${{ github.event.inputs.force }}
+        run: python daily_push.py
