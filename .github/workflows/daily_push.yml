@@ -2,11 +2,13 @@ name: 可转债上市提醒 - 每日推送
 
 on:
   schedule:
-    # GitHub Actions 用 UTC 时间。北京时间 08:30 = UTC 00:30
-    # 说明：GitHub 免费版 cron 有 5~20 分钟的排队延迟，实际到达时间约 8:30-8:50，属正常。
-    - cron: '30 0 * * *'
-    # 保险起见再加一次 北京时间 12:00 = UTC 04:00（万一早上那次被 GitHub 丢了）
-    - cron: '0 4 * * *'
+    # GitHub Actions 用 UTC 时间。北京时间 08:xx = UTC 00:xx
+    # 改用冷门分钟（17/37/57）替代整点/半点，避免 GitHub 免费版高峰丢弃。
+    # 4 次冗余覆盖北京时间 08:10-09:25 早盘窗口；mark-notified 去重，不重复推。
+    - cron: '17 0 * * *'   # UTC 00:17 = 北京 08:17
+    - cron: '37 0 * * *'   # UTC 00:37 = 北京 08:37
+    - cron: '57 0 * * *'   # UTC 00:57 = 北京 08:57
+    - cron: '17 1 * * *'   # UTC 01:17 = 北京 09:17（兜底，开盘前最后一次）
   workflow_dispatch:      # 允许在网页上手动点「Run workflow」立即测试
     inputs:
       force:
