@@ -80,6 +80,65 @@ def push_serverchan(sendkey, title, desp):
     except Exception as e:
         return False, "推送失败: %s" % e
 
+# ----------------------------------------------------------------------------
+# 补抓上市日：PA 免费版出站到东方财富被 403，自身抓不到；
+# 但云端 runner / 本机都能出网 —— 由这里每天轮询补齐空白上市日，再回写 PA。
+# ----------------------------------------------------------------------------
+EM_URL = ("https://datacenter-web.eastmoney.com/api/data/v1/get"
+          "?reportName=RPT_BOND_CB_LIST"
+          "&columns=SECURITY_CODE,SECURITY_NAME_ABBR,LISTING_DATE"
+          "&pageSize=10&pageNumber=1")
+
+def fetch_listing_date(code, name=""):
+    """查东方财富 RPT_BOND_CB_LIST，返回 'YYYY-MM-DD' 或 None。"""
+    candidates = []
+    if code:
+        candidates.append(('SECURITY_CODE', code))
+    if name:
+        candidates.append(('SECURITY_NAME_ABBR', name))
+    for field, val in candidates:
+        try:
+            flt = urllib.parse.quote('(%s="%s")' % (field, val))
+            url = EM_URL + "&filter=" + flt
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            raw = urllib.request.urlopen(req, timeout=15, context=CTX).read()
+            d = json.loads(raw)
+            rows = (d.get("result") or {}).get("data") or []
+            for r in rows:
+                ld = r.get("LISTING_DATE")
+                if ld:
+                    return ld[:10]
+        except Exception:
+            continue
+    return None
+
+def catch_up_listing_dates(users, key):
+    """对 listing_date 为空的债，每天查东方财富补齐：
+       - 回写 PA（/api/update-listing-date）持久化，不依赖本机记忆；
+       - 同时就地改 users 内存，让本次推送循环立即用上新上市日。
+    返回更新条数。"""
+    updates = []
+    for u in users:
+        for acc in u.get("accounts", []):
+            for b in acc.get("bonds", []):
+                if b.get("listing_date"):
+                    continue
+                code = b.get("code", "")
+                name = b.get("name", "")
+                nd = fetch_listing_date(code, name)
+                if nd:
+                    b["listing_date"] = nd   # 就地生效，供后续推送判断
+                    updates.append({"id": b.get("id"), "listing_date": nd, "source": "auto"})
+    if updates:
+        st, resp = http_json("%s/api/update-listing-date" % PA_BASE, method="POST",
+                             data={"key": key, "updates": updates})
+        ok = (st == 200 and resp.get("ok"))
+        print("[daily_push] 补抓上市日：更新 %d 条 -> %s" % (
+            len(updates), (resp if ok else "%s %s" % (st, resp))))
+    else:
+        print("[daily_push] 补抓上市日：无需更新（全部已有 / 东财暂未公布）")
+    return len(updates)
+
 def resolve_cron_key():
     if CRON_KEY:
         return CRON_KEY
@@ -112,6 +171,10 @@ def main():
 
     today = beijing_today()   # 用北京时间的今天，云端 UTC 也不会错日
     print("[daily_push] 基准日期（北京时间今天）= %s" % today)
+
+    # 步骤 0：补抓上市日（每天轮询东方财富补齐空白，再回写 PA）
+    catch_up_listing_dates(users, key)
+
     total = 0
     for u in users:
         sendkey = u.get("sendkey", "")
