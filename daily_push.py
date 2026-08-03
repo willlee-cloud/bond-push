@@ -139,6 +139,66 @@ def catch_up_listing_dates(users, key):
         print("[daily_push] 补抓上市日：无需更新（全部已有 / 东财暂未公布）")
     return len(updates)
 
+# ----------------------------------------------------------------------------
+# 东方财富回填正式名称：申购阶段名（如「申能发债」）上市后会变成正式名
+# （「申能转债」）。云端 runner 能出网访问东方财富，每天自动用 f58 覆盖，
+# 避免库里一直停留「XX发债」这种易误导的申购阶段名。
+# 仅当库内名称仍以「发债」结尾时才覆盖，已是正确的「XX转债」绝不乱动。
+# ----------------------------------------------------------------------------
+def em_secid(code):
+    """可转债代码 -> 东方财富 secid（上交所 11xxxx=1. / 深交所 12xxxx=0.）。"""
+    if not code:
+        return None
+    if code.startswith("11"):
+        return "1." + code
+    if code.startswith("12"):
+        return "0." + code
+    return None
+
+def fetch_official_name(code):
+    """查东方财富行情接口拿正式简称（f58）。返回名称或 None。"""
+    secid = em_secid(code)
+    if not secid:
+        return None
+    try:
+        url = "https://push2.eastmoney.com/api/qt/stock/get?secid=%s&fields=f57,f58,f168" % secid
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0",
+                                                    "Referer": "https://quote.eastmoney.com/"})
+        raw = urllib.request.urlopen(req, timeout=15, context=CTX).read()
+        d = json.loads(raw)
+        sd = d.get("data") or {}
+        name = sd.get("f58")
+        if name and ("转债" in name or "发债" in name):
+            return name
+    except Exception:
+        pass
+    return None
+
+def backfill_official_names(users, key):
+    """对库内名称仍以「发债」结尾的债，用东方财富正式名覆盖。"""
+    plan = []   # [(bond_id, official_name)]
+    for u in users:
+        for acc in u.get("accounts", []):
+            for b in acc.get("bonds", []):
+                name = b.get("name") or ""
+                if not name.endswith("发债"):
+                    continue
+                code = b.get("code", "")
+                off = fetch_official_name(code)
+                if off and off != name:
+                    b["name"] = off
+                    plan.append((b.get("id"), off))
+    for bid, off in plan:
+        st, resp = http_json("%s/api/admin-update-bond" % PA_BASE, method="POST",
+                             data={"key": key, "bond_id": bid, "name": off})
+        ok = (st == 200 and resp.get("ok"))
+        print("  [回填] bond %s -> %s (%s)" % (bid, off, "OK" if ok else "%s %s" % (st, resp)))
+    if plan:
+        print("[daily_push] 东方财富回填正式名称：更新 %d 条" % len(plan))
+    else:
+        print("[daily_push] 东方财富回填正式名称：无需更新（无申购阶段名 / 东财未收录）")
+    return len(plan)
+
 def resolve_cron_key():
     if CRON_KEY:
         return CRON_KEY
@@ -174,6 +234,9 @@ def main():
 
     # 步骤 0：补抓上市日（每天轮询东方财富补齐空白，再回写 PA）
     catch_up_listing_dates(users, key)
+
+    # 步骤 0.5：东方财富回填正式名称（把「申能发债」之类申购阶段名改成「申能转债」）
+    backfill_official_names(users, key)
 
     total = 0
     for u in users:
