@@ -116,11 +116,9 @@ def catch_up_listing_dates(users, key):
     """对 listing_date 为空的债，每天查东方财富补齐：
        - 回写 PA（/api/update-listing-date）持久化，不依赖本机记忆；
        - 同时就地改 users 内存，让本次推送循环立即用上新上市日。
-    双库：按 scope 分组回写，确保落到正确的库（public / private）。
     返回更新条数。"""
-    by_scope = {}   # scope -> [updates]
+    updates = []
     for u in users:
-        scope = u.get("scope", "private")
         for acc in u.get("accounts", []):
             for b in acc.get("bonds", []):
                 if b.get("listing_date"):
@@ -130,21 +128,16 @@ def catch_up_listing_dates(users, key):
                 nd = fetch_listing_date(code, name)
                 if nd:
                     b["listing_date"] = nd   # 就地生效，供后续推送判断
-                    by_scope.setdefault(scope, []).append(
-                        {"id": b.get("id"), "listing_date": nd, "source": "auto"})
-    total = 0
-    for scope, updates in by_scope.items():
-        if not updates:
-            continue
+                    updates.append({"id": b.get("id"), "listing_date": nd, "source": "auto"})
+    if updates:
         st, resp = http_json("%s/api/update-listing-date" % PA_BASE, method="POST",
-                             data={"key": key, "db": scope, "updates": updates})
+                             data={"key": key, "updates": updates})
         ok = (st == 200 and resp.get("ok"))
-        total += len(updates)
-        print("[daily_push] 补抓上市日[%s]：更新 %d 条 -> %s" % (
-            scope, len(updates), (resp if ok else "%s %s" % (st, resp))))
-    if total == 0:
+        print("[daily_push] 补抓上市日：更新 %d 条 -> %s" % (
+            len(updates), (resp if ok else "%s %s" % (st, resp))))
+    else:
         print("[daily_push] 补抓上市日：无需更新（全部已有 / 东财暂未公布）")
-    return total
+    return len(updates)
 
 # ----------------------------------------------------------------------------
 # 东方财富回填正式名称：申购阶段名（如「申能发债」）上市后会变成正式名
@@ -182,10 +175,9 @@ def fetch_official_name(code):
     return None
 
 def backfill_official_names(users, key):
-    """对库内名称仍以「发债」结尾的债，用东方财富正式名覆盖。双库按 scope 分组回写。"""
-    plan_by_scope = {}   # scope -> [(bond_id, official_name)]
+    """对库内名称仍以「发债」结尾的债，用东方财富正式名覆盖。"""
+    plan = []   # [(bond_id, official_name)]
     for u in users:
-        scope = u.get("scope", "private")
         for acc in u.get("accounts", []):
             for b in acc.get("bonds", []):
                 name = b.get("name") or ""
@@ -195,20 +187,17 @@ def backfill_official_names(users, key):
                 off = fetch_official_name(code)
                 if off and off != name:
                     b["name"] = off
-                    plan_by_scope.setdefault(scope, []).append((b.get("id"), off))
-    total = 0
-    for scope, plan in plan_by_scope.items():
-        for bid, off in plan:
-            st, resp = http_json("%s/api/admin-update-bond" % PA_BASE, method="POST",
-                                 data={"key": key, "db": scope, "bond_id": bid, "name": off})
-            ok = (st == 200 and resp.get("ok"))
-            total += 1
-            print("  [回填][%s] bond %s -> %s (%s)" % (scope, bid, off, "OK" if ok else "%s %s" % (st, resp)))
-    if total:
-        print("[daily_push] 东方财富回填正式名称：更新 %d 条" % total)
+                    plan.append((b.get("id"), off))
+    for bid, off in plan:
+        st, resp = http_json("%s/api/admin-update-bond" % PA_BASE, method="POST",
+                             data={"key": key, "bond_id": bid, "name": off})
+        ok = (st == 200 and resp.get("ok"))
+        print("  [回填] bond %s -> %s (%s)" % (bid, off, "OK" if ok else "%s %s" % (st, resp)))
+    if plan:
+        print("[daily_push] 东方财富回填正式名称：更新 %d 条" % len(plan))
     else:
         print("[daily_push] 东方财富回填正式名称：无需更新（无申购阶段名 / 东财未收录）")
-    return total
+    return len(plan)
 
 def resolve_cron_key():
     if CRON_KEY:
@@ -296,10 +285,9 @@ def main():
                                               acc.get("name", ""), b.get("name", ""), msg))
                 if ok:
                     total += 1
-                    # 标记已推送（按 scope 落到正确的库）
+                    # 标记已推送
                     http_json("%s/api/mark-notified" % PA_BASE, method="POST",
-                              data={"key": key, "db": u.get("scope", "private"),
-                                    "bond_id": b.get("id")})
+                              data={"key": key, "bond_id": b.get("id")})
     print("[daily_push] 本次共推送 %d 条" % total)
 
 if __name__ == "__main__":
