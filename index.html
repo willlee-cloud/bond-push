@@ -1,0 +1,3390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可转债潜伏配债 · 汇总看板</title>
+<link rel="icon" type="image/x-icon" href="https://www.pythonanywhere.com/static/anywhere/images/favicon.ico">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+  :root{
+    --amber:#e0a82e; --amber-deep:#8a6310; --amber-tint:#fbf6ea; --amber-ink:#3d2f00; --amber-line:#d8b25a;
+    --ink:#1f2430; --muted:#737a89; --line:#e9ebef; --bg:#f5f6f8; --surface:#ffffff;
+    --num-bg:#f7f9fb; --num-ink:#2a3142;
+    --cush:#1f7a5c; --cush-bg:#eef7f2;
+    --up:#c0392b; --down:#2e8b57;
+    --rate5:#8a6310; --rate4:#b58900; --rate3:#5b8c5a; --rate2:#c2772e; --rate1:#9aa0aa;
+    --grp-green:#3f9d6b; --grp-blue:#3f7cc0; --grp-orange:#d68a2e; --grp-cyan:#2f9c92;
+    --grp-lgreen:#7fae54; --grp-ygreen:#9cc06a; --grp-gray:#8593a1; --grp-purple:#9a6db5; --grp-red:#d05b50;
+    /* 兼容内嵌单页模板 */
+    --blue:#1565C0; --blue-tint:#E3F2FD; --purple:#7B1FA2; --purple-tint:#F3E5F5;
+  }
+  *{box-sizing:border-box;}
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    font-family:"Manrope","PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:var(--bg); color:var(--ink); margin:0; padding:26px 20px 64px; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  .wrap{max-width:1420px; margin:0 auto;}
+  .topbar{display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:6px;}
+  h1{font-size:36px; font-weight:800; letter-spacing:-.02em; margin:0; color:var(--ink); line-height:1.12; padding-left:18px; border-left:6px solid var(--amber);}
+  .eyebrow{font-size:11.5px; letter-spacing:.2em; color:var(--amber-deep); font-weight:700; text-transform:uppercase; margin-bottom:10px;}
+  .meta{font-size:13px; color:var(--muted); font-family:"JetBrains Mono","SF Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;}
+  .sub{font-size:12.5px; color:var(--muted); margin:8px 0 18px; line-height:1.75; max-width:92ch;}
+  .toolbar{display:flex; flex-wrap:wrap; gap:9px; align-items:center; margin-bottom:16px;}
+  .toolbar select,.toolbar input{
+    font-family:inherit; font-size:14px; padding:7px 11px; border:1px solid var(--line); border-radius:9px;
+    background:var(--surface); color:var(--ink); transition:border-color .15s, box-shadow .15s; cursor:pointer;
+  }
+  .toolbar select:focus,.toolbar input:focus{outline:none; border-color:var(--amber); box-shadow:0 0 0 3px rgba(224,168,46,.16);}
+  .toolbar label{font-size:13px; color:var(--muted); margin-left:6px;}
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    box-shadow:0 24px 48px -20px rgba(20,28,46,.10); padding:16px 18px; margin-bottom:20px; overflow:visible;
+  }
+  .scroll{overflow:visible;}
+  /* 字号放大后，窄屏防御：保持桌面布局不变，仅手机端允许表格横向滚动，避免窄列挤压 */
+  @media (max-width:600px){
+    .card{overflow:hidden;}
+    .scroll{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+    #board{min-width:1100px;}
+    h1{font-size:26px;}
+    .detail-grid{grid-template-columns:repeat(2, 1fr); gap:4px 16px;}
+  }
+  table{border-collapse:separate; border-spacing:0; width:100%; table-layout:fixed; font-size:13px;}
+  thead{position:sticky; top:0; z-index:5;}
+  thead th{
+    background:var(--amber); color:var(--amber-ink); padding:11px 6px; text-align:center; border:1px solid var(--amber-line);
+    font-weight:700; white-space:nowrap; position:sticky; top:0; z-index:3; letter-spacing:.02em; font-size:13px;
+    box-shadow:0 3px 6px -2px rgba(0,0,0,.18);
+  }
+  tbody td{
+    padding:9px 6px; text-align:center; border:1px solid var(--line); white-space:normal; font-size:13px; line-height:1.45;
+    font-family:"JetBrains Mono","SF Mono",ui-monospace,"Cascadia Code",monospace; font-variant-numeric:tabular-nums;
+  }
+  tbody td.ind-col{font-family:inherit; white-space:normal; line-height:1.4; text-align:left; font-size:12.5px; color:var(--muted); overflow-wrap:anywhere; word-break:keep-all; padding:9px 5px;}
+  tbody td.name-cell{font-family:inherit; font-weight:700; text-align:left; padding-left:9px;}
+  tbody td.click{font-family:inherit;}
+  tbody td.stage{font-family:inherit;}
+  tbody td.bond-cell{font-family:inherit;}
+  tbody tr{cursor:pointer; transition:background .14s ease;}
+  tbody tr:hover{background:var(--amber-tint);}
+  tbody tr.row-expanded{background:var(--amber-tint);}
+  .grp td{border:none; padding:0; height:0;}
+  .grp-row td{font-weight:800; color:#fff; padding:7px 12px; font-size:13.5px; letter-spacing:.04em; text-align:left; border:none;}
+  .g-green{background:var(--grp-green);} .g-blue{background:var(--grp-blue);} .g-orange{background:var(--grp-orange);}
+  .g-cyan{background:var(--grp-cyan);} .g-lgreen{background:var(--grp-lgreen);} .g-ygreen{background:var(--grp-ygreen);}
+  .g-gray{background:var(--grp-gray);} .g-purple{background:var(--grp-purple);} .g-red{background:var(--grp-red);}
+  .num{background:var(--num-bg); color:var(--num-ink);}
+  .cush{background:var(--cush-bg); color:var(--cush); font-weight:700;}
+  .rate4{color:var(--up); font-weight:800;} .rate1{color:var(--down); font-weight:800;}
+  .rate5{color:var(--rate5); font-weight:800;} .rate3{color:var(--rate3); font-weight:700;} .rate2{color:var(--rate2); font-weight:700;}
+  .name-cell{font-weight:700;}
+  .bond-cell{color:#5d5247; font-size:13px;}
+  .stage{font-size:12.5px; color:var(--muted);}
+  .click{cursor:pointer;}
+  .click:hover{text-decoration:underline; color:var(--amber-deep);}
+  tbody td.hl-row, tbody td.hl-col{background:rgba(224,168,46,.18); outline:1px solid var(--amber);}
+  thead th.hl-col{background:#e8b84a !important;}
+  .foot{font-size:12.5px; color:var(--muted); margin-top:16px; line-height:1.75;}
+  .legend{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;}
+  .legend span{font-size:12px; padding:2px 8px; border-radius:6px; color:#fff;}
+  .star-mark{font-size:11px; color:var(--amber-deep);}
+  .stage-legend{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line);}
+  .stage-legend-label{font-size:14px; font-weight:800; color:var(--ink);}
+  .stage-item{display:flex; align-items:center; gap:5px; font-size:13px; color:var(--ink);}
+  .stage-num{display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; background:var(--amber); color:var(--amber-ink); font-weight:800; font-size:11px;}
+  .detail-row td{background:#fafbfc; padding:0; border:none;}
+  .detail-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:4px 30px; padding:18px 22px;}
+  .detail-item{display:flex; justify-content:space-between; gap:12px; font-size:14px; padding:8px 0; border-bottom:1px solid #eef0f3;}
+  .detail-item .k{color:var(--muted); white-space:nowrap;}
+  .detail-item .v{font-weight:700; text-align:right; color:var(--ink); font-variant-numeric:tabular-nums;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <div class="eyebrow">Convertible Bond · Latent Allocation</div>
+      <h1>可转债潜伏配债 · 汇总看板</h1>
+    </div>
+    <div class="meta"><span id="genDate"></span> <span id="priceDate"></span></div>
+  </div>
+  <div class="toolbar">
+    <label>进度筛选</label>
+    <select id="filterStage">
+      <option value="">全部</option>
+      <option value="1">1 董事会预案</option>
+      <option value="2">2 股东大会通过</option>
+      <option value="3">3 交易所受理</option>
+      <option value="4">4 上市委通过</option>
+      <option value="5">5 同意注册</option>
+      <option value="6">6 公告</option>
+    </select>
+    <label>排序</label>
+    <select id="sortBy">
+      <option value="cush">安全垫（保守·最优档·高→低）</option>
+      <option value="cushAggr">安全垫（激进·最优档·高→低）</option>
+      <option value="contain">含权量（高→低）</option>
+      <option value="float">可流通规模（小→大）</option>
+      <option value="gain">加表后涨幅（高→低）</option>
+      <option value="reg">股权登记日（近→远）</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="scroll">
+      <table id="board">
+        <colgroup>
+          <col style="width:6.5%"><col style="width:7%"><col style="width:5%"><col style="width:6%"><col style="width:4%">
+          <col style="width:4%"><col style="width:4%"><col style="width:4%"><col style="width:4%"><col style="width:4%">
+          <col style="width:5.5%"><col style="width:3.5%"><col style="width:4%"><col style="width:4%"><col style="width:4%">
+          <col style="width:4%"><col style="width:5%"><col style="width:4%"><col style="width:5%"><col style="width:4%">
+          <col style="width:4%"><col style="width:4.5%"><col style="width:4.5%"><col style="width:3%">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>行业概念</th><th>名称</th><th>代码</th><th>板块</th><th>进度</th>
+            <th>规模</th><th>流通<br>规模</th><th>转股价</th><th>制表价</th><th>实时价</th>
+            <th>加表<br>涨幅</th><th>每股<br>配售</th><th>最优<br>股数</th><th>配售<br>金额</th><th>实际<br>配售额</th>
+            <th>上市价<br>保守</th><th>安全垫<br>保守</th><th>上市价<br>激进</th><th>安全垫<br>激进</th>
+            <th>需要<br>金额</th><th>含权量</th><th>登记日</th><th>进度日</th><th>排序</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="stage-legend">
+      <span class="stage-legend-label">进度说明：</span>
+      <div class="stage-item"><span class="stage-num">1</span>董事会预案</div>
+      <div class="stage-item"><span class="stage-num">2</span>股东大会通过</div>
+      <div class="stage-item"><span class="stage-num">3</span>交易所受理</div>
+      <div class="stage-item"><span class="stage-num">4</span>上市委通过（过会）</div>
+      <div class="stage-item"><span class="stage-num">5</span>同意注册（已获批）</div>
+      <div class="stage-item"><span class="stage-num">6</span>公告</div>
+    </div>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+const LISTING = 157.3;
+const PRICE_DATE = '2026-08-14';
+const GEN_DATE = '2026-08-14';
+const TEMPLATE = "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>可转债潜伏配债量化测算</title>\n<link rel=\"icon\" type=\"image/x-icon\" href=\"https://www.pythonanywhere.com/static/anywhere/images/favicon.ico\">\n<style>\n  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');\n  * { box-sizing: border-box; }\n  :root {\n    /* 与汇总看板统一的设计令牌 */\n    --amber:#e0a82e; --amber-deep:#8a6310; --amber-tint:#fbf6ea; --amber-ink:#3d2f00; --amber-line:#d8b25a;\n    --ink:#1f2430; --muted:#737a89; --line:#e9ebef; --bg:#f5f6f8; --surface:#ffffff;\n    --num-bg:#f7f9fb; --num-ink:#2a3142;\n    --cush:#1f7a5c; --cush-bg:#eef7f2;\n    --up:#c0392b;\n    --radius:16px;\n    --shadow:0 24px 48px -20px rgba(20,28,46,.10);\n  }\n  body {\n    font-family:\"Manrope\",\"PingFang SC\",\"Microsoft YaHei\",\"Hiragino Sans GB\",system-ui,-apple-system,\"Segoe UI\",sans-serif;\n    margin: 0; padding: 26px 20px 56px; background: var(--bg); color: var(--ink);\n    -webkit-font-smoothing: antialiased; text-rendering:optimizeLegibility;\n    -webkit-print-color-adjust: exact; print-color-adjust: exact;\n  }\n  .wrap { max-width: 1080px; margin: 0 auto; }\n  .num-tabular { font-variant-numeric: tabular-nums; font-family:\"JetBrains Mono\",\"SF Mono\",ui-monospace,monospace; }\n\n  /* 与汇总看板一致的标题：左对齐 + 琥珀左边框（无黄色色块、无居中套路） */\n  .page-head { margin-bottom: 22px; }\n  .page-head h1 {\n    font-size: 36px; font-weight: 800; letter-spacing: -.02em; color: var(--ink);\n    margin: 0; line-height: 1.12; padding-left: 18px; border-left: 6px solid var(--amber);\n  }\n  .page-head .eyebrow {\n    font-size: 11.5px; letter-spacing: .2em; color: var(--amber-deep); font-weight: 700;\n    text-transform: uppercase; margin-bottom: 10px;\n  }\n  .page-head .sub { font-size: 13px; color: var(--muted); margin: 10px 0 0 18px; line-height: 1.7; }\n\n  .card {\n    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);\n    padding: 18px 22px 22px; margin-bottom: 20px; box-shadow: var(--shadow);\n  }\n  /* 小节标题：与 h1 同构的琥珀左边框（去色块化，弱化 AI 套路） */\n  .section-h {\n    display: block; font-size: 15px; font-weight: 800; color: var(--ink);\n    padding: 2px 0 2px 11px; border-left: 4px solid var(--amber); margin: 2px 0 14px;\n  }\n  .hint { font-size: 12.5px; color: var(--muted); margin: -8px 0 14px; line-height: 1.65; }\n  .hint b { color: var(--ink); }\n\n  /* 参数录入网格：标签在上、输入在下 */\n  .form-grid {\n    display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px 18px;\n  }\n  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }\n  .field .u { color: #9ca3af; font-size: 11px; margin-left: 3px; }\n  .field input {\n    width: 100%; padding: 9px 11px; border: 1px solid #d1d5db; border-radius: 9px;\n    font-size: 14px; font-family: inherit; background: #fffef8; color: var(--ink);\n    transition: border-color .15s, box-shadow .15s;\n  }\n  .field input:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(224,168,46,.16); }\n  .field input[readonly] { background: #f3f4f6; color: var(--muted); cursor: default; }\n\n  /* 核心参数条 */\n  .core-params { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }\n  .cp {\n    background: var(--amber-tint); border: 1px solid var(--amber-line); border-radius: 11px;\n    padding: 11px 16px; transition: transform .12s ease;\n  }\n  .cp:hover { transform: translateY(-1px); }\n  .cp .k { font-size: 12px; color: var(--amber-deep); }\n  .cp .v { font-size: 19px; font-weight: 800; color: var(--amber-deep); margin-top: 2px; }\n\n  /* 流通规模提醒横幅（去渐变，纯色块 + 顶部琥珀强调线） */\n  .float-warning {\n    background: var(--amber-tint); border: 1px solid var(--amber-line); border-top: 3px solid var(--amber);\n    border-radius: 0 0 var(--radius) var(--radius); padding: 14px 20px; margin: 0 0 18px 0; box-shadow: var(--shadow);\n  }\n  .float-warning .tag {\n    display: inline-block; background: var(--amber); color: var(--amber-ink);\n    font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 4px; margin-right: 8px;\n  }\n  .float-warning p { margin: 4px 0 0; font-size: 13px; color: var(--amber-deep); line-height: 1.7; }\n  .float-warning b { color: var(--amber-ink); }\n\n  .btn-print {\n    margin-top: 16px; padding: 9px 20px; background: var(--amber); color: var(--amber-ink);\n    border: 1px solid var(--amber-line); border-radius: 9px; font-size: 14px; font-weight: 700;\n    cursor: pointer; transition: transform .1s ease, background .15s;\n  }\n  .btn-print:hover { background: #d29a24; }\n  .btn-print:active { transform: translateY(1px) scale(.985); }\n\n  /* 表格：与汇总看板一致 —— 固定布局 + 琥珀表头吸顶 + 数字等宽 */\n  .table-scroll { overflow-x: auto; }\n  table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 13px; margin-top: 2px; }\n  thead th {\n    background: var(--amber); color: var(--amber-ink); padding: 11px 8px; text-align: center;\n    border: 1px solid var(--amber-line); font-weight: 700; white-space: normal; line-height: 1.3;\n    position: sticky; top: 0; z-index: 3; font-size: 13px; box-shadow: 0 3px 6px -2px rgba(0,0,0,.18);\n  }\n  tbody td {\n    padding: 9px 8px; text-align: center; border: 1px solid var(--line);\n    font-family:\"JetBrains Mono\",\"SF Mono\",ui-monospace,monospace; font-variant-numeric: tabular-nums;\n    transition: background .12s ease; font-size: 13px;\n  }\n  .num { background: var(--num-bg); color: var(--num-ink); }\n  .cushion { background: var(--cush-bg); color: var(--cush); font-weight: 700; }\n  .stars { font-size: 12px; white-space: nowrap; }\n  .tier { background: #f7f9fb; font-weight: 700; color: #37474f; }\n  /* 评级色与汇总看板对齐 */\n  .r5 { color: #8a6310; font-weight: 800; }\n  .r4 { color: var(--up); font-weight: 800; }\n  .r3 { color: #5b8c5a; font-weight: 800; }\n  .r2 { color: #c2772e; font-weight: 800; }\n  .r1 { color: #9aa0aa; font-weight: 800; }\n\n  /* 十字高亮：与汇总看板一致（琥珀低饱和底 + 琥珀描边） */\n  tbody tr:hover td {\n    background: rgba(224,168,46,.16) !important;\n    box-shadow: inset 0 0 0 2px var(--amber);\n  }\n  table:has(tbody td:nth-child(1):hover) tbody td:nth-child(1),\n  table:has(tbody td:nth-child(1):hover) thead th:nth-child(1),\n  table:has(tbody td:nth-child(2):hover) tbody td:nth-child(2),\n  table:has(tbody td:nth-child(2):hover) thead th:nth-child(2),\n  table:has(tbody td:nth-child(3):hover) tbody td:nth-child(3),\n  table:has(tbody td:nth-child(3):hover) thead th:nth-child(3),\n  table:has(tbody td:nth-child(4):hover) tbody td:nth-child(4),\n  table:has(tbody td:nth-child(4):hover) thead th:nth-child(4),\n  table:has(tbody td:nth-child(5):hover) tbody td:nth-child(5),\n  table:has(tbody td:nth-child(5):hover) thead th:nth-child(5),\n  table:has(tbody td:nth-child(6):hover) tbody td:nth-child(6),\n  table:has(tbody td:nth-child(6):hover) thead th:nth-child(6),\n  table:has(tbody td:nth-child(7):hover) tbody td:nth-child(7),\n  table:has(tbody td:nth-child(7):hover) thead th:nth-child(7),\n  table:has(tbody td:nth-child(8):hover) tbody td:nth-child(8),\n  table:has(tbody td:nth-child(8):hover) thead th:nth-child(8) {\n    background: rgba(224,168,46,.16) !important;\n    box-shadow: inset 0 0 0 2px var(--amber);\n  }\n  table:has(tbody td:nth-child(1):hover) tbody tr:hover td:nth-child(1),\n  table:has(tbody td:nth-child(2):hover) tbody tr:hover td:nth-child(2),\n  table:has(tbody td:nth-child(3):hover) tbody tr:hover td:nth-child(3),\n  table:has(tbody td:nth-child(4):hover) tbody tr:hover td:nth-child(4),\n  table:has(tbody td:nth-child(5):hover) tbody tr:hover td:nth-child(5),\n  table:has(tbody td:nth-child(6):hover) tbody tr:hover td:nth-child(6),\n  table:has(tbody td:nth-child(7):hover) tbody tr:hover td:nth-child(7),\n  table:has(tbody td:nth-child(8):hover) tbody tr:hover td:nth-child(8) {\n    background: rgba(224,168,46,.26) !important;\n    box-shadow: inset 0 0 0 3px var(--amber);\n  }\n\n  /* 评级结论 */\n  .verdict { background: var(--amber-tint); border: 1px solid var(--amber-line); border-radius: 12px; padding: 18px 22px; }\n  .verdict .big-stars { font-size: 30px; color: var(--amber-deep); letter-spacing: 4px; }\n  .verdict .label { font-size: 20px; font-weight: 800; margin-left: 10px; }\n  .verdict .line { font-size: 14px; margin-top: 10px; color: var(--muted); line-height: 1.7; }\n  .verdict .line b { color: var(--ink); }\n\n  /* 注释说明 */\n  .notes h4 { margin: 18px 0 7px; font-size: 14px; font-weight: 800; color: var(--ink); padding-left: 11px; border-left: 4px solid var(--amber); }\n  .notes ul { margin: 4px 0 4px; padding-left: 20px; }\n  .notes li { font-size: 13px; line-height: 1.75; color: #4b5563; margin-bottom: 4px; }\n  .bench { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; margin-top: 8px; }\n  .bench th { background: var(--amber); color: var(--amber-ink); padding: 8px 10px; border: 1px solid var(--amber-line); text-align: left; font-weight: 700; }\n  .bench td { padding: 8px 10px; border: 1px solid var(--line); }\n\n  @media print {\n    body { background: #fff; padding: 0; }\n    .card { border: 1px solid var(--line); border-radius: 0; box-shadow: none; }\n    .btn-print { display: none; }\n  }\n  @media (max-width:600px){\n    .page-head h1 { font-size: 26px; }\n    .table-scroll table { min-width: 760px; }\n  }\n</style>\n</head>\n<body>\n<div class=\"wrap\">\n\n  <div class=\"page-head\">\n    <div class=\"eyebrow\">可转债潜伏配债 · 量化测算</div>\n    <h1>{{BOARD_TITLE}}抢权配售 · {{stockName}}</h1>\n    <div class=\"sub\">参数可自定义 · 全档位自动演算 · 风险评级对标</div>\n  </div>\n\n  <div class=\"float-warning\">\n    <div><span class=\"tag\">流通规模提醒</span><b id=\"floatScaleTag\">—</b></div>\n    <p>可流通规模越小，上市越易被资金集中炒作推高、上市溢价空间越大；但对应波动与回撤风险也同步放大。小盘债需重点盯住炒作情绪与兑现时点，避免在情绪高点接盘。</p>\n  </div>\n\n  <div class=\"card\">\n    <div class=\"section-h\">一、参数录入</div>\n    <div class=\"hint\">修改任意参数，下方测算结果与风险评级将实时联动刷新。带（可自定义）的为预期上市价，其余为标的公告数据。</div>\n    <div class=\"form-grid\">\n      <div class=\"field\"><label>股票代码</label><input id=\"code\" value=\"300815\"></div>\n      <div class=\"field\"><label>股票名称</label><input id=\"name\" value=\"玉禾田\"></div>\n      <div class=\"field\"><label>对应转债名称</label><input id=\"bondName\" value=\"玉禾转债\"></div>\n      <div class=\"field\"><label>标的当日收盘价（确权基准价）</label><input id=\"price\" type=\"number\" step=\"0.01\" value=\"16.35\"><span class=\"u\">元</span></div>\n      <div class=\"field\"><label>官方每股配售金额（4位小数）</label><input id=\"perShare\" type=\"number\" step=\"0.0001\" value=\"3.0969\"><span class=\"u\">元/股</span></div>\n      <div class=\"field\"><label>股权登记日</label><input id=\"regDate\" value=\"2026-07-28\"></div>\n      <div class=\"field\"><label>配债缴款日</label><input id=\"payDate\" value=\"2026-07-29\"></div>\n      <div class=\"field\"><label>转债发行总规模</label><input id=\"issueSize\" value=\"15.00\"><span class=\"u\">亿元</span></div>\n      <div class=\"field\"><label>转债信用评级</label><input id=\"rating\" value=\"AA\"></div>\n      <div class=\"field\"><label>正股最新转股价</label><input id=\"convPrice\" type=\"number\" step=\"0.01\" value=\"16.35\"><span class=\"u\">元</span></div>\n      <div class=\"field\"><label>转债预期上市价格（可自定义）</label><input id=\"listingPrice\" type=\"number\" step=\"0.1\" value=\"157.3\"><span class=\"u\">元（默认激进价，可手动改为保守价）</span></div>\n      <div class=\"field\" title=\"控股股东、实控人及其一致行动人（即使单个<5%只要属一致行动人也计入）合计持股数\"><label>锁定持股数</label><input id=\"lockShares\" type=\"number\" step=\"1\" value=\"171057001\"><span class=\"u\">股</span></div>\n      <div class=\"field\"><label>锁定股东配售参与比例</label><input id=\"lockRatio\" type=\"number\" step=\"1\" value=\"100\"><span class=\"u\">%（默认100，放弃则调低）</span></div>\n      <div class=\"field\"><label>转债可流通规模（自动倒推·不可改）</label><input id=\"floatScale\" type=\"number\" step=\"0.01\" readonly value=\"\"><span class=\"u\">亿元</span></div>\n    </div>\n    <div class=\"core-params\">\n      <div class=\"cp\"><div class=\"k\">单张转债盈利 = 上市价 − 100</div><div class=\"v num-tabular\" id=\"profitPerBond\">—</div></div>\n      <div class=\"cp\"><div class=\"k\">理论安全垫（满配·忽略碎面损耗）</div><div class=\"v num-tabular\" id=\"theoCushion\">—</div></div>\n      <div class=\"cp\"><div class=\"k\">制表日期</div><div class=\"v num-tabular\" id=\"tableDateValue\">—</div></div>\n    </div>\n    <button class=\"btn-print\" onclick=\"window.print()\">打印 / 导出 PDF</button>\n  </div>\n\n  <div class=\"card\">\n    <div class=\"section-h\">二、全档位仓位测算</div>\n    <div id=\"calcError\" style=\"display:none; color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:10px 12px; margin-bottom:10px; font-size:13px;\"></div>\n    <div class=\"table-scroll\">\n      <table>\n        <colgroup><col style=\"width:9%\"><col style=\"width:14%\"><col style=\"width:12%\"><col style=\"width:12%\"><col style=\"width:12%\"><col style=\"width:11%\"><col style=\"width:15%\"><col style=\"width:15%\"></colgroup>\n        <thead>\n          <tr>\n            <th>股数档位</th>\n            <th>所需资金(正股)</th>\n            <th>理论获配</th>\n            <th>实际获配</th>\n            <th>预期盈利</th>\n            <th>安全垫</th>\n            <th>星级评级</th>\n            <th>该档评级</th>\n          </tr>\n        </thead>\n        <tbody id=\"tierBody\" class=\"num-tabular\"><tr><td colspan=\"8\" style=\"padding:24px;color:#9ca3af;text-align:center;\">正在计算档位数据，请稍候…</td></tr></tbody>\n      </table>\n    </div>\n    <div class=\"hint\" style=\"margin-top:12px;\">\n      说明：深市配债按张计算，理论获配金额<b>向下取整百元</b>，舍去不足100元的零碎面值（不四舍五入、不进位）。\n      持仓体量越小，碎面损耗越高、实际安全垫越低。上表「实际获配」已套用该铁规。\n    </div>\n  </div>\n\n  <div class=\"card\">\n    <div class=\"section-h\">三、风险评级结论</div>\n    <div class=\"verdict\">\n      <div><span class=\"big-stars\" id=\"headlineStars\">—</span><span class=\"label\" id=\"headlineLabel\">—</span></div>\n      <div class=\"line\">基准安全垫（满配理论）：<b id=\"headlineCushion\">—</b> ｜ 评级阈值：≥9%★★★★★ ｜ 7–9%★★★★ ｜ 4–7%★★★ ｜ 2–4%★★ ｜ &lt;2%★</div>\n      <div class=\"line\">注：基准安全垫按「忽略碎面损耗」测算，代表大资金满配下的理想安全垫；小仓位实际安全垫见上表各档，会低于基准值。</div>\n    </div>\n  </div>\n\n  <div class=\"card notes\">\n    <div class=\"section-h\">四、注释说明</div>\n\n    <h4>核心策略模型</h4>\n    <ul>\n      <li>登记日潜伏买入正股 → 收盘确权获取转债配售权 → 缴款日清仓正股 → 持有转债上市套利。</li>\n    </ul>\n\n    <h4>标准交易执行策略</h4>\n    <ul>\n      <li><b>低风险潜伏打法（首选推荐）</b>：登记日前 3–5 天分批建底仓，不一次性满仓；股价上涨则减仓兑现浮盈、保留核心底仓锁定配债权、被动增厚安全垫；股价下跌则分批加仓摊薄成本、主动增厚安全垫；股权登记日收盘锁定最终持仓确保确权；配债缴款日开盘无条件清仓全部正股，仅保留转债等待上市套利。</li>\n      <li><b>短线尾盘突击打法（高风险）</b>：登记日尾盘 14:40–14:55 集中建仓，最小化资金占用时间；优势是资金闲置成本极低，劣势是无择时、摊成本空间，尾盘抢筹易抬高成本、压缩安全垫。</li>\n    </ul>\n\n    <h4>核心风控铁律（永久通用）</h4>\n    <ul>\n      <li>所有盈利、安全垫测算基于「自定义转债上市价格」，行情走弱/走强需手动调整参数重新演算风险。</li>\n      <li>深市零碎配债面值全部舍去，持仓体量越小，配售资金损耗越高。</li>\n      <li>抢权套利最大风险：缴款日套利资金集体兑现砸盘，单日踩踏下跌击穿安全垫。</li>\n      <li>配债为股东权利，确权后需<b>手动缴款</b>，未缴款自动放弃配售额度。</li>\n      <li>本策略为纯短线套利，正股不做中长期持有，杜绝趋势博弈。</li>\n    </ul>\n\n    <h4>五星风险评级体系（永久复用）</h4>\n    <ul>\n      <li>★★★★★ 极致优质：安全垫 ≥9%，小盘转债、潜伏窗口期充足、容错极高。</li>\n      <li>★★★★ 优质稳健：安全垫 7%–9%，性价比优异，适合主力重仓参与。</li>\n      <li>★★★ 中性博弈：安全垫 4%–7%，容错一般，仅适合小仓位试错。</li>\n      <li>★★ 风险偏弱：安全垫 2%–4%，回撤风险高，不建议常规参与。</li>\n      <li>★ 极致垃圾：安全垫 &lt;2%，极易总账亏损，直接放弃标的。</li>\n    </ul>\n\n    <h4>可流通规模倒推逻辑（永久复用 · 禁止瞎估）</h4>\n    <ul>\n      <li>规则依据：2023 年《证券发行与承销管理办法》修订后，原股东优先配售的可转债中，<b>持股 ≥5% 的股东、实际控制人及其一致行动人、董监高</b>参与配售的部分，自发行结束之日起 <b>6 个月内不得转让（锁定）</b>；其余持股 &lt;5% 且非一致行动人的原股东配售部分，以及网上/网下中签部分，上市首日即可全流通。</li>\n      <li>倒推公式：<b>锁定部分（亿元）= 锁定股东合计持股数 × 每股配售金额 × 大股东配售参与比例 ÷ 1 亿</b>；<b>可流通规模 = 发行总规模 − 锁定部分</b>。</li>\n      <li>锁定股东范围：控股股东 + 实际控制人 + 其一致行动人（即使单个持股 &lt;5%，只要属一致行动人也计入）。大股东若<b>放弃配售</b>，相应份额转网上发行、变为全流通，流通规模会显著变大——因此「大股东配不配债」是流通盘的核心变量。</li>\n      <li>本页「转债可流通规模」由上述公式<b>自动倒推、不接受手填</b>，确保每页数字都可回溯到公告披露的大股东持股与配售参与比例，杜绝主观乱估。</li>\n    </ul>\n\n    <h4>经典标的对标案例（固化参考 · 默认上市价 157.3）</h4>\n    <table class=\"bench\">\n      <thead><tr><th>标的</th><th>基准安全垫（默认157.3）</th><th>风险评级</th><th>核心优劣总结</th></tr></thead>\n      <tbody>\n        <tr><td>玉禾田（玉禾转债）</td><td>10%+</td><td>★★★★★</td><td>厚安全垫（10%+）、容错极高；但流通盘约 9.7 亿非迷你债，炒作弹性有限</td></tr>\n        <tr><td>丰茂股份（丰茂转债）</td><td>9%+</td><td>★★★★★</td><td>迷你债（流通约 1.5 亿）易爆炒、安全垫充足，当期最优套利标的</td></tr>\n        <tr><td>震裕科技（震裕转02）</td><td>4.2%左右</td><td>★★★</td><td>安全垫极薄、无潜伏窗口期、波动大，仅适合博弈型小仓位</td></tr>\n      </tbody>\n    </table>\n  </div>\n\n</div>\n\n<script>\n  // —— 固定测算仓位档位（统一标准，无需自定义）——\n  const TIERS = [100,200,300,400,500,600,700,800,900,1000,2000,3000,4000];\n  const DEFAULT_LISTING = 157.3;\n\n  function ratingFor(c){\n    if (c >= 9) return { stars:'★★★★★', label:'极致优质', cls:'r5' };\n    if (c >= 7) return { stars:'★★★★',   label:'优质稳健', cls:'r4' };\n    if (c >= 4) return { stars:'★★★',    label:'中性博弈', cls:'r3' };\n    if (c >= 2) return { stars:'★★',     label:'风险偏弱', cls:'r2' };\n    return        { stars:'★',       label:'极致垃圾', cls:'r1' };\n  }\n  function fmt(n, d){\n    if (!isFinite(n)) return '—';\n    return Number(n).toLocaleString('zh-CN', { minimumFractionDigits:d, maximumFractionDigits:d });\n  }\n\n  function showError(msg){\n    const err = document.getElementById('calcError');\n    if (err) { err.textContent = '计算异常：' + msg; err.style.display = 'block'; }\n  }\n\n  // 核心公式（参数联动）\n  // 所需资金 = 持股数量 × 收盘价\n  // 理论获配 = 持股数量 × 每股配售金额\n  // 实际获配 = 沪市(60/688) FLOOR(理论获配 ÷ 1000) × 1000；深市(00/30) FLOOR(理论获配 ÷ 100) × 100\n  // 预期盈利 = (实际获配 ÷ 100) × (上市价 − 100)\n  // 安全垫   = 预期盈利 ÷ 所需资金 × 100%   （保留2位小数）\n  // 需要金额 = 正股所需资金 + 实际获配转债面值\n  function recompute(){\n    try {\n    const P  = parseFloat(document.getElementById('price').value) || 0;\n    const A  = parseFloat(document.getElementById('perShare').value) || 0;\n    const noScheme = !(A > 0);   // 方案未定（无每股配售）→ 获配/安全垫用横杠，不误导\n    const L  = parseFloat(document.getElementById('listingPrice').value) || DEFAULT_LISTING;\n    const profitPerBond = L - 100;\n\n    document.getElementById('profitPerBond').textContent = noScheme ? '—' : (fmt(profitPerBond, 1) + ' 元');\n\n    const tbody = document.getElementById('tierBody');\n    tbody.innerHTML = '';\n    TIERS.forEach(function(N){\n      const cost   = N * P;                       // 所需资金(正股)\n      const theo   = noScheme ? null : N * A;       // 理论获配\n      const codeEl = document.getElementById('code');\n      const isSH   = codeEl && String(codeEl.value)[0] === '6'; // 沪市(60/688)按手(1000)取整\n      const actual = noScheme ? null : (isSH ? Math.floor(theo / 1000) * 1000 : Math.floor(theo / 100) * 100); // 实际获配：沪市floor1000 / 深市floor100\n      const profit = noScheme ? null : (actual / 100) * profitPerBond; // 预期盈利\n      const cushion = (noScheme || cost <= 0) ? null : profit / cost * 100; // 安全垫%\n      const r = cushion == null ? null : ratingFor(cushion);\n      const tr = document.createElement('tr');\n      tr.innerHTML =\n        '<td class=\"tier\">' + N + '</td>' +\n        '<td class=\"num\">' + fmt(cost, 0) + '</td>' +\n        '<td class=\"num\">' + (noScheme ? '—' : fmt(theo, 2)) + '</td>' +\n        '<td class=\"num\">' + (noScheme ? '—' : fmt(actual, 0)) + '</td>' +\n        '<td class=\"num\">' + (noScheme ? '—' : fmt(profit, 2)) + '</td>' +\n        '<td class=\"cushion\">' + (noScheme ? '—' : fmt(cushion, 2) + '%') + '</td>' +\n        '<td class=\"stars ' + (r ? r.cls : '') + '\">' + (noScheme ? '—' : r.stars) + '</td>' +\n        '<td class=\"' + (r ? r.cls : '') + '\">' + (noScheme ? '—' : r.label) + '</td>';\n      tbody.appendChild(tr);\n    });\n\n    // 理论安全垫（满配·忽略碎面损耗）= 每股配售盈利 ÷ 每股股价，已是百分比\n    // 每股配售盈利 = (A/100) × 上市盈利；÷ 股价 P；×100%  ⇒  A × 上市盈利 ÷ P\n    const theoCushion = (P > 0 && A > 0) ? (A * profitPerBond) / P : null;\n    const head = noScheme ? null : ratingFor(theoCushion);\n    document.getElementById('theoCushion').textContent = noScheme ? '—' : fmt(theoCushion, 2) + '%';\n    document.getElementById('headlineStars').textContent = noScheme ? '—' : head.stars;\n    document.getElementById('headlineLabel').textContent = noScheme ? '方案未定' : head.label;\n    document.getElementById('headlineCushion').textContent = noScheme ? '—' : fmt(theoCushion, 2) + '%';\n\n    // 可流通规模倒推（底层逻辑：总规模 − 锁定股东优先配售锁定部分）\n    // 规则：2023《证券发行与承销管理办法》修订后，持股≥5%股东、实控人及其一致行动人、董监高\n    //       通过优先配售取得的可转债，发行结束日起 6 个月内不得转让（锁定）；其余原股东及网申中签上市首日全流通。\n    // 倒推公式：锁定部分(亿元) = 锁定股东合计持股数(股) × 每股配售(元/股) × 参与比例 ÷ 1e8\n    //           可流通规模      = 发行总规模 − 锁定部分\n    const issue      = parseFloat(document.getElementById('issueSize').value) || 0;\n    const lockShares = parseFloat(document.getElementById('lockShares').value) || 0;\n    const lockRatio  = parseFloat(document.getElementById('lockRatio').value) || 0;\n    const floatEl    = document.getElementById('floatScale');\n    if (lockShares > 0) {\n      const locked     = lockShares * A * (lockRatio / 100) / 1e8;   // 亿元\n      const floatScale = issue - locked;                            // 亿元（自动倒推，只读）\n      floatEl.value = fmt(floatScale, 2);\n      document.getElementById('floatScaleTag').textContent = floatScale > 0\n        ? ('本转债倒推可流通规模约 ' + fmt(floatScale, 2) + ' 亿元（总规模 ' + fmt(issue,2) + ' − 锁定 ' + fmt(locked,2) + '）')\n        : '（请填写锁定股东合计持股数）';\n    } else {\n      // 无锁定股东数据时保留生成器注入值，不瞎算\n      const current = parseFloat(floatEl.value) || 0;\n      if (!current) floatEl.value = '';\n      document.getElementById('floatScaleTag').textContent = current > 0\n        ? ('本转债可流通规模约 ' + fmt(current, 2) + ' 亿元')\n        : '（锁定股东持股数未提供，可流通规模待补）';\n    }\n    const err = document.getElementById('calcError');\n    if (err) err.style.display = 'none';\n  } catch (e) {\n    showError(e.message);\n  }\n}\n\n  document.querySelectorAll('input').forEach(function(i){ i.addEventListener('input', recompute); });\n\n  // 制表日期：生成时已写入则保留；打开时仍为占位符则补为当天，便于回溯\n  (function initDate(){\n    const d = document.getElementById('tableDateValue');\n    if (!d || d.textContent === '—' || !d.textContent.trim()) {\n      const t = new Date();\n      const p = function(n){ return String(n).padStart(2,'0'); };\n      d.textContent = t.getFullYear() + '-' + p(t.getMonth()+1) + '-' + p(t.getDate());\n    }\n  })();\n\n  // 计算入口：立即执行 + DOMReady + Load 三重保险，确保在各种预览环境都能渲染\n  function runCompute(){\n    try {\n      recompute();\n      console.log('[潜伏配债] 档位计算完成');\n    } catch(e) {\n      console.error('[潜伏配债] 计算异常:', e);\n      showError(e.message + '（请按 F12 查看控制台详情）');\n    }\n  }\n  runCompute();\n  if (document.readyState === 'loading') {\n    document.addEventListener('DOMContentLoaded', runCompute);\n    window.addEventListener('load', runCompute);\n  } else {\n    // DOM 已就绪，但仍可能在 load 后某些资源加载导致重排，再补一次\n    runCompute();\n    if (document.readyState !== 'complete') {\n      window.addEventListener('load', runCompute);\n    }\n  }\n<\\/script>\n</body>\n</html>\n";
+const DATA = [
+  {
+    "code": "605123",
+    "name": "派克新材",
+    "bond": "派克转债",
+    "board": "沪市主板",
+    "stage": "同意注册",
+    "grp": "cyan",
+    "issue": 15.8,
+    "conv": 81.8,
+    "price": 78.12,
+    "perShare": 13.039,
+    "reg": "2026-08-05",
+    "pay": "2026-08-06",
+    "fs": 6.98,
+    "ind": "金属锻件",
+    "rating": "AA",
+    "progressDate": "2026-08-06",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "lockShares": "67620000",
+    "lockList": [
+      {
+        "name": "宗丽萍",
+        "pct": 33.23
+      },
+      {
+        "name": "是玉丰",
+        "pct": 20.18
+      },
+      {
+        "name": "无锡众智恒达投资企业(有限合伙)",
+        "pct": 2.39
+      }
+    ],
+    "lockDate": "2026-03-31",
+    "rtPrice": 78.12,
+    "tableGain": 0,
+    "optimalShares": 1000,
+    "optimalCost": 78120,
+    "optimalTheo": 13039,
+    "optimalActual": 13000,
+    "optimalCushionCons": 0.04992319508448541,
+    "optimalCushionAggr": 0.09535330261136715,
+    "minShares": 100
+  },
+  {
+    "code": "688605",
+    "name": "先锋精科",
+    "bond": "先锋转债",
+    "board": "沪市科创",
+    "stage": "同意注册",
+    "grp": "cyan",
+    "issue": 7.5,
+    "conv": 86.4,
+    "price": 78.1,
+    "perShare": 3.705,
+    "reg": "2026-08-05",
+    "pay": "2026-08-06",
+    "fs": null,
+    "ind": "半导体零部件",
+    "rating": "AA",
+    "progressDate": "2026-08-06",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 78.1,
+    "tableGain": 0,
+    "optimalShares": 300,
+    "optimalCost": 23430,
+    "optimalTheo": 1111.5,
+    "optimalActual": 1000,
+    "optimalCushionCons": 0.012804097311139564,
+    "optimalCushionAggr": 0.024455825864276574,
+    "minShares": 300
+  },
+  {
+    "code": "301565",
+    "name": "中仑新材",
+    "bond": "中仑转债",
+    "board": "深市创业",
+    "stage": "同意注册",
+    "grp": "cyan",
+    "issue": 10.68,
+    "conv": 20.28,
+    "price": 19.63,
+    "perShare": 2.6699,
+    "reg": "2026-08-05",
+    "pay": "2026-08-06",
+    "fs": 3.04,
+    "ind": "功能性薄膜(BOPA)",
+    "rating": "AA-",
+    "progressDate": "2026-08-06",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "lockShares": "285999500",
+    "lockList": [
+      {
+        "name": "中仑科技集团有限公司",
+        "pct": 52.27
+      },
+      {
+        "name": "Strait Co, Ltd.",
+        "pct": 7.75
+      },
+      {
+        "name": "厦门中仑海清股权投资合伙企业(有限合伙)",
+        "pct": 7.65
+      },
+      {
+        "name": "厦门中仑海杰股权投资合伙企业(有限合伙)",
+        "pct": 3.82
+      }
+    ],
+    "lockDate": "2026-06-30",
+    "rtPrice": 19.63,
+    "tableGain": 0,
+    "optimalShares": 300,
+    "optimalCost": 5889,
+    "optimalTheo": 800.97,
+    "optimalActual": 800,
+    "optimalCushionCons": 0.04075394803871625,
+    "optimalCushionAggr": 0.07784004075394806,
+    "minShares": 100
+  },
+  {
+    "code": "688686",
+    "name": "奥普特",
+    "bond": "奥普转债",
+    "board": "沪市科创",
+    "stage": "同意注册",
+    "grp": "cyan",
+    "issue": 12.7,
+    "conv": 150.03,
+    "price": 116.13,
+    "perShare": 10.396,
+    "reg": "2026-07-28",
+    "pay": "2026-07-29",
+    "fs": 3.53,
+    "ind": "机器视觉",
+    "rating": "AA",
+    "progressDate": "2026-07-29",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "lockShares": "88207566",
+    "lockList": [
+      {
+        "name": "卢治临",
+        "pct": 29.85
+      },
+      {
+        "name": "卢盛林",
+        "pct": 29.2
+      },
+      {
+        "name": "许学亮",
+        "pct": 7.31
+      },
+      {
+        "name": "宁波千智创业投资合伙企业(有限合伙)",
+        "pct": 5.81
+      }
+    ],
+    "lockDate": "2026-03-31",
+    "rtPrice": 116.13,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 11613,
+    "optimalTheo": 1039.6000000000001,
+    "optimalActual": 1000,
+    "optimalCushionCons": 0.025833118057349523,
+    "optimalCushionAggr": 0.0493412554895376,
+    "minShares": 100
+  },
+  {
+    "code": "605016",
+    "name": "百龙创园",
+    "bond": "百龙创园转债",
+    "board": "沪市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 7.48,
+    "conv": 21.43,
+    "price": 19.79,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "益生元/膳食纤维",
+    "rating": "-",
+    "progressDate": "2026-05-06",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 19.79,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 1979,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "300634",
+    "name": "彩讯股份",
+    "bond": "彩讯股份转债",
+    "board": "深市创业",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 12.7,
+    "conv": 20.28,
+    "price": 21.87,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "企业信息化软件",
+    "rating": "-",
+    "progressDate": "2026-04-29",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 21.87,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 2187,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "001316",
+    "name": "润贝航科",
+    "bond": "润贝航科转债",
+    "board": "深市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 4.3,
+    "conv": 25.7,
+    "price": 26.6,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "航空材料分销",
+    "rating": "-",
+    "progressDate": "2026-04-25",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 26.6,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 2660,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "300447",
+    "name": "全信股份",
+    "bond": "全信股份转债",
+    "board": "深市创业",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 2.45,
+    "conv": 13.1,
+    "price": 13.86,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "军工线缆",
+    "rating": "-",
+    "progressDate": "2026-04-20",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 13.86,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 1386,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "301018",
+    "name": "申菱环境",
+    "bond": "申菱环境转债",
+    "board": "深市创业",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 10,
+    "conv": 84.17,
+    "price": 92.6,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "精密温控",
+    "rating": "-",
+    "progressDate": "2026-04-10",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 92.6,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 9260,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "301379",
+    "name": "天山电子",
+    "bond": "天山电子转债",
+    "board": "深市创业",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 6.97,
+    "conv": 22.31,
+    "price": 23.33,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "液晶显示模组",
+    "rating": "-",
+    "progressDate": "2026-03-11",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 23.33,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 2333,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "300181",
+    "name": "佐力药业",
+    "bond": "佐力药业转债",
+    "board": "深市创业",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 13.71,
+    "conv": 14.47,
+    "price": 14.94,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "中药(乌灵)",
+    "rating": "-",
+    "progressDate": "2026-02-27",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 14.94,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 1494,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "300660",
+    "name": "江苏雷利",
+    "bond": "江苏雷利转债",
+    "board": "深市创业",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 12.86,
+    "conv": 26.73,
+    "price": 26.75,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "微特电机",
+    "rating": "-",
+    "progressDate": "2025-12-09",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 26.75,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 2675,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "600089",
+    "name": "特变电工",
+    "bond": "特变电工转债",
+    "board": "沪市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 80,
+    "conv": 20.74,
+    "price": 20.87,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "变压器/输变电",
+    "rating": "-",
+    "progressDate": "2025-09-27",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 20.87,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 2087,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "600577",
+    "name": "精达股份",
+    "bond": "精达股份转债",
+    "board": "沪市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 9.56,
+    "conv": 7.67,
+    "price": 8.11,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "漆包线/电磁线",
+    "rating": "-",
+    "progressDate": "2025-06-26",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 8.11,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 811,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "603093",
+    "name": "南华期货",
+    "bond": "南华期货转债",
+    "board": "沪市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 12,
+    "conv": 12.03,
+    "price": 11.89,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "期货",
+    "rating": "-",
+    "progressDate": "2023-05-18",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 11.89,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 1189,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "601528",
+    "name": "瑞丰银行",
+    "bond": "瑞丰银行转债",
+    "board": "沪市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 50,
+    "conv": 8.99,
+    "price": 4.86,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "银行",
+    "rating": "-",
+    "progressDate": "2023-01-20",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 4.86,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 486.00000000000006,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "601577",
+    "name": "长沙银行",
+    "bond": "长沙银行转债",
+    "board": "沪市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 110,
+    "conv": 12.19,
+    "price": 9.18,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "银行",
+    "rating": "-",
+    "progressDate": "2022-09-28",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 9.18,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 918,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "601187",
+    "name": "厦门银行",
+    "bond": "厦门银行转债",
+    "board": "沪市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 50,
+    "conv": 7.68,
+    "price": 7.37,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "银行",
+    "rating": "-",
+    "progressDate": "2022-09-27",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 7.37,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 737,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "301479",
+    "name": "弘景光电",
+    "bond": "弘景光电转债",
+    "board": "深市创业",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 6.3,
+    "conv": 47.96,
+    "price": 55.36,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "光学镜头",
+    "rating": "-",
+    "progressDate": "2026-08-10",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 55.36,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 5536,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "300695",
+    "name": "兆丰股份",
+    "bond": "兆丰股份转债",
+    "board": "深市创业",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 14,
+    "conv": 47.31,
+    "price": 51.96,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "轮毂轴承",
+    "rating": "-",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 51.96,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 5196,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "688261",
+    "name": "东微半导",
+    "bond": "东微半导转债",
+    "board": "沪市科创",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 14.36,
+    "conv": 69.72,
+    "price": 71.35,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "功率半导体",
+    "rating": "-",
+    "progressDate": "2026-07-21",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 71.35,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 7134.999999999999,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "300428",
+    "name": "立中集团",
+    "bond": "立中集团转债",
+    "board": "深市创业",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 11.8,
+    "conv": 18.68,
+    "price": 18.67,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "铝合金车轮",
+    "rating": "-",
+    "progressDate": "2026-07-20",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 18.67,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 1867.0000000000002,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "002978",
+    "name": "安宁股份",
+    "bond": "安宁股份转债",
+    "board": "深市主板",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 25,
+    "conv": 26.46,
+    "price": 26.04,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "钒钛矿",
+    "rating": "-",
+    "progressDate": "2026-06-17",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 26.04,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 2604,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "603499",
+    "name": "翔港科技",
+    "bond": "翔港科技转债",
+    "board": "沪市主板",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 4.78,
+    "conv": 11.47,
+    "price": 12.75,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "包装印刷",
+    "rating": "-",
+    "progressDate": "2026-06-16",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 12.75,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 1275,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "001203",
+    "name": "大中矿业",
+    "bond": "大中矿业转债",
+    "board": "深市主板",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 25,
+    "conv": 26.99,
+    "price": 27.77,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "铁矿石",
+    "rating": "-",
+    "progressDate": "2026-06-02",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 27.77,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 2777,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "301585",
+    "name": "蓝宇股份",
+    "bond": "蓝宇股份转债",
+    "board": "深市创业",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 4.73,
+    "conv": 26.37,
+    "price": 27.52,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "数码喷印墨水",
+    "rating": "-",
+    "progressDate": "2026-05-27",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 27.52,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 2752,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "688372",
+    "name": "伟测科技",
+    "bond": "伟测科技转债",
+    "board": "沪市科创",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 20,
+    "conv": 120.68,
+    "price": 130.01,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "芯片测试",
+    "rating": "-",
+    "progressDate": "2026-05-23",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 130.01,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 13001,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "688390",
+    "name": "固德威",
+    "bond": "固德威转债",
+    "board": "沪市科创",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 14.8,
+    "conv": 65.44,
+    "price": 67.26,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "光伏逆变器",
+    "rating": "-",
+    "progressDate": "2026-05-21",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 67.26,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 6726.000000000001,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "301263",
+    "name": "泰恩康",
+    "bond": "泰恩康转债",
+    "board": "深市创业",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 8.01,
+    "conv": 20.2,
+    "price": 20.65,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "医药(代理)",
+    "rating": "-",
+    "progressDate": "2026-05-20",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 20.65,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 2065,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "301522",
+    "name": "上大股份",
+    "bond": "上大股份转债",
+    "board": "深市创业",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 8,
+    "conv": 22.78,
+    "price": 23.35,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "高温合金",
+    "rating": "-",
+    "progressDate": "2026-05-20",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 23.35,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 2335,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "301603",
+    "name": "乔锋智能",
+    "bond": "乔锋智能转债",
+    "board": "深市创业",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 11.5,
+    "conv": 111.75,
+    "price": 129.1,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "数控机床",
+    "rating": "-",
+    "progressDate": "2026-05-19",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 129.1,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 12910,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "301092",
+    "name": "争光股份",
+    "bond": "争光股份转债",
+    "board": "深市创业",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 6.17,
+    "conv": 43.26,
+    "price": 45.21,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "离子交换树脂",
+    "rating": "-",
+    "progressDate": "2026-05-19",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 45.21,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 4521,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "688720",
+    "name": "艾森股份",
+    "bond": "艾森股份转债",
+    "board": "沪市科创",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 5.14,
+    "conv": 61.94,
+    "price": 66.22,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "电子化学品",
+    "rating": "-",
+    "progressDate": "2026-05-16",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 66.22,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 6622,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "603166",
+    "name": "福达股份",
+    "bond": "福达股份转债",
+    "board": "沪市主板",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 10,
+    "conv": 10.81,
+    "price": 11.32,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "汽车曲轴/锻件",
+    "rating": "-",
+    "progressDate": "2026-05-16",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 11.32,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 1132,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "300389",
+    "name": "艾比森",
+    "bond": "艾比森转债",
+    "board": "深市创业",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 8.1,
+    "conv": 12.16,
+    "price": 12.31,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "LED显示屏",
+    "rating": "-",
+    "progressDate": "2026-05-15",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 12.31,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 1231,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "603409",
+    "name": "汇通控股",
+    "bond": "汇通控股转债",
+    "board": "沪市主板",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 5,
+    "conv": 17.32,
+    "price": 17.61,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "汽车饰件",
+    "rating": "-",
+    "progressDate": "2026-05-09",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 17.61,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 1761,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "605020",
+    "name": "永和股份",
+    "bond": "永和股份转债",
+    "board": "沪市主板",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 22,
+    "conv": 33.35,
+    "price": 34.76,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "氟化工",
+    "rating": "-",
+    "progressDate": "2026-05-09",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 34.76,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 3476,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "603693",
+    "name": "江苏新能",
+    "bond": "江苏新能转债",
+    "board": "沪市主板",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 12.4,
+    "conv": 12.25,
+    "price": 11.82,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "新能源发电",
+    "rating": "-",
+    "progressDate": "2026-03-25",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 11.82,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 1182,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "603219",
+    "name": "富佳股份",
+    "bond": "富佳股份转债",
+    "board": "沪市主板",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 5,
+    "conv": 13.44,
+    "price": 14.51,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "清洁小家电",
+    "rating": "-",
+    "progressDate": "2026-01-24",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 14.51,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 1451,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "605196",
+    "name": "华通线缆",
+    "bond": "华通线缆转债",
+    "board": "沪市主板",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 8,
+    "conv": 31.29,
+    "price": 35.07,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "电线电缆",
+    "rating": "-",
+    "progressDate": "2025-11-07",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 35.07,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 3507,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "300709",
+    "name": "精研科技",
+    "bond": "精研科技转债",
+    "board": "深市创业",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 5.78,
+    "conv": 35.84,
+    "price": 40.15,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "MIM精密金属",
+    "rating": "-",
+    "progressDate": "2025-08-19",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 40.15,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 4015,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "300751",
+    "name": "迈为股份",
+    "bond": "迈为股份转债",
+    "board": "深市创业",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 19.67,
+    "conv": 168.52,
+    "price": 178.39,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "光伏设备",
+    "rating": "-",
+    "progressDate": "2025-06-16",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 178.39,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 17839,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "600928",
+    "name": "西安银行",
+    "bond": "西安银行转债",
+    "board": "沪市主板",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 80,
+    "conv": 3.59,
+    "price": 3.49,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "银行",
+    "rating": "-",
+    "progressDate": "2025-05-31",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 3.49,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 349,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "300432",
+    "name": "富临精工",
+    "bond": "富临精工转债",
+    "board": "深市创业",
+    "stage": "股东大会通过",
+    "grp": "lgreen",
+    "issue": 12.52,
+    "conv": 15.69,
+    "price": 16.23,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "汽车零部件/锂电正极",
+    "rating": "-",
+    "progressDate": "2024-12-06",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 16.23,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 1623,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "301141",
+    "name": "中科磁业",
+    "bond": "中科磁业转债",
+    "board": "深市创业",
+    "stage": "董事会预案",
+    "grp": "ygreen",
+    "issue": 6.09,
+    "conv": 41.16,
+    "price": 43.29,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "永磁材料",
+    "rating": "-",
+    "progressDate": "2026-08-11",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 43.29,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 4329,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "001335",
+    "name": "信凯科技",
+    "bond": "信凯科技转债",
+    "board": "深市主板",
+    "stage": "董事会预案",
+    "grp": "ygreen",
+    "issue": 4.5,
+    "conv": 30.22,
+    "price": 31.46,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "有机颜料",
+    "rating": "-",
+    "progressDate": "2026-07-08",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 31.46,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 3146,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "001389",
+    "name": "广合科技",
+    "bond": "广合科技转债",
+    "board": "深市主板",
+    "stage": "董事会预案",
+    "grp": "ygreen",
+    "issue": 36,
+    "conv": 158.08,
+    "price": 169.46,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "PCB(服务器)",
+    "rating": "-",
+    "progressDate": "2026-06-23",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 169.46,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 16946,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "002948",
+    "name": "青岛银行",
+    "bond": "青岛银行转债",
+    "board": "深市主板",
+    "stage": "董事会预案",
+    "grp": "ygreen",
+    "issue": 48,
+    "conv": 5.76,
+    "price": 5.67,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "银行",
+    "rating": "-",
+    "progressDate": "2025-08-29",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 5.67,
+    "tableGain": 0,
+    "optimalShares": 100,
+    "optimalCost": 567,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
+    "minShares": 100
+  },
+  {
+    "code": "603339",
+    "name": "四方科技",
+    "bond": "四方转债",
+    "board": "沪市主板",
+    "stage": "同意注册",
+    "grp": "cyan",
+    "issue": 10.23,
+    "conv": 16.25,
+    "price": 13.77,
+    "perShare": 3.3064,
+    "reg": "—",
+    "pay": "—",
+    "fs": 6.11,
+    "ind": "冷链装备",
+    "rating": "AA",
+    "lockShares": "124596915",
+    "progressDate": "2026-07-11",
+    "consPrice": 130,
+    "aggrPrice": 140,
+    "lockList": [
+      {
+        "name": "黄杰",
+        "pct": 40.27
+      }
+    ],
+    "lockDate": "2026-06-30",
+    "rtPrice": 13.74,
+    "tableGain": -0.0021786492374727207,
+    "optimalShares": 1600,
+    "optimalCost": 21984,
+    "optimalTheo": 5290.24,
+    "optimalActual": 5000,
+    "optimalCushionCons": 0.06823144104803494,
+    "optimalCushionAggr": 0.09097525473071325,
+    "minShares": 400
+  },
+  {
+    "code": "002913",
+    "name": "奥士康",
+    "bond": "奥士转债",
+    "board": "深市主板",
+    "stage": "同意注册",
+    "grp": "cyan",
+    "issue": 10,
+    "conv": 54.34,
+    "price": 56.88,
+    "perShare": 3.1513,
+    "reg": "—",
+    "pay": "—",
+    "fs": 3.63,
+    "ind": "电子/PCB",
+    "rating": "AA",
+    "lockShares": "202000000",
+    "progressDate": "2026-07-11",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "lockList": [
+      {
+        "name": "深圳市北电投资有限公司",
+        "pct": 50.42
+      },
+      {
+        "name": "贺波",
+        "pct": 13.23
+      }
+    ],
+    "lockDate": "2026-03-31",
+    "rtPrice": 56.75,
+    "tableGain": -0.002285513361462773,
+    "optimalShares": 2000,
+    "optimalCost": 113500,
+    "optimalTheo": 6302.6,
+    "optimalActual": 6300,
+    "optimalCushionCons": 0.016651982378854624,
+    "optimalCushionAggr": 0.03180528634361234,
+    "minShares": 100
+  },
+  {
+    "code": "301459",
+    "name": "丰茂股份",
+    "bond": "丰茂转债",
+    "board": "深市创业",
+    "stage": "已发行·缴款",
+    "grp": "orange",
+    "issue": 6.08,
+    "conv": 35.59,
+    "price": 37.31,
+    "perShare": 5.8347,
+    "reg": "2026-08-17",
+    "pay": "2026-08-18",
+    "fs": 1.6,
+    "ind": "橡胶管路",
+    "rating": "AA-",
+    "lockShares": "76830000",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "lockList": [
+      {
+        "name": "宁波丰茂投资控股有限公司",
+        "pct": 59.93
+      },
+      {
+        "name": "蒋春雷",
+        "pct": 11.36
+      },
+      {
+        "name": "宁波苏康企业管理合伙企业(有限合伙)",
+        "pct": 2.5
+      }
+    ],
+    "lockDate": "2026-03-31",
+    "rtPrice": 37.57,
+    "tableGain": 0.006968641114982525,
+    "optimalShares": 600,
+    "optimalCost": 22542,
+    "optimalTheo": 3500.8199999999997,
+    "optimalActual": 3500,
+    "optimalCushionCons": 0.04657971785999468,
+    "optimalCushionAggr": 0.08896726111258985,
+    "minShares": 100
+  },
+  {
+    "code": "002550",
+    "name": "千红制药",
+    "bond": "千红转债",
+    "board": "深市主板",
+    "stage": "同意注册",
+    "grp": "cyan",
+    "issue": 10,
+    "conv": 6.79,
+    "price": 7.16,
+    "perShare": 0.7812,
+    "reg": "—",
+    "pay": "—",
+    "fs": 7.34,
+    "ind": "医药/肝素",
+    "rating": "AA",
+    "lockShares": "340811600",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 140,
+    "lockList": [
+      {
+        "name": "王耀方",
+        "pct": 19.96
+      },
+      {
+        "name": "王轲",
+        "pct": 6.67
+      }
+    ],
+    "lockDate": "2026-06-30",
+    "rtPrice": 7.2,
+    "tableGain": 0.005586592178770954,
+    "optimalShares": 900,
+    "optimalCost": 6480,
+    "optimalTheo": 703.08,
+    "optimalActual": 700,
+    "optimalCushionCons": 0.032407407407407406,
+    "optimalCushionAggr": 0.043209876543209874,
+    "minShares": 200
+  },
+  {
+    "code": "301132",
+    "name": "满坤科技",
+    "bond": "满坤转债",
+    "board": "深市创业",
+    "stage": "同意注册",
+    "grp": "cyan",
+    "issue": 7.6,
+    "conv": 26.35,
+    "price": 35.41,
+    "perShare": 5.1321,
+    "reg": "—",
+    "pay": "—",
+    "fs": 3.24,
+    "ind": "汽车电子",
+    "rating": "AA",
+    "lockShares": "85000000",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 140,
+    "lockList": [
+      {
+        "name": "洪耿奇",
+        "pct": 16.88
+      },
+      {
+        "name": "洪俊城",
+        "pct": 13.51
+      },
+      {
+        "name": "洪耿宇",
+        "pct": 13.51
+      },
+      {
+        "name": "洪娜珊",
+        "pct": 13.51
+      }
+    ],
+    "lockDate": "2026-03-31",
+    "rtPrice": 35.52,
+    "tableGain": 0.0031064670996895382,
+    "optimalShares": 800,
+    "optimalCost": 28416.000000000004,
+    "optimalTheo": 4105.68,
+    "optimalActual": 4100,
+    "optimalCushionCons": 0.043285472972972965,
+    "optimalCushionAggr": 0.05771396396396396,
+    "minShares": 100
+  },
+  {
+    "code": "000887",
+    "name": "中鼎股份",
+    "bond": "中鼎转债",
+    "board": "深市主板",
+    "stage": "同意注册",
+    "grp": "cyan",
+    "issue": 19.2,
+    "conv": 17.25,
+    "price": 21.75,
+    "perShare": 1.4589,
+    "reg": "—",
+    "pay": "—",
+    "fs": 11.49,
+    "ind": "密封件",
+    "rating": "AA",
+    "lockShares": "528480362",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 140,
+    "rtPrice": 21.82,
+    "tableGain": 0.003218390804597714,
+    "optimalShares": 2000,
+    "optimalCost": 43640,
+    "optimalTheo": 2917.8,
+    "optimalActual": 2900,
+    "optimalCushionCons": 0.01993583868010999,
+    "optimalCushionAggr": 0.026581118240146653,
+    "minShares": 100
+  },
+  {
+    "code": "301628",
+    "name": "强达电路",
+    "bond": "强达转债",
+    "board": "深市创业",
+    "stage": "同意注册",
+    "grp": "cyan",
+    "issue": 5.5,
+    "conv": 72.66,
+    "price": 84.29,
+    "perShare": 6.8992,
+    "reg": "—",
+    "pay": "—",
+    "fs": 2.2,
+    "ind": "PCB/光模块",
+    "rating": "AA",
+    "lockShares": "47849564",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "lockList": [
+      {
+        "name": "祝小华",
+        "pct": 32.14
+      },
+      {
+        "name": "宋振武",
+        "pct": 16.39
+      },
+      {
+        "name": "宁波保税区鸿超翔投资合伙企业(有限合伙)",
+        "pct": 6.3
+      },
+      {
+        "name": "何伟鸿",
+        "pct": 6.3
+      },
+      {
+        "name": "宁波保税区翔振达投资合伙企业(有限合伙)",
+        "pct": 1.89
+      },
+      {
+        "name": "深圳市中小担创业投资有限公司",
+        "pct": 0.46
+      }
+    ],
+    "lockDate": "2026-03-31",
+    "rtPrice": 84.88,
+    "tableGain": 0.006999644085893809,
+    "optimalShares": 900,
+    "optimalCost": 76392,
+    "optimalTheo": 6209.280000000001,
+    "optimalActual": 6200,
+    "optimalCushionCons": 0.02434809927741125,
+    "optimalCushionAggr": 0.04650486961985549,
+    "minShares": 100
+  },
+  {
+    "code": "688150",
+    "name": "莱特光电",
+    "bond": "莱特转债",
+    "board": "沪市科创",
+    "stage": "上市委通过",
+    "grp": "lgreen",
+    "issue": 5.25,
+    "conv": 40.29,
+    "price": 40.45,
+    "perShare": 1.3059,
+    "reg": "—",
+    "pay": "—",
+    "fs": 2.22,
+    "ind": "OLED材料",
+    "rating": "AA",
+    "lockShares": "231866984",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 140,
+    "lockList": [
+      {
+        "name": "王亚龙",
+        "pct": 49.52
+      },
+      {
+        "name": "宁波高展自有资金投资有限公司",
+        "pct": 4.39
+      },
+      {
+        "name": "北京君联成业股权投资合伙企业(有限合伙)",
+        "pct": 1.13
+      },
+      {
+        "name": "宁波君成自有资金投资合伙企业(有限合伙)",
+        "pct": 0.9
+      },
+      {
+        "name": "北京君联慧诚股权投资合伙企业(有限合伙)",
+        "pct": 0.9
+      },
+      {
+        "name": "宁波青荷自有资金投资合伙企业(有限合伙)",
+        "pct": 0.78
+      }
+    ],
+    "lockDate": "2026-03-31",
+    "rtPrice": 40.44,
+    "tableGain": -0.00024721878862806216,
+    "optimalShares": 800,
+    "optimalCost": 32352,
+    "optimalTheo": 1044.72,
+    "optimalActual": 1000,
+    "optimalCushionCons": 0.009272997032640949,
+    "optimalCushionAggr": 0.012363996043521267,
+    "minShares": 800
+  },
+  {
+    "code": "301149",
+    "name": "隆华新材",
+    "bond": "隆华转债",
+    "board": "深市创业",
+    "stage": "上市委通过",
+    "grp": "lgreen",
+    "issue": 9.6,
+    "conv": 7.13,
+    "price": 7.88,
+    "perShare": 1.7173,
+    "reg": "—",
+    "pay": "—",
+    "fs": 4.6,
+    "ind": "聚氨酯/聚醚",
+    "rating": "AA",
+    "lockShares": "291154720",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 7.87,
+    "tableGain": -0.0012690355329948969,
+    "optimalShares": 700,
+    "optimalCost": 5509,
+    "optimalTheo": 1202.1100000000001,
+    "optimalActual": 1200,
+    "optimalCushionCons": 0.06534761299691413,
+    "optimalCushionAggr": 0.12481394082410603,
+    "minShares": 100
+  },
+  {
+    "code": "301571",
+    "name": "国科天成",
+    "bond": "国科转债",
+    "board": "深市创业",
+    "stage": "上市委通过",
+    "grp": "lgreen",
+    "issue": 6.21,
+    "conv": 58.35,
+    "price": 68.52,
+    "perShare": 4.743,
+    "reg": "—",
+    "pay": "—",
+    "fs": 2.77,
+    "ind": "红外探测器",
+    "rating": "AA",
+    "lockShares": "72434350",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 140,
+    "lockList": [
+      {
+        "name": "罗珏典",
+        "pct": 8.19
+      },
+      {
+        "name": "北京空应科技发展有限公司",
+        "pct": 6.91
+      },
+      {
+        "name": "吴明星",
+        "pct": 6.16
+      },
+      {
+        "name": "天津晟易天成企业管理合伙企业(有限合伙)",
+        "pct": 5.4
+      },
+      {
+        "name": "北京科创天成企业管理中心(有限合伙)",
+        "pct": 4.91
+      },
+      {
+        "name": "北京恒润长图资产管理有限公司-天津天盛天成资产管理中心(有限合伙)",
+        "pct": 4.61
+      },
+      {
+        "name": "北京大数长青资产管理有限公司-盐城大数成长股权投资合伙企业(有限合伙)",
+        "pct": 4.18
+      }
+    ],
+    "lockDate": "2026-03-31",
+    "rtPrice": 68.46,
+    "tableGain": -0.0008756567425569509,
+    "optimalShares": 1500,
+    "optimalCost": 102689.99999999999,
+    "optimalTheo": 7114.500000000001,
+    "optimalActual": 7100,
+    "optimalCushionCons": 0.020742039146947125,
+    "optimalCushionAggr": 0.0276560521959295,
+    "minShares": 100
+  },
+  {
+    "code": "603125",
+    "name": "常青科技",
+    "bond": "常青转债",
+    "board": "沪市主板",
+    "stage": "上市委通过",
+    "grp": "lgreen",
+    "issue": 2.18,
+    "conv": 19.86,
+    "price": 24.11,
+    "perShare": 1.9753,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "离子交换树脂",
+    "rating": "AA",
+    "lockShares": "",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 140,
+    "rtPrice": 24.19,
+    "tableGain": 0.0033181252592286124,
+    "optimalShares": 1600,
+    "optimalCost": 38704,
+    "optimalTheo": 3160.48,
+    "optimalActual": 3000,
+    "optimalCushionCons": 0.023253410500206698,
+    "optimalCushionAggr": 0.03100454733360893,
+    "minShares": 600
+  },
+  {
+    "code": "301175",
+    "name": "中科环保",
+    "bond": "中科转债",
+    "board": "深市创业",
+    "stage": "上市委通过",
+    "grp": "lgreen",
+    "issue": 4.22,
+    "conv": 5.49,
+    "price": 5.46,
+    "perShare": 0.6793,
+    "reg": "—",
+    "pay": "—",
+    "fs": 3.73,
+    "ind": "绿色电力/环保",
+    "rating": "AA",
+    "lockShares": "72434350",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 140,
+    "lockList": [
+      {
+        "name": "罗珏典",
+        "pct": 8.19
+      },
+      {
+        "name": "北京空应科技发展有限公司",
+        "pct": 6.91
+      },
+      {
+        "name": "吴明星",
+        "pct": 6.16
+      },
+      {
+        "name": "天津晟易天成企业管理合伙企业(有限合伙)",
+        "pct": 5.4
+      },
+      {
+        "name": "北京科创天成企业管理中心(有限合伙)",
+        "pct": 4.91
+      },
+      {
+        "name": "北京恒润长图资产管理有限公司-天津天盛天成资产管理中心(有限合伙)",
+        "pct": 4.61
+      },
+      {
+        "name": "北京大数长青资产管理有限公司-盐城大数成长股权投资合伙企业(有限合伙)",
+        "pct": 4.18
+      }
+    ],
+    "lockDate": "2026-06-30",
+    "rtPrice": 5.45,
+    "tableGain": -0.0018315018315017925,
+    "optimalShares": 4000,
+    "optimalCost": 21800,
+    "optimalTheo": 2717.2000000000003,
+    "optimalActual": 2700,
+    "optimalCushionCons": 0.037155963302752296,
+    "optimalCushionAggr": 0.04954128440366973,
+    "minShares": 200
+  },
+  {
+    "code": "001380",
+    "name": "华纬科技",
+    "bond": "华纬转债",
+    "board": "深市主板",
+    "stage": "上市委通过",
+    "grp": "lgreen",
+    "issue": 5.75,
+    "conv": 22.74,
+    "price": 16.6,
+    "perShare": 2.1229,
+    "reg": "—",
+    "pay": "—",
+    "fs": 2.15,
+    "ind": "汽车零部件/弹簧",
+    "rating": "AA",
+    "lockShares": "169354284",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "lockList": [
+      {
+        "name": "浙江华纬控股有限公司",
+        "pct": 35.42
+      },
+      {
+        "name": "金雷",
+        "pct": 16.88
+      },
+      {
+        "name": "诸暨市珍珍投资管理中心(有限合伙)",
+        "pct": 10.23
+      }
+    ],
+    "lockDate": "2026-06-30",
+    "rtPrice": 16.61,
+    "tableGain": 0.000602409638554097,
+    "optimalShares": 2500,
+    "optimalCost": 41525,
+    "optimalTheo": 5307.25,
+    "optimalActual": 5300,
+    "optimalCushionCons": 0.038290186634557494,
+    "optimalCushionAggr": 0.07313425647200483,
+    "minShares": 100
+  },
+  {
+    "code": "600368",
+    "name": "五洲交通",
+    "bond": "五洲转债",
+    "board": "沪市主板",
+    "stage": "上市委通过",
+    "grp": "lgreen",
+    "issue": 30,
+    "conv": 3.94,
+    "price": 3.94,
+    "perShare": 1.8638,
+    "reg": "—",
+    "pay": "—",
+    "fs": 14.32,
+    "ind": "高速公路",
+    "rating": "AA",
+    "lockShares": "841452568",
+    "progressDate": "2026-07-31",
+    "consPrice": 120,
+    "aggrPrice": 125,
+    "lockList": [
+      {
+        "name": "广西交通投资集团有限公司",
+        "pct": 38.42
+      },
+      {
+        "name": "招商局公路网络科技控股股份有限公司",
+        "pct": 13.86
+      }
+    ],
+    "lockDate": "2026-03-31",
+    "rtPrice": 3.93,
+    "tableGain": -0.0025380710659897937,
+    "optimalShares": 600,
+    "optimalCost": 2358,
+    "optimalTheo": 1118.28,
+    "optimalActual": 1000,
+    "optimalCushionCons": 0.08481764206955046,
+    "optimalCushionAggr": 0.10602205258693809,
+    "minShares": 600
+  },
+  {
+    "code": "300727",
+    "name": "润禾材料",
+    "bond": "润禾转债",
+    "board": "深市创业",
+    "stage": "上市委通过",
+    "grp": "lgreen",
+    "issue": 1.9,
+    "conv": 28,
+    "price": 27.97,
+    "perShare": 2.0555,
+    "reg": "—",
+    "pay": "—",
+    "fs": 0,
+    "ind": "有机硅/助剂",
+    "rating": "AA",
+    "lockShares": "94070116",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "lockList": [
+      {
+        "name": "浙江润禾控股有限公司",
+        "pct": 37.95
+      },
+      {
+        "name": "叶剑平",
+        "pct": 10.52
+      },
+      {
+        "name": "宁海协润投资合伙企业(有限合伙)",
+        "pct": 2.8
+      },
+      {
+        "name": "宁海咏春投资合伙企业(有限合伙)",
+        "pct": 0.95
+      }
+    ],
+    "lockDate": "2026-06-30",
+    "rtPrice": 28,
+    "tableGain": 0.0010725777618877776,
+    "optimalShares": 2000,
+    "optimalCost": 56000,
+    "optimalTheo": 4111,
+    "optimalActual": 4100,
+    "optimalCushionCons": 0.021964285714285714,
+    "optimalCushionAggr": 0.041951785714285726,
+    "minShares": 100
+  },
+  {
+    "code": "300909",
+    "name": "汇创达",
+    "bond": "汇创转债",
+    "board": "深市创业",
+    "stage": "同意注册",
+    "grp": "cyan",
+    "issue": 6.5,
+    "conv": 40.46,
+    "price": 54.12,
+    "perShare": 3.7572,
+    "reg": "—",
+    "pay": "—",
+    "fs": 3.47,
+    "ind": "连接器/精密结构件",
+    "rating": "AA",
+    "lockShares": "80720106",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "lockList": [
+      {
+        "name": "李明",
+        "pct": 30.25
+      },
+      {
+        "name": "宁波通慕创业投资合伙企业(有限合伙)",
+        "pct": 14.05
+      },
+      {
+        "name": "上海犇腾向前科技发展中心(有限合伙)",
+        "pct": 1.69
+      },
+      {
+        "name": "东莞市信为通达创业投资合伙企业(有限合伙)",
+        "pct": 0.68
+      }
+    ],
+    "lockDate": "2026-06-30",
+    "rtPrice": 54.32,
+    "tableGain": 0.003695491500369602,
+    "optimalShares": 400,
+    "optimalCost": 21728,
+    "optimalTheo": 1502.88,
+    "optimalActual": 1500,
+    "optimalCushionCons": 0.02071060382916053,
+    "optimalCushionAggr": 0.039557253313696625,
+    "minShares": 100
+  },
+  {
+    "code": "002997",
+    "name": "瑞鹄模具",
+    "bond": "瑞鹄转债",
+    "board": "深市主板",
+    "stage": "上市委通过",
+    "grp": "lgreen",
+    "issue": 6.86,
+    "conv": 26.41,
+    "price": 27.06,
+    "perShare": 3.2822,
+    "reg": "—",
+    "pay": "—",
+    "fs": 4.02,
+    "ind": "汽车零部件/模具",
+    "rating": "AA",
+    "lockShares": "86527329",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 140,
+    "rtPrice": 27.01,
+    "tableGain": -0.0018477457501846696,
+    "optimalShares": 2500,
+    "optimalCost": 67525,
+    "optimalTheo": 8205.5,
+    "optimalActual": 8200,
+    "optimalCushionCons": 0.03643095149944465,
+    "optimalCushionAggr": 0.04857460199925953,
+    "minShares": 100
+  },
+  {
+    "code": "300953",
+    "name": "震裕科技",
+    "bond": "震裕转02",
+    "board": "深市创业",
+    "stage": "同意注册·待发",
+    "grp": "cyan",
+    "issue": 18.8,
+    "conv": 104.85,
+    "price": 105.74,
+    "perShare": 7.7324,
+    "reg": "2026-08-14",
+    "pay": "2026-08-17",
+    "fs": 13.24,
+    "ind": "精密模具/锂电池结构件",
+    "rating": "AA-",
+    "lockShares": "71933596",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 180,
+    "lockList": [
+      {
+        "name": "蒋震林",
+        "pct": 26.81
+      },
+      {
+        "name": "洪瑞娣",
+        "pct": 10.64
+      },
+      {
+        "name": "宁波聚信投资合伙企业(有限合伙)",
+        "pct": 4.02
+      }
+    ],
+    "lockDate": "2026-06-30",
+    "rtPrice": 105.5,
+    "tableGain": -0.002269718176659683,
+    "optimalShares": 4000,
+    "optimalCost": 422000,
+    "optimalTheo": 30929.600000000002,
+    "optimalActual": 30900,
+    "optimalCushionCons": 0.021966824644549764,
+    "optimalCushionAggr": 0.0585781990521327,
+    "minShares": 100
+  },
+  {
+    "code": "603163",
+    "name": "圣晖集成",
+    "bond": "圣晖转债",
+    "board": "沪市主板",
+    "stage": "同意注册",
+    "grp": "cyan",
+    "issue": 5.5,
+    "conv": 73.23,
+    "price": 85.49,
+    "perShare": 5.5,
+    "reg": "—",
+    "pay": "—",
+    "fs": 1.39,
+    "ind": "半导体洁净室",
+    "rating": "AA",
+    "lockShares": "74695500",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 180,
+    "lockList": [
+      {
+        "name": "SHENG HUEI INTERNATIONAL CO.LTD.",
+        "pct": 65
+      },
+      {
+        "name": "苏州嵩辉企业管理咨询合伙企业(有限合伙)",
+        "pct": 7.63
+      },
+      {
+        "name": "苏州圣展企业管理咨询合伙企业(有限合伙)",
+        "pct": 1.31
+      },
+      {
+        "name": "铭基国际投资公司-MATTHEWS ASIA FUNDS (US)",
+        "pct": 0.75
+      }
+    ],
+    "lockDate": "2026-03-31",
+    "rtPrice": 86.89,
+    "tableGain": 0.016376184349046738,
+    "optimalShares": 1500,
+    "optimalCost": 130335,
+    "optimalTheo": 8250,
+    "optimalActual": 8000,
+    "optimalCushionCons": 0.018414086776383932,
+    "optimalCushionAggr": 0.04910423140369049,
+    "minShares": 200
+  },
+  {
+    "code": "001282",
+    "name": "三联锻造",
+    "bond": "三联转债",
+    "board": "深市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 6.5,
+    "conv": 20.8,
+    "price": 16.2,
+    "perShare": 2.7905,
+    "reg": "—",
+    "pay": "—",
+    "fs": 1.64,
+    "ind": "锻造/汽车零部件",
+    "rating": "AA",
+    "lockShares": "174162336",
+    "progressDate": "2026-07-11",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 16.24,
+    "tableGain": 0.0024691358024690833,
+    "optimalShares": 900,
+    "optimalCost": 14615.999999999998,
+    "optimalTheo": 2511.4500000000003,
+    "optimalActual": 2500,
+    "optimalCushionCons": 0.0513136288998358,
+    "optimalCushionAggr": 0.0980090311986864,
+    "minShares": 100
+  },
+  {
+    "code": "301279",
+    "name": "金道科技",
+    "bond": "金道转债",
+    "board": "深市创业",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 3.06,
+    "conv": 30.6,
+    "price": 20.68,
+    "perShare": 1.8107,
+    "reg": "—",
+    "pay": "—",
+    "fs": 1.44,
+    "ind": "减速机/叉车",
+    "rating": "AA",
+    "lockShares": "89700000",
+    "progressDate": "2026-07-11",
+    "consPrice": 157.3,
+    "aggrPrice": 200,
+    "lockList": [
+      {
+        "name": "浙江金道控股有限公司",
+        "pct": 33.82
+      },
+      {
+        "name": "金刚强",
+        "pct": 15.03
+      },
+      {
+        "name": "金言荣",
+        "pct": 7.52
+      },
+      {
+        "name": "金晓燕",
+        "pct": 7.52
+      },
+      {
+        "name": "宁波金及创业投资合伙企业(有限合伙)",
+        "pct": 5.26
+      }
+    ],
+    "lockDate": "2026-03-31",
+    "rtPrice": 20.7,
+    "tableGain": 0.0009671179883945635,
+    "optimalShares": 500,
+    "optimalCost": 10350,
+    "optimalTheo": 905.35,
+    "optimalActual": 900,
+    "optimalCushionCons": 0.04982608695652174,
+    "optimalCushionAggr": 0.08695652173913043,
+    "minShares": 100
+  },
+  {
+    "code": "601717",
+    "name": "中创智领",
+    "bond": "中创转债",
+    "board": "沪市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 43.5,
+    "conv": 16.32,
+    "price": 15.38,
+    "perShare": 2.4367,
+    "reg": "—",
+    "pay": "—",
+    "fs": 16.32,
+    "ind": "工程机械/汽车部",
+    "rating": "AA",
+    "lockShares": "1115443017",
+    "progressDate": "2026-07-31",
+    "consPrice": 120,
+    "aggrPrice": 130,
+    "rtPrice": 15.39,
+    "tableGain": 0.0006501950585175414,
+    "optimalShares": 900,
+    "optimalCost": 13851,
+    "optimalTheo": 2193.03,
+    "optimalActual": 2000,
+    "optimalCushionCons": 0.028878781315428488,
+    "optimalCushionAggr": 0.043318171973142736,
+    "minShares": 500
+  },
+  {
+    "code": "002981",
+    "name": "朝阳科技",
+    "bond": "朝阳转债",
+    "board": "深市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 5.2,
+    "conv": 22.56,
+    "price": 23,
+    "perShare": 3.7956,
+    "reg": "—",
+    "pay": "—",
+    "fs": 1.8,
+    "ind": "消费电子",
+    "rating": "AA",
+    "lockShares": "89619576",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "lockList": [
+      {
+        "name": "广东健溢投资有限责任公司",
+        "pct": 50.91
+      },
+      {
+        "name": "郭丽勤",
+        "pct": 13.23
+      },
+      {
+        "name": "宁波鹏辰创业投资合伙企业(有限合伙)",
+        "pct": 1.04
+      }
+    ],
+    "lockDate": "2026-06-30",
+    "rtPrice": 23.09,
+    "tableGain": 0.003913043478260864,
+    "optimalShares": 900,
+    "optimalCost": 20781,
+    "optimalTheo": 3416.04,
+    "optimalActual": 3400,
+    "optimalCushionCons": 0.049083297242673594,
+    "optimalCushionAggr": 0.09374909773350658,
+    "minShares": 100
+  },
+  {
+    "code": "688600",
+    "name": "皖仪科技",
+    "bond": "皖仪转债",
+    "board": "沪市科创",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 3.2,
+    "conv": 22.58,
+    "price": 26.14,
+    "perShare": 2.3703,
+    "reg": "—",
+    "pay": "—",
+    "fs": 1.74,
+    "ind": "质谱仪/工业检测",
+    "rating": "AA",
+    "lockShares": "61592039",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "lockList": [
+      {
+        "name": "臧牧",
+        "pct": 38.67
+      },
+      {
+        "name": "黄文平",
+        "pct": 6.04
+      },
+      {
+        "name": "合肥成泽企业管理合伙企业(有限合伙)",
+        "pct": 1
+      }
+    ],
+    "lockDate": "2026-06-30",
+    "rtPrice": 26.21,
+    "tableGain": 0.0026778882938026122,
+    "optimalShares": 900,
+    "optimalCost": 23589,
+    "optimalTheo": 2133.27,
+    "optimalActual": 2000,
+    "optimalCushionCons": 0.02543558438255119,
+    "optimalCushionAggr": 0.04858196617067278,
+    "minShares": 500
+  },
+  {
+    "code": "300813",
+    "name": "泰林生物",
+    "bond": "泰林转债",
+    "board": "深市创业",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 2.3,
+    "conv": 18.08,
+    "price": 20.55,
+    "perShare": 1.9008,
+    "reg": "—",
+    "pay": "—",
+    "fs": 0.98,
+    "ind": "制药装备",
+    "rating": "AA",
+    "lockShares": "69592700",
+    "progressDate": "2026-07-31",
+    "consPrice": 157.3,
+    "aggrPrice": 200,
+    "lockList": [
+      {
+        "name": "叶大林",
+        "pct": 37.73
+      },
+      {
+        "name": "倪卫菊",
+        "pct": 15.18
+      },
+      {
+        "name": "青岛高得投资合伙企业(有限合伙)",
+        "pct": 4.51
+      }
+    ],
+    "lockDate": "2026-06-30",
+    "rtPrice": 20.48,
+    "tableGain": -0.0034063260340632742,
+    "optimalShares": 1000,
+    "optimalCost": 20480,
+    "optimalTheo": 1900.8,
+    "optimalActual": 1900,
+    "optimalCushionCons": 0.053159179687500016,
+    "optimalCushionAggr": 0.0927734375,
+    "minShares": 100
+  },
+  {
+    "code": "301631",
+    "name": "壹连科技",
+    "bond": "壹连转债",
+    "board": "深市创业",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 11.8,
+    "conv": 58.54,
+    "price": 66.56,
+    "perShare": 9.2187,
+    "reg": "—",
+    "pay": "—",
+    "fs": 4.8,
+    "ind": "线束/新能源三电",
+    "rating": "AA",
+    "lockShares": "75932615",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 66.5,
+    "tableGain": -0.0009014423076923418,
+    "optimalShares": 500,
+    "optimalCost": 33250,
+    "optimalTheo": 4609.35,
+    "optimalActual": 4600,
+    "optimalCushionCons": 0.04150375939849624,
+    "optimalCushionAggr": 0.07927218045112784,
+    "minShares": 100
+  },
+  {
+    "code": "688510",
+    "name": "航亚科技",
+    "bond": "航亚转债",
+    "board": "沪市主板",
+    "stage": "上市委通过",
+    "grp": "lgreen",
+    "issue": 6,
+    "conv": 23.34,
+    "price": 23.34,
+    "perShare": 2.3041,
+    "reg": "—",
+    "pay": "—",
+    "fs": 4.89,
+    "ind": "航空发动机",
+    "rating": "-",
+    "lockShares": "48346639",
+    "progressDate": "2026-08-12",
+    "consPrice": 130,
+    "aggrPrice": 140,
+    "lockList": [
+      {
+        "name": "严奇",
+        "pct": 14.49
+      },
+      {
+        "name": "无锡华航科创投资中心(有限合伙)",
+        "pct": 2.28
+      },
+      {
+        "name": "江苏新苏投资发展集团有限公司",
+        "pct": 1.86
+      }
+    ],
+    "lockDate": "2026-03-31",
+    "rtPrice": 23.34,
+    "tableGain": 0,
+    "optimalShares": 900,
+    "optimalCost": 21006,
+    "optimalTheo": 2073.69,
+    "optimalActual": 2000,
+    "optimalCushionCons": 0.028563267637817767,
+    "optimalCushionAggr": 0.03808435685042369,
+    "minShares": 500
+  },
+  {
+    "code": "300739",
+    "name": "明阳电路",
+    "bond": "明阳转债",
+    "board": "深市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 12,
+    "conv": 23.42,
+    "price": 23.42,
+    "perShare": 3.2051,
+    "reg": "—",
+    "pay": "—",
+    "fs": 6.25,
+    "ind": "PCB电路板",
+    "rating": "-",
+    "lockShares": "179446840",
+    "progressDate": "2026-08-12",
+    "consPrice": 130,
+    "aggrPrice": 140,
+    "lockList": [
+      {
+        "name": "张佩珂",
+        "pct": 23.64
+      },
+      {
+        "name": "丰县润佳玺企业管理有限公司",
+        "pct": 20.29
+      },
+      {
+        "name": "丰县盛健企业管理中心(有限合伙)",
+        "pct": 1.75
+      },
+      {
+        "name": "赣州圣盈高创业投资有限公司",
+        "pct": 1.61
+      },
+      {
+        "name": "丰县利运得企业管理有限公司",
+        "pct": 0.75
+      }
+    ],
+    "lockDate": "2026-03-31",
+    "rtPrice": 23.42,
+    "tableGain": 0,
+    "optimalShares": 500,
+    "optimalCost": 11710,
+    "optimalTheo": 1602.55,
+    "optimalActual": 1600,
+    "optimalCushionCons": 0.04099060631938514,
+    "optimalCushionAggr": 0.05465414175918019,
+    "minShares": 100
+  },
+  {
+    "code": "301305",
+    "name": "朗坤科技",
+    "bond": "朗坤转债",
+    "board": "深市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 5.9,
+    "conv": 23.96,
+    "price": 23.96,
+    "perShare": 2.439,
+    "reg": "—",
+    "pay": "—",
+    "fs": 3.74,
+    "ind": "物联网/智慧城市",
+    "rating": "-",
+    "lockShares": "88373000",
+    "progressDate": "2026-08-11",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "lockList": [
+      {
+        "name": "深圳市建银财富投资控股有限公司",
+        "pct": 11.9
+      },
+      {
+        "name": "陈建湘",
+        "pct": 6.45
+      },
+      {
+        "name": "张丽音",
+        "pct": 6.32
+      },
+      {
+        "name": "深圳市朗坤投资合伙企业(有限合伙)",
+        "pct": 5.94
+      },
+      {
+        "name": "共青城朗坤投资管理合伙企业(有限合伙)",
+        "pct": 5.9
+      }
+    ],
+    "lockDate": "2026-06-30",
+    "rtPrice": 23.96,
+    "tableGain": 0,
+    "optimalShares": 3000,
+    "optimalCost": 71880,
+    "optimalTheo": 7317,
+    "optimalActual": 7300,
+    "optimalCushionCons": 0.03046744574290484,
+    "optimalCushionAggr": 0.05819282136894825,
+    "minShares": 100
+  },
+  {
+    "code": "603043",
+    "name": "广州酒家",
+    "bond": "广州酒家转债",
+    "board": "沪市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 10,
+    "conv": 13.64,
+    "price": 13.64,
+    "perShare": 1.7606,
+    "reg": "—",
+    "pay": "—",
+    "fs": 3.26,
+    "ind": "餐饮食品",
+    "rating": "-",
+    "lockShares": "382884544",
+    "progressDate": "2026-08-01",
+    "consPrice": 130,
+    "aggrPrice": 140,
+    "lockList": [
+      {
+        "name": "广州市城市建设投资集团有限公司",
+        "pct": 50.72
+      },
+      {
+        "name": "广州产业投资控股集团有限公司",
+        "pct": 9.87
+      },
+      {
+        "name": "广东省财政厅",
+        "pct": 6.73
+      }
+    ],
+    "lockDate": "2026-03-31",
+    "rtPrice": 13.64,
+    "tableGain": 0,
+    "optimalShares": 600,
+    "optimalCost": 8184,
+    "optimalTheo": 1056.36,
+    "optimalActual": 1000,
+    "optimalCushionCons": 0.036656891495601175,
+    "optimalCushionAggr": 0.04887585532746823,
+    "minShares": 600
+  },
+  {
+    "code": "603061",
+    "name": "金海通",
+    "bond": "金海转债",
+    "board": "沪市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 8.5,
+    "conv": 333.22,
+    "price": 333.22,
+    "perShare": 9.7087,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "半导体设备",
+    "rating": "-",
+    "lockShares": "",
+    "progressDate": "2026-07-31",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "rtPrice": 333.22,
+    "tableGain": 0,
+    "optimalShares": 1600,
+    "optimalCost": 533152,
+    "optimalTheo": 15533.92,
+    "optimalActual": 15000,
+    "optimalCushionCons": 0.008440369725706741,
+    "optimalCushionAggr": 0.016121106176099877,
+    "minShares": 200
+  },
+  {
+    "code": "603565",
+    "name": "中谷物流",
+    "bond": "中谷转债",
+    "board": "沪市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 27.3,
+    "conv": 10.48,
+    "price": 10.48,
+    "perShare": 1.2987,
+    "reg": "—",
+    "pay": "—",
+    "fs": 11.63,
+    "ind": "航运物流",
+    "rating": "-",
+    "lockShares": "1206682881",
+    "progressDate": "2026-07-03",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "lockList": [
+      {
+        "name": "中谷海运集团有限公司",
+        "pct": 57.46
+      }
+    ],
+    "lockDate": "2026-06-30",
+    "rtPrice": 10.48,
+    "tableGain": 0,
+    "optimalShares": 800,
+    "optimalCost": 8384,
+    "optimalTheo": 1038.96,
+    "optimalActual": 1000,
+    "optimalCushionCons": 0.0357824427480916,
+    "optimalCushionAggr": 0.06834446564885498,
+    "minShares": 800
+  },
+  {
+    "code": "300893",
+    "name": "松原安全",
+    "bond": "松原转债",
+    "board": "深市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 10.55,
+    "conv": 16.13,
+    "price": 16.13,
+    "perShare": 2.2272,
+    "reg": "—",
+    "pay": "—",
+    "fs": 2.91,
+    "ind": "汽车安全部件",
+    "rating": "-",
+    "lockShares": "343108452",
+    "progressDate": "2026-06-12",
+    "consPrice": 130,
+    "aggrPrice": 157.3,
+    "lockList": [
+      {
+        "name": "胡铲明",
+        "pct": 43.7
+      },
+      {
+        "name": "沈燕燕",
+        "pct": 18.73
+      },
+      {
+        "name": "南京明凯创业投资合伙企业(有限合伙)",
+        "pct": 6.57
+      },
+      {
+        "name": "科威特政府投资局",
+        "pct": 2.08
+      },
+      {
+        "name": "澳门金融管理局-自有资金",
+        "pct": 1.46
+      }
+    ],
+    "lockDate": "2026-06-30",
+    "rtPrice": 16.13,
+    "tableGain": 0,
+    "optimalShares": 4000,
+    "optimalCost": 64519.99999999999,
+    "optimalTheo": 8908.8,
+    "optimalActual": 8900,
+    "optimalCushionCons": 0.041382517048977066,
+    "optimalCushionAggr": 0.07904060756354621,
+    "minShares": 100
+  },
+  {
+    "code": "001221",
+    "name": "悍高集团",
+    "bond": "悍高转债",
+    "board": "深市主板",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
+    "issue": 12,
+    "conv": 39.25,
+    "price": 39.25,
+    "perShare": 2.994,
+    "reg": "—",
+    "pay": "—",
+    "fs": 1.66,
+    "ind": "家居五金",
+    "rating": "-",
+    "lockShares": "345221710",
+    "progressDate": "2026-06-08",
+    "consPrice": 130,
+    "aggrPrice": 140,
+    "lockList": [
+      {
+        "name": "广东悍高管理集团有限公司",
+        "pct": 64.63
+      },
+      {
+        "name": "欧锦锋",
+        "pct": 8.08
+      },
+      {
+        "name": "佛山市锦益管理咨询合伙企业(有限合伙)",
+        "pct": 4.2
+      },
+      {
+        "name": "广东悍高企业管理有限公司",
+        "pct": 2.1
+      },
+      {
+        "name": "广州二鸣创业投资合伙企业(有限合伙)",
+        "pct": 2.07
+      },
+      {
+        "name": "广东顺德科创智谷进取股权投资合伙企业(有限合伙)",
+        "pct": 2.06
+      },
+      {
+        "name": "佛山市锦悦管理咨询合伙企业(有限合伙)",
+        "pct": 1.78
+      },
+      {
+        "name": "广东顺德科创智造进取股权投资合伙企业(有限合伙)",
+        "pct": 1.38
+      }
+    ],
+    "lockDate": "2026-06-30",
+    "rtPrice": 39.25,
+    "tableGain": 0,
+    "optimalShares": 4000,
+    "optimalCost": 157000,
+    "optimalTheo": 11976,
+    "optimalActual": 11900,
+    "optimalCushionCons": 0.022738853503184712,
+    "optimalCushionAggr": 0.030318471337579617,
+    "minShares": 100
+  }
+];
+const BYCODE = {}; DATA.forEach(d => BYCODE[d.code] = d);
+// 真实数据：公告字段 + 实时股价（westock API 抓取）
+
+function compute(d){
+  const contain = d.perShare / d.price * 100;         // 含权量(百元)
+  const minShares = d.minShares || Math.ceil(100 / d.perShare / 100) * 100;
+  const rtPrice = d.rtPrice != null ? d.rtPrice : d.price;
+  const tableGain = (rtPrice - d.price) / d.price;
+  const cushConsNum = d.optimalCushionCons || 0;
+  const cushAggrNum = d.optimalCushionAggr || 0;
+  const starsCons = cushConsNum>=0.09?5:cushConsNum>=0.07?4:cushConsNum>=0.04?3:cushConsNum>=0.02?2:1;
+  const starsAggr = cushAggrNum>=0.09?5:cushAggrNum>=0.07?4:cushAggrNum>=0.04?3:cushAggrNum>=0.02?2:1;
+  return {contain, minShares, rtPrice, tableGain, cushConsNum, cushAggrNum, starsCons, starsAggr,
+          optimalShares:d.optimalShares||minShares, optimalCost:d.optimalCost||0,
+          optimalTheo:d.optimalTheo||0, optimalActual:d.optimalActual||0};
+}
+function fmt(n,dp){ return Number(n).toFixed(dp); }
+function rateClass(s){ return 'rate'+s; }
+
+// 进度阶段映射：1~6（与截图一致）
+const STAGE_MAP = {
+  '董事会预案':1,
+  '股东大会通过':2,
+  '交易所受理':3,'交易所已受理':3,
+  '上市委通过':4,'上市委通过（过会）':4,
+  '同意注册':5,'同意注册（已获批）':5,'同意注册·待发':5,
+  '公告':6,'已发行·缴款':6,'已申购·待上市':6
+};
+const STAGE_LABELS = {
+  1:'董事会预案',2:'股东大会通过',3:'交易所受理',
+  4:'上市委通过（过会）',5:'同意注册（已获批）',6:'公告'
+};
+function stageNum(s){ return STAGE_MAP[s] || s; }
+function stageText(n){ return STAGE_LABELS[n] || n; }
+
+
+function detailHtml(r){
+  const noSch = !(r.perShare > 0);
+  const rows = [
+    ['转债名称', r.bond],
+    ['行业概念', r.ind],
+    ['板块', r.board],
+    ['评级', r.rating],
+    ['进度', r.stage],
+    ['进度日期', r.progressDate || '—'],
+    ['发行规模(亿)', fmt(r.issue,2)],
+    ['可流通规模(亿)', (r.fs==null?'—':fmt(r.fs,2))],
+    // —— 可流通规模推导区块（来自 API 前十大股东自动倒推，数字可回溯）——
+    ...(function(){
+      if (r.fs==null || !r.lockList || !r.lockList.length){
+        return [['流通规模推导', r.lockDate ? ('锁定股东数据（'+r.lockDate+'）缺失，暂未倒推') : '方案未定 / 数据缺失，未倒推']];
+      }
+      const lockNames = r.lockList.map(x => x.name + (x.pct?('（'+x.pct+'%）'):'')).join('、');
+      const base = (r.lockShares||'').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      const lockPart = (+r.lockShares * (r.perShare||0) / 1e8);
+      const part = isFinite(lockPart) ? lockPart.toFixed(2) : '—';
+      const txt = '锁定(' + (r.lockDate||'—') + ')：' + lockNames
+        + ' ｜ 锁定持股 ' + (base||'—') + ' 股 × 每股配售 ' + fmt(r.perShare,1)
+        + ' ÷1e8 = 锁定 ' + part + ' 亿 ｜ 可流通 = 发行 ' + fmt(r.issue,2) + ' − 锁定 ' + part + ' = ' + fmt(r.fs,2) + ' 亿';
+      return [['流通规模推导', txt]];
+    })(),
+    ['转股价', fmt(r.conv,2)],
+    ['制表价', fmt(r.price,2)],
+    ['实时价', fmt(r.rtPrice,2)],
+    ['加表后涨幅', fmt(r.tableGain*100,2)+'%'],
+    ['每股配售', (r.perShare>0?fmt(r.perShare,1):'—')],
+    ['最小配债(股)', r.minShares],
+    ['最优股数', (noSch?'—':r.optimalShares)],
+    ['所需金额', (noSch?'—':fmt(r.optimalCost,0))],
+    ['理论配售额', (noSch?'—':fmt(r.optimalTheo,0))],
+    ['实际配售额', (noSch?'—':fmt(r.optimalActual,0))],
+    ['上市价保守', fmt(r.consPrice,1)],
+    ['安全垫保守', (noSch?'—':fmt(r.cushConsNum*100,2)+'%')],
+    ['上市价激进', fmt(r.aggrPrice,1)],
+    ['安全垫激进', (noSch?'—':fmt(r.cushAggrNum*100,2)+'%')],
+    ['含权量', (noSch?'—':fmt(r.contain,2))],
+    ['登记日', r.reg],
+    ['缴款日', r.pay]
+  ];
+  let h = '<div class="detail-grid">';
+  for (const kv of rows){
+    h += '<div class="detail-item"><span class="k">'+kv[0]+'</span><span class="v">'+kv[1]+'</span></div>';
+  }
+  return h + '</div>';
+}
+function toggleExpand(tr, r){
+  const nx = tr.nextElementSibling;
+  if (nx && nx.classList.contains('detail-row')){
+    nx.remove(); tr.classList.remove('row-expanded'); return;
+  }
+  const dr = document.createElement('tr');
+  dr.className = 'detail-row';
+  dr.innerHTML = '<td colspan="24">' + detailHtml(r) + '</td>';
+  tr.classList.add('row-expanded');
+  tr.parentNode.insertBefore(dr, tr.nextSibling);
+}
+
+function render(){
+  const fs = document.getElementById('filterStage').value;
+  const sort = document.getElementById('sortBy').value;
+  let rows = DATA.map(d=>({...d, ...compute(d)}));
+  rows = rows.filter(r => r.stage !== '已申购·待上市');
+  if(fs){
+    const n = parseInt(fs,10);
+    rows = rows.filter(r => stageNum(r.stage) === n);
+  }
+  rows.sort((a,b)=>{
+    if(sort==='cush') return b.cushConsNum-a.cushConsNum;
+    if(sort==='cushAggr') return b.cushAggrNum-a.cushAggrNum;
+    if(sort==='contain') return b.contain-a.contain;
+    if(sort==='float'){ const av=a.fs==null?1e9:a.fs, bv=b.fs==null?1e9:b.fs; return av-bv; }
+    if(sort==='gain') return b.tableGain-a.tableGain;
+    if(sort==='reg') return a.reg<b.reg?-1:1;
+    return 0;
+  });
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML='';
+  let order=0;
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    const noScheme = !(r.perShare > 0);   // 方案未定（无每股配售）→ 派生列用横杠，不误导
+        tr.innerHTML =
+      '<td class="ind-col">'+r.ind.replace(/\//g, '/<wbr>')+'</td>'+
+      '<td class="name-cell click" data-code="'+r.code+'">'+r.name+'</td>'+
+      '<td class="click" data-code="'+r.code+'">'+r.code+'</td>'+
+      '<td>'+r.board+'</td>'+
+      '<td class="stage" title="'+r.stage+'">'+stageNum(r.stage)+'</td>'+
+      '<td class="num">'+fmt(r.issue,2)+'</td>'+
+      '<td class="num">'+(r.fs==null?'—':fmt(r.fs,2))+'</td>'+
+      '<td class="num">'+fmt(r.conv,2)+'</td>'+
+      '<td class="num">'+fmt(r.price,2)+'</td>'+
+      '<td class="num">'+fmt(r.rtPrice,2)+'</td>'+
+      '<td class="num '+(r.tableGain>=0?'rate4':'rate1')+'">'+fmt(r.tableGain*100,2)+'%</td>'+
+      '<td class="num">'+(noScheme?'—':fmt(r.perShare,1))+'</td>'+
+      '<td class="num" style="background:var(--amber-tint);font-weight:800;">'+(noScheme?'—':r.optimalShares)+'</td>'+
+      '<td class="num">'+(noScheme?'—':fmt(r.optimalTheo,0))+'</td>'+
+      '<td class="num">'+(noScheme?'—':fmt(r.optimalActual,0))+'</td>'+
+      '<td class="num">'+(noScheme?'—':fmt(r.consPrice,1))+'</td>'+
+      '<td class="cush">'+(noScheme?'—':(fmt(r.cushConsNum*100,2)+'% <span class="star-mark">'+'★'.repeat(r.starsCons)+'</span>'))+'</td>'+
+      '<td class="num">'+(noScheme?'—':fmt(r.aggrPrice,1))+'</td>'+
+      '<td class="cush">'+(noScheme?'—':(fmt(r.cushAggrNum*100,2)+'% <span class="star-mark">'+'★'.repeat(r.starsAggr)+'</span>'))+'</td>'+
+      '<td class="num">'+(noScheme?'—':fmt(r.optimalCost,0))+'</td>'+
+      '<td class="num">'+(noScheme?'—':fmt(r.contain,2))+'</td>'+
+      '<td>'+r.reg+'</td>'+
+      '<td>'+(r.progressDate||'—')+'</td>'+
+      '<td>'+(++order)+'</td>';
+    tbody.appendChild(tr);
+    tr.addEventListener('click', function(e){ if(e.target.classList.contains('click')) return; toggleExpand(tr, r); });
+  });
+
+  // 十字高亮
+  const table = document.getElementById('board');
+  table.querySelectorAll('tbody tr').forEach(tr=>{
+    tr.addEventListener('mouseover', e=>{
+      const cell = e.target.closest('td'); if(!cell) return;
+      const idx = cell.cellIndex;
+      tbody.querySelectorAll('td').forEach(c=>c.classList.remove('hl-row','hl-col'));
+      tr.querySelectorAll('td').forEach(c=>c.classList.add('hl-row'));
+      table.querySelectorAll('tbody tr').forEach(row=>{ const c=row.cells[idx]; if(c) c.classList.add('hl-col'); });
+    });
+    tr.addEventListener('mouseleave', ()=>{
+      tbody.querySelectorAll('td').forEach(c=>c.classList.remove('hl-row','hl-col'));
+    });
+  });
+
+  // 按潜伏配债 skill 模板即时生成单页并打开新标签
+  const BOARD_TITLE_MAP = {'上海主板':'沪市主板','深圳主板':'深市主板','创业板':'深市创业板','科创板':'沪市科创板'};
+  function openSingle(d){
+    let h = TEMPLATE;
+    // 标题明确沪市/深市 + 板块
+    h = h.replace(/{{BOARD_TITLE}}/g, BOARD_TITLE_MAP[d.board] || d.board);
+    h = h.replace(/{{stockName}}/g, d.name || '');
+    // 参数填充：上市价默认采用激进价
+    const map = {code:d.code, name:d.name, bondName:d.bond, price:d.price, perShare:d.perShare,
+      regDate:d.reg, payDate:d.pay, issueSize:d.issue, rating:d.rating, convPrice:d.conv,
+      listingPrice:d.aggrPrice || '157.3', lockShares:d.lockShares || '', lockRatio:'100',
+      floatScale:(d.fs === null || d.fs === undefined || d.fs === '') ? '' : d.fs};
+    for (const id in map){
+      const re = new RegExp('<input id="'+id+'"[^>]*?value="[^"]*"', 'g');
+      h = h.replace(re, '<input id="'+id+'" value="'+map[id]+'"');
+    }
+    h = h.replace(/id="tableDateValue">—</, 'id="tableDateValue">'+GEN_DATE+'<');
+
+    // 预计算全档位结果并静态写入 HTML：打开即见，不依赖浏览器 JS 执行时机
+    const TIERS = [100,200,300,400,500,600,700,800,900,1000,2000,3000,4000];
+    function fmt(n, dp){
+      if (!isFinite(n)) return '—';
+      return Number(n).toLocaleString('zh-CN', { minimumFractionDigits:dp, maximumFractionDigits:dp });
+    }
+    function ratingFor(c){
+      if (c >= 9) return { stars:'★★★★★', label:'极致优质', cls:'r5' };
+      if (c >= 7) return { stars:'★★★★',   label:'优质稳健', cls:'r4' };
+      if (c >= 4) return { stars:'★★★',    label:'中性博弈', cls:'r3' };
+      if (c >= 2) return { stars:'★★',     label:'风险偏弱', cls:'r2' };
+      return        { stars:'★',       label:'极致垃圾', cls:'r1' };
+    }
+    const P = parseFloat(d.price) || 0;
+    const A = parseFloat(d.perShare) || 0;
+    const noScheme = !(A > 0);   // 方案未定（无每股配售）→ 获配/安全垫用横杠，不误导
+    const L = parseFloat(d.aggrPrice) || 157.3;
+    const profitPerBond = L - 100;
+    const theoCushion = (P > 0 && A > 0) ? (A * profitPerBond) / P : null;
+    const head = noScheme ? null : ratingFor(theoCushion);
+    h = h.replace(/id="profitPerBond">—</, 'id="profitPerBond">'+(noScheme?'—':fmt(profitPerBond,1)+' 元')+'<');
+    h = h.replace(/id="theoCushion">—</, 'id="theoCushion">'+(noScheme?'—':fmt(theoCushion,2)+'%')+'<');
+    h = h.replace(/id="headlineStars">—</, 'id="headlineStars">'+(noScheme?'—':head.stars)+'<');
+    h = h.replace(/id="headlineLabel">—</, 'id="headlineLabel">'+(noScheme?'方案未定':head.label)+'<');
+    h = h.replace(/id="headlineCushion">—</, 'id="headlineCushion">'+(noScheme?'—':fmt(theoCushion,2)+'%')+'<');
+    let rowsHtml = '';
+    TIERS.forEach(function(N){
+      const cost = N * P;
+      const theo = noScheme ? null : N * A;
+      const actual = noScheme ? null : ((String(d.code)[0] === '6') ? Math.floor(theo / 1000) * 1000 : Math.floor(theo / 100) * 100); // 沪市按手(1000)取整，深市按张(100)取整
+      const profit = noScheme ? null : (actual / 100) * profitPerBond;
+      const cushion = (noScheme || cost <= 0) ? null : profit / cost * 100;
+      const r = cushion == null ? null : ratingFor(cushion);
+      rowsHtml +=
+        '<tr>' +
+        '<td class="tier">' + N + '</td>' +
+        '<td class="num">' + fmt(cost, 0) + '</td>' +
+        '<td class="num">' + (noScheme ? '—' : fmt(theo, 2)) + '</td>' +
+        '<td class="num">' + (noScheme ? '—' : fmt(actual, 0)) + '</td>' +
+        '<td class="num">' + (noScheme ? '—' : fmt(profit, 2)) + '</td>' +
+        '<td class="cushion">' + (noScheme ? '—' : fmt(cushion, 2) + '%') + '</td>' +
+        '<td class="stars ' + (r ? r.cls : '') + '">' + (noScheme ? '—' : r.stars) + '</td>' +
+        '<td class="' + (r ? r.cls : '') + '">' + (noScheme ? '—' : r.label) + '</td>' +
+        '</tr>';
+    });
+    h = h.replace(
+      /<tbody id="tierBody" class="num-tabular">[\s\S]*?<\/tbody>/,
+      '<tbody id="tierBody" class="num-tabular">' + rowsHtml + '</tbody>'
+    );
+
+    window.location.href = './bonds/' + String(d.name).replace(/[\/\\?:*<>|"\s]/g,'') + '.html';
+  }
+
+  // 点击代码联动生成单页（正式：按潜伏配债 skill 模板即时生成并打开新标签）
+  tbody.querySelectorAll('.click').forEach(c=>{
+    c.addEventListener('click', function(){
+      const code = c.getAttribute('data-code');
+      const d = BYCODE[code];
+      if (d) openSingle(d);
+    });
+  });
+}
+
+document.getElementById('genDate').textContent = '制表日期 '+GEN_DATE;
+const _pd = document.getElementById('priceDate'); if(_pd) _pd.textContent = '实时价 '+PRICE_DATE;
+document.getElementById('filterStage').addEventListener('change', render);
+document.getElementById('sortBy').addEventListener('change', render);
+render();
+
+const avg = (DATA.reduce((s,d)=>s+(d.optimalCushionCons||0),0)/DATA.length*100).toFixed(2);
+document.getElementById('foot').innerHTML =
+  '共 '+DATA.length+' 只标的 ｜ 平均最优档保守安全垫 '+avg+'% ｜ 实时价截至 '+PRICE_DATE+'（腾讯自选股）｜ 上市价按保守/激进模型价估算，可在单页测算中自定义 ｜ 安全垫/含权量为理论值，小仓位因碎面损耗实际更低 ｜ 可流通规模=发行规模−锁定股东持股×每股配售÷1e8（持股≥5%/实控人/一致行动人 6 个月锁定）'
+</script>
+</body>
+</html>

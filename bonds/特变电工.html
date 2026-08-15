@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可转债潜伏配债量化测算</title>
+<link rel="icon" type="image/x-icon" href="https://www.pythonanywhere.com/static/anywhere/images/favicon.ico">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; }
+  :root {
+    /* 与汇总看板统一的设计令牌 */
+    --amber:#e0a82e; --amber-deep:#8a6310; --amber-tint:#fbf6ea; --amber-ink:#3d2f00; --amber-line:#d8b25a;
+    --ink:#1f2430; --muted:#737a89; --line:#e9ebef; --bg:#f5f6f8; --surface:#ffffff;
+    --num-bg:#f7f9fb; --num-ink:#2a3142;
+    --cush:#1f7a5c; --cush-bg:#eef7f2;
+    --up:#c0392b;
+    --radius:16px;
+    --shadow:0 24px 48px -20px rgba(20,28,46,.10);
+  }
+  body {
+    font-family:"Manrope","PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,-apple-system,"Segoe UI",sans-serif;
+    margin: 0; padding: 26px 20px 56px; background: var(--bg); color: var(--ink);
+    -webkit-font-smoothing: antialiased; text-rendering:optimizeLegibility;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  .num-tabular { font-variant-numeric: tabular-nums; font-family:"JetBrains Mono","SF Mono",ui-monospace,monospace; }
+
+  /* 与汇总看板一致的标题：左对齐 + 琥珀左边框（无黄色色块、无居中套路） */
+  .page-head { margin-bottom: 22px; }
+  .page-head h1 {
+    font-size: 36px; font-weight: 800; letter-spacing: -.02em; color: var(--ink);
+    margin: 0; line-height: 1.12; padding-left: 18px; border-left: 6px solid var(--amber);
+  }
+  .page-head .eyebrow {
+    font-size: 11.5px; letter-spacing: .2em; color: var(--amber-deep); font-weight: 700;
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  .page-head .sub { font-size: 13px; color: var(--muted); margin: 10px 0 0 18px; line-height: 1.7; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 18px 22px 22px; margin-bottom: 20px; box-shadow: var(--shadow);
+  }
+  /* 小节标题：与 h1 同构的琥珀左边框（去色块化，弱化 AI 套路） */
+  .section-h {
+    display: block; font-size: 15px; font-weight: 800; color: var(--ink);
+    padding: 2px 0 2px 11px; border-left: 4px solid var(--amber); margin: 2px 0 14px;
+  }
+  .hint { font-size: 12.5px; color: var(--muted); margin: -8px 0 14px; line-height: 1.65; }
+  .hint b { color: var(--ink); }
+
+  /* 参数录入网格：标签在上、输入在下 */
+  .form-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px 18px;
+  }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+  .field .u { color: #9ca3af; font-size: 11px; margin-left: 3px; }
+  .field input {
+    width: 100%; padding: 9px 11px; border: 1px solid #d1d5db; border-radius: 9px;
+    font-size: 14px; font-family: inherit; background: #fffef8; color: var(--ink);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .field input:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(224,168,46,.16); }
+  .field input[readonly] { background: #f3f4f6; color: var(--muted); cursor: default; }
+
+  /* 核心参数条 */
+  .core-params { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }
+  .cp {
+    background: var(--amber-tint); border: 1px solid var(--amber-line); border-radius: 11px;
+    padding: 11px 16px; transition: transform .12s ease;
+  }
+  .cp:hover { transform: translateY(-1px); }
+  .cp .k { font-size: 12px; color: var(--amber-deep); }
+  .cp .v { font-size: 19px; font-weight: 800; color: var(--amber-deep); margin-top: 2px; }
+
+  /* 流通规模提醒横幅（去渐变，纯色块 + 顶部琥珀强调线） */
+  .float-warning {
+    background: var(--amber-tint); border: 1px solid var(--amber-line); border-top: 3px solid var(--amber);
+    border-radius: 0 0 var(--radius) var(--radius); padding: 14px 20px; margin: 0 0 18px 0; box-shadow: var(--shadow);
+  }
+  .float-warning .tag {
+    display: inline-block; background: var(--amber); color: var(--amber-ink);
+    font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 4px; margin-right: 8px;
+  }
+  .float-warning p { margin: 4px 0 0; font-size: 13px; color: var(--amber-deep); line-height: 1.7; }
+  .float-warning b { color: var(--amber-ink); }
+
+  .btn-print {
+    margin-top: 16px; padding: 9px 20px; background: var(--amber); color: var(--amber-ink);
+    border: 1px solid var(--amber-line); border-radius: 9px; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: transform .1s ease, background .15s;
+  }
+  .btn-print:hover { background: #d29a24; }
+  .btn-print:active { transform: translateY(1px) scale(.985); }
+
+  /* 表格：与汇总看板一致 —— 固定布局 + 琥珀表头吸顶 + 数字等宽 */
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 13px; margin-top: 2px; }
+  thead th {
+    background: var(--amber); color: var(--amber-ink); padding: 11px 8px; text-align: center;
+    border: 1px solid var(--amber-line); font-weight: 700; white-space: normal; line-height: 1.3;
+    position: sticky; top: 0; z-index: 3; font-size: 13px; box-shadow: 0 3px 6px -2px rgba(0,0,0,.18);
+  }
+  tbody td {
+    padding: 9px 8px; text-align: center; border: 1px solid var(--line);
+    font-family:"JetBrains Mono","SF Mono",ui-monospace,monospace; font-variant-numeric: tabular-nums;
+    transition: background .12s ease; font-size: 13px;
+  }
+  .num { background: var(--num-bg); color: var(--num-ink); }
+  .cushion { background: var(--cush-bg); color: var(--cush); font-weight: 700; }
+  .stars { font-size: 12px; white-space: nowrap; }
+  .tier { background: #f7f9fb; font-weight: 700; color: #37474f; }
+  /* 评级色与汇总看板对齐 */
+  .r5 { color: #8a6310; font-weight: 800; }
+  .r4 { color: var(--up); font-weight: 800; }
+  .r3 { color: #5b8c5a; font-weight: 800; }
+  .r2 { color: #c2772e; font-weight: 800; }
+  .r1 { color: #9aa0aa; font-weight: 800; }
+
+  /* 十字高亮：与汇总看板一致（琥珀低饱和底 + 琥珀描边） */
+  tbody tr:hover td {
+    background: rgba(224,168,46,.16) !important;
+    box-shadow: inset 0 0 0 2px var(--amber);
+  }
+  table:has(tbody td:nth-child(1):hover) tbody td:nth-child(1),
+  table:has(tbody td:nth-child(1):hover) thead th:nth-child(1),
+  table:has(tbody td:nth-child(2):hover) tbody td:nth-child(2),
+  table:has(tbody td:nth-child(2):hover) thead th:nth-child(2),
+  table:has(tbody td:nth-child(3):hover) tbody td:nth-child(3),
+  table:has(tbody td:nth-child(3):hover) thead th:nth-child(3),
+  table:has(tbody td:nth-child(4):hover) tbody td:nth-child(4),
+  table:has(tbody td:nth-child(4):hover) thead th:nth-child(4),
+  table:has(tbody td:nth-child(5):hover) tbody td:nth-child(5),
+  table:has(tbody td:nth-child(5):hover) thead th:nth-child(5),
+  table:has(tbody td:nth-child(6):hover) tbody td:nth-child(6),
+  table:has(tbody td:nth-child(6):hover) thead th:nth-child(6),
+  table:has(tbody td:nth-child(7):hover) tbody td:nth-child(7),
+  table:has(tbody td:nth-child(7):hover) thead th:nth-child(7),
+  table:has(tbody td:nth-child(8):hover) tbody td:nth-child(8),
+  table:has(tbody td:nth-child(8):hover) thead th:nth-child(8) {
+    background: rgba(224,168,46,.16) !important;
+    box-shadow: inset 0 0 0 2px var(--amber);
+  }
+  table:has(tbody td:nth-child(1):hover) tbody tr:hover td:nth-child(1),
+  table:has(tbody td:nth-child(2):hover) tbody tr:hover td:nth-child(2),
+  table:has(tbody td:nth-child(3):hover) tbody tr:hover td:nth-child(3),
+  table:has(tbody td:nth-child(4):hover) tbody tr:hover td:nth-child(4),
+  table:has(tbody td:nth-child(5):hover) tbody tr:hover td:nth-child(5),
+  table:has(tbody td:nth-child(6):hover) tbody tr:hover td:nth-child(6),
+  table:has(tbody td:nth-child(7):hover) tbody tr:hover td:nth-child(7),
+  table:has(tbody td:nth-child(8):hover) tbody tr:hover td:nth-child(8) {
+    background: rgba(224,168,46,.26) !important;
+    box-shadow: inset 0 0 0 3px var(--amber);
+  }
+
+  /* 评级结论 */
+  .verdict { background: var(--amber-tint); border: 1px solid var(--amber-line); border-radius: 12px; padding: 18px 22px; }
+  .verdict .big-stars { font-size: 30px; color: var(--amber-deep); letter-spacing: 4px; }
+  .verdict .label { font-size: 20px; font-weight: 800; margin-left: 10px; }
+  .verdict .line { font-size: 14px; margin-top: 10px; color: var(--muted); line-height: 1.7; }
+  .verdict .line b { color: var(--ink); }
+
+  /* 注释说明 */
+  .notes h4 { margin: 18px 0 7px; font-size: 14px; font-weight: 800; color: var(--ink); padding-left: 11px; border-left: 4px solid var(--amber); }
+  .notes ul { margin: 4px 0 4px; padding-left: 20px; }
+  .notes li { font-size: 13px; line-height: 1.75; color: #4b5563; margin-bottom: 4px; }
+  .bench { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; margin-top: 8px; }
+  .bench th { background: var(--amber); color: var(--amber-ink); padding: 8px 10px; border: 1px solid var(--amber-line); text-align: left; font-weight: 700; }
+  .bench td { padding: 8px 10px; border: 1px solid var(--line); }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .card { border: 1px solid var(--line); border-radius: 0; box-shadow: none; }
+    .btn-print { display: none; }
+  }
+  @media (max-width:600px){
+    .page-head h1 { font-size: 26px; }
+    .table-scroll table { min-width: 760px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="page-head">
+    <div class="eyebrow">可转债潜伏配债 · 量化测算</div>
+    <h1>沪市主板抢权配售 · 特变电工</h1>
+    <div class="sub">参数可自定义 · 全档位自动演算 · 风险评级对标</div>
+  </div>
+
+  <div class="float-warning">
+    <div><span class="tag">流通规模提醒</span><b id="floatScaleTag">—</b></div>
+    <p>可流通规模越小，上市越易被资金集中炒作推高、上市溢价空间越大；但对应波动与回撤风险也同步放大。小盘债需重点盯住炒作情绪与兑现时点，避免在情绪高点接盘。</p>
+  </div>
+
+  <div class="card">
+    <div class="section-h">一、参数录入</div>
+    <div class="hint">修改任意参数，下方测算结果与风险评级将实时联动刷新。带（可自定义）的为预期上市价，其余为标的公告数据。</div>
+    <div class="form-grid">
+      <div class="field"><label>股票代码</label><input id="code" value="600089"></div>
+      <div class="field"><label>股票名称</label><input id="name" value="特变电工"></div>
+      <div class="field"><label>对应转债名称</label><input id="bondName" value="特变电工转债"></div>
+      <div class="field"><label>标的当日收盘价（确权基准价）</label><input id="price" value="20.87"><span class="u">元</span></div>
+      <div class="field"><label>官方每股配售金额（4位小数）</label><input id="perShare" value="0"><span class="u">元/股</span></div>
+      <div class="field"><label>股权登记日</label><input id="regDate" value="—"></div>
+      <div class="field"><label>配债缴款日</label><input id="payDate" value="—"></div>
+      <div class="field"><label>转债发行总规模</label><input id="issueSize" value="80"><span class="u">亿元</span></div>
+      <div class="field"><label>转债信用评级</label><input id="rating" value="-"></div>
+      <div class="field"><label>正股最新转股价</label><input id="convPrice" value="20.74"><span class="u">元</span></div>
+      <div class="field"><label>转债预期上市价格（可自定义）</label><input id="listingPrice" value="157.3"><span class="u">元（默认激进价，可手动改为保守价）</span></div>
+      <div class="field" title="控股股东、实控人及其一致行动人（即使单个<5%只要属一致行动人也计入）合计持股数"><label>锁定持股数</label><input id="lockShares" value=""><span class="u">股</span></div>
+      <div class="field"><label>锁定股东配售参与比例</label><input id="lockRatio" value="100"><span class="u">%（默认100，放弃则调低）</span></div>
+      <div class="field"><label>转债可流通规模（自动倒推·不可改）</label><input id="floatScale" value=""><span class="u">亿元</span></div>
+    </div>
+    <div class="core-params">
+      <div class="cp"><div class="k">单张转债盈利 = 上市价 − 100</div><div class="v num-tabular" id="profitPerBond">—</div></div>
+      <div class="cp"><div class="k">理论安全垫（满配·忽略碎面损耗）</div><div class="v num-tabular" id="theoCushion">—</div></div>
+      <div class="cp"><div class="k">制表日期</div><div class="v num-tabular" id="tableDateValue">2026-08-15</div></div>
+    </div>
+    <button class="btn-print" onclick="window.print()">打印 / 导出 PDF</button>
+  </div>
+
+  <div class="card">
+    <div class="section-h">二、全档位仓位测算</div>
+    <div id="calcError" style="display:none; color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:10px 12px; margin-bottom:10px; font-size:13px;"></div>
+    <div class="table-scroll">
+      <table>
+        <colgroup><col style="width:9%"><col style="width:14%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:11%"><col style="width:15%"><col style="width:15%"></colgroup>
+        <thead>
+          <tr>
+            <th>股数档位</th>
+            <th>所需资金(正股)</th>
+            <th>理论获配</th>
+            <th>实际获配</th>
+            <th>预期盈利</th>
+            <th>安全垫</th>
+            <th>星级评级</th>
+            <th>该档评级</th>
+          </tr>
+        </thead>
+        <tbody id="tierBody" class="num-tabular"><tr><td class="tier">100</td><td class="num">2,087</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">200</td><td class="num">4,174</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">300</td><td class="num">6,261</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">400</td><td class="num">8,348</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">500</td><td class="num">10,435</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">600</td><td class="num">12,522</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">700</td><td class="num">14,609</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">800</td><td class="num">16,696</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">900</td><td class="num">18,783</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">1000</td><td class="num">20,870</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">2000</td><td class="num">41,740</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">3000</td><td class="num">62,610</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">4000</td><td class="num">83,480</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr></tbody>
+      </table>
+    </div>
+    <div class="hint" style="margin-top:12px;">
+      说明：深市配债按张计算，理论获配金额<b>向下取整百元</b>，舍去不足100元的零碎面值（不四舍五入、不进位）。
+      持仓体量越小，碎面损耗越高、实际安全垫越低。上表「实际获配」已套用该铁规。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-h">三、风险评级结论</div>
+    <div class="verdict">
+      <div><span class="big-stars" id="headlineStars">—</span><span class="label" id="headlineLabel">方案未定</span></div>
+      <div class="line">基准安全垫（满配理论）：<b id="headlineCushion">—</b> ｜ 评级阈值：≥9%★★★★★ ｜ 7–9%★★★★ ｜ 4–7%★★★ ｜ 2–4%★★ ｜ &lt;2%★</div>
+      <div class="line">注：基准安全垫按「忽略碎面损耗」测算，代表大资金满配下的理想安全垫；小仓位实际安全垫见上表各档，会低于基准值。</div>
+    </div>
+  </div>
+
+  <div class="card notes">
+    <div class="section-h">四、注释说明</div>
+
+    <h4>核心策略模型</h4>
+    <ul>
+      <li>登记日潜伏买入正股 → 收盘确权获取转债配售权 → 缴款日清仓正股 → 持有转债上市套利。</li>
+    </ul>
+
+    <h4>标准交易执行策略</h4>
+    <ul>
+      <li><b>低风险潜伏打法（首选推荐）</b>：登记日前 3–5 天分批建底仓，不一次性满仓；股价上涨则减仓兑现浮盈、保留核心底仓锁定配债权、被动增厚安全垫；股价下跌则分批加仓摊薄成本、主动增厚安全垫；股权登记日收盘锁定最终持仓确保确权；配债缴款日开盘无条件清仓全部正股，仅保留转债等待上市套利。</li>
+      <li><b>短线尾盘突击打法（高风险）</b>：登记日尾盘 14:40–14:55 集中建仓，最小化资金占用时间；优势是资金闲置成本极低，劣势是无择时、摊成本空间，尾盘抢筹易抬高成本、压缩安全垫。</li>
+    </ul>
+
+    <h4>核心风控铁律（永久通用）</h4>
+    <ul>
+      <li>所有盈利、安全垫测算基于「自定义转债上市价格」，行情走弱/走强需手动调整参数重新演算风险。</li>
+      <li>深市零碎配债面值全部舍去，持仓体量越小，配售资金损耗越高。</li>
+      <li>抢权套利最大风险：缴款日套利资金集体兑现砸盘，单日踩踏下跌击穿安全垫。</li>
+      <li>配债为股东权利，确权后需<b>手动缴款</b>，未缴款自动放弃配售额度。</li>
+      <li>本策略为纯短线套利，正股不做中长期持有，杜绝趋势博弈。</li>
+    </ul>
+
+    <h4>五星风险评级体系（永久复用）</h4>
+    <ul>
+      <li>★★★★★ 极致优质：安全垫 ≥9%，小盘转债、潜伏窗口期充足、容错极高。</li>
+      <li>★★★★ 优质稳健：安全垫 7%–9%，性价比优异，适合主力重仓参与。</li>
+      <li>★★★ 中性博弈：安全垫 4%–7%，容错一般，仅适合小仓位试错。</li>
+      <li>★★ 风险偏弱：安全垫 2%–4%，回撤风险高，不建议常规参与。</li>
+      <li>★ 极致垃圾：安全垫 &lt;2%，极易总账亏损，直接放弃标的。</li>
+    </ul>
+
+    <h4>可流通规模倒推逻辑（永久复用 · 禁止瞎估）</h4>
+    <ul>
+      <li>规则依据：2023 年《证券发行与承销管理办法》修订后，原股东优先配售的可转债中，<b>持股 ≥5% 的股东、实际控制人及其一致行动人、董监高</b>参与配售的部分，自发行结束之日起 <b>6 个月内不得转让（锁定）</b>；其余持股 &lt;5% 且非一致行动人的原股东配售部分，以及网上/网下中签部分，上市首日即可全流通。</li>
+      <li>倒推公式：<b>锁定部分（亿元）= 锁定股东合计持股数 × 每股配售金额 × 大股东配售参与比例 ÷ 1 亿</b>；<b>可流通规模 = 发行总规模 − 锁定部分</b>。</li>
+      <li>锁定股东范围：控股股东 + 实际控制人 + 其一致行动人（即使单个持股 &lt;5%，只要属一致行动人也计入）。大股东若<b>放弃配售</b>，相应份额转网上发行、变为全流通，流通规模会显著变大——因此「大股东配不配债」是流通盘的核心变量。</li>
+      <li>本页「转债可流通规模」由上述公式<b>自动倒推、不接受手填</b>，确保每页数字都可回溯到公告披露的大股东持股与配售参与比例，杜绝主观乱估。</li>
+    </ul>
+
+    <h4>经典标的对标案例（固化参考 · 默认上市价 157.3）</h4>
+    <table class="bench">
+      <thead><tr><th>标的</th><th>基准安全垫（默认157.3）</th><th>风险评级</th><th>核心优劣总结</th></tr></thead>
+      <tbody>
+        <tr><td>玉禾田（玉禾转债）</td><td>10%+</td><td>★★★★★</td><td>厚安全垫（10%+）、容错极高；但流通盘约 9.7 亿非迷你债，炒作弹性有限</td></tr>
+        <tr><td>丰茂股份（丰茂转债）</td><td>9%+</td><td>★★★★★</td><td>迷你债（流通约 1.5 亿）易爆炒、安全垫充足，当期最优套利标的</td></tr>
+        <tr><td>震裕科技（震裕转02）</td><td>4.2%左右</td><td>★★★</td><td>安全垫极薄、无潜伏窗口期、波动大，仅适合博弈型小仓位</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  // —— 固定测算仓位档位（统一标准，无需自定义）——
+  const TIERS = [100,200,300,400,500,600,700,800,900,1000,2000,3000,4000];
+  const DEFAULT_LISTING = 157.3;
+
+  function ratingFor(c){
+    if (c >= 9) return { stars:'★★★★★', label:'极致优质', cls:'r5' };
+    if (c >= 7) return { stars:'★★★★',   label:'优质稳健', cls:'r4' };
+    if (c >= 4) return { stars:'★★★',    label:'中性博弈', cls:'r3' };
+    if (c >= 2) return { stars:'★★',     label:'风险偏弱', cls:'r2' };
+    return        { stars:'★',       label:'极致垃圾', cls:'r1' };
+  }
+  function fmt(n, d){
+    if (!isFinite(n)) return '—';
+    return Number(n).toLocaleString('zh-CN', { minimumFractionDigits:d, maximumFractionDigits:d });
+  }
+
+  function showError(msg){
+    const err = document.getElementById('calcError');
+    if (err) { err.textContent = '计算异常：' + msg; err.style.display = 'block'; }
+  }
+
+  // 核心公式（参数联动）
+  // 所需资金 = 持股数量 × 收盘价
+  // 理论获配 = 持股数量 × 每股配售金额
+  // 实际获配 = 沪市(60/688) FLOOR(理论获配 ÷ 1000) × 1000；深市(00/30) FLOOR(理论获配 ÷ 100) × 100
+  // 预期盈利 = (实际获配 ÷ 100) × (上市价 − 100)
+  // 安全垫   = 预期盈利 ÷ 所需资金 × 100%   （保留2位小数）
+  // 需要金额 = 正股所需资金 + 实际获配转债面值
+  function recompute(){
+    try {
+    const P  = parseFloat(document.getElementById('price').value) || 0;
+    const A  = parseFloat(document.getElementById('perShare').value) || 0;
+    const noScheme = !(A > 0);   // 方案未定（无每股配售）→ 获配/安全垫用横杠，不误导
+    const L  = parseFloat(document.getElementById('listingPrice').value) || DEFAULT_LISTING;
+    const profitPerBond = L - 100;
+
+    document.getElementById('profitPerBond').textContent = noScheme ? '—' : (fmt(profitPerBond, 1) + ' 元');
+
+    const tbody = document.getElementById('tierBody');
+    tbody.innerHTML = '';
+    TIERS.forEach(function(N){
+      const cost   = N * P;                       // 所需资金(正股)
+      const theo   = noScheme ? null : N * A;       // 理论获配
+      const codeEl = document.getElementById('code');
+      const isSH   = codeEl && String(codeEl.value)[0] === '6'; // 沪市(60/688)按手(1000)取整
+      const actual = noScheme ? null : (isSH ? Math.floor(theo / 1000) * 1000 : Math.floor(theo / 100) * 100); // 实际获配：沪市floor1000 / 深市floor100
+      const profit = noScheme ? null : (actual / 100) * profitPerBond; // 预期盈利
+      const cushion = (noScheme || cost <= 0) ? null : profit / cost * 100; // 安全垫%
+      const r = cushion == null ? null : ratingFor(cushion);
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td class="tier">' + N + '</td>' +
+        '<td class="num">' + fmt(cost, 0) + '</td>' +
+        '<td class="num">' + (noScheme ? '—' : fmt(theo, 2)) + '</td>' +
+        '<td class="num">' + (noScheme ? '—' : fmt(actual, 0)) + '</td>' +
+        '<td class="num">' + (noScheme ? '—' : fmt(profit, 2)) + '</td>' +
+        '<td class="cushion">' + (noScheme ? '—' : fmt(cushion, 2) + '%') + '</td>' +
+        '<td class="stars ' + (r ? r.cls : '') + '">' + (noScheme ? '—' : r.stars) + '</td>' +
+        '<td class="' + (r ? r.cls : '') + '">' + (noScheme ? '—' : r.label) + '</td>';
+      tbody.appendChild(tr);
+    });
+
+    // 理论安全垫（满配·忽略碎面损耗）= 每股配售盈利 ÷ 每股股价，已是百分比
+    // 每股配售盈利 = (A/100) × 上市盈利；÷ 股价 P；×100%  ⇒  A × 上市盈利 ÷ P
+    const theoCushion = (P > 0 && A > 0) ? (A * profitPerBond) / P : null;
+    const head = noScheme ? null : ratingFor(theoCushion);
+    document.getElementById('theoCushion').textContent = noScheme ? '—' : fmt(theoCushion, 2) + '%';
+    document.getElementById('headlineStars').textContent = noScheme ? '—' : head.stars;
+    document.getElementById('headlineLabel').textContent = noScheme ? '方案未定' : head.label;
+    document.getElementById('headlineCushion').textContent = noScheme ? '—' : fmt(theoCushion, 2) + '%';
+
+    // 可流通规模倒推（底层逻辑：总规模 − 锁定股东优先配售锁定部分）
+    // 规则：2023《证券发行与承销管理办法》修订后，持股≥5%股东、实控人及其一致行动人、董监高
+    //       通过优先配售取得的可转债，发行结束日起 6 个月内不得转让（锁定）；其余原股东及网申中签上市首日全流通。
+    // 倒推公式：锁定部分(亿元) = 锁定股东合计持股数(股) × 每股配售(元/股) × 参与比例 ÷ 1e8
+    //           可流通规模      = 发行总规模 − 锁定部分
+    const issue      = parseFloat(document.getElementById('issueSize').value) || 0;
+    const lockShares = parseFloat(document.getElementById('lockShares').value) || 0;
+    const lockRatio  = parseFloat(document.getElementById('lockRatio').value) || 0;
+    const floatEl    = document.getElementById('floatScale');
+    if (lockShares > 0) {
+      const locked     = lockShares * A * (lockRatio / 100) / 1e8;   // 亿元
+      const floatScale = issue - locked;                            // 亿元（自动倒推，只读）
+      floatEl.value = fmt(floatScale, 2);
+      document.getElementById('floatScaleTag').textContent = floatScale > 0
+        ? ('本转债倒推可流通规模约 ' + fmt(floatScale, 2) + ' 亿元（总规模 ' + fmt(issue,2) + ' − 锁定 ' + fmt(locked,2) + '）')
+        : '（请填写锁定股东合计持股数）';
+    } else {
+      // 无锁定股东数据时保留生成器注入值，不瞎算
+      const current = parseFloat(floatEl.value) || 0;
+      if (!current) floatEl.value = '';
+      document.getElementById('floatScaleTag').textContent = current > 0
+        ? ('本转债可流通规模约 ' + fmt(current, 2) + ' 亿元')
+        : '（锁定股东持股数未提供，可流通规模待补）';
+    }
+    const err = document.getElementById('calcError');
+    if (err) err.style.display = 'none';
+  } catch (e) {
+    showError(e.message);
+  }
+}
+
+  document.querySelectorAll('input').forEach(function(i){ i.addEventListener('input', recompute); });
+
+  // 制表日期：生成时已写入则保留；打开时仍为占位符则补为当天，便于回溯
+  (function initDate(){
+    const d = document.getElementById('tableDateValue');
+    if (!d || d.textContent === '—' || !d.textContent.trim()) {
+      const t = new Date();
+      const p = function(n){ return String(n).padStart(2,'0'); };
+      d.textContent = t.getFullYear() + '-' + p(t.getMonth()+1) + '-' + p(t.getDate());
+    }
+  })();
+
+  // 计算入口：立即执行 + DOMReady + Load 三重保险，确保在各种预览环境都能渲染
+  function runCompute(){
+    try {
+      recompute();
+      console.log('[潜伏配债] 档位计算完成');
+    } catch(e) {
+      console.error('[潜伏配债] 计算异常:', e);
+      showError(e.message + '（请按 F12 查看控制台详情）');
+    }
+  }
+  runCompute();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runCompute);
+    window.addEventListener('load', runCompute);
+  } else {
+    // DOM 已就绪，但仍可能在 load 后某些资源加载导致重排，再补一次
+    runCompute();
+    if (document.readyState !== 'complete') {
+      window.addEventListener('load', runCompute);
+    }
+  }
+</script>
+</body>
+</html>
