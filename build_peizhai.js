@@ -5,7 +5,7 @@ const BOARD = process.env.BOARD_PATH ? path.resolve(__dirname, process.env.BOARD
 const TPL = process.env.TPL_PATH ? path.resolve(__dirname, process.env.TPL_PATH) : 'C:/Users/戴尔/.workbuddy/skills/可转债潜伏配债/template.html';
 const OUT = process.env.PEIZHAI_OUT ? path.resolve(__dirname, process.env.PEIZHAI_OUT) : 'D:/WeGameApps/common_apps/peizhai';
 
-const GEN_DATE = '2026-08-15';
+const GEN_DATE = new Date().toISOString().slice(0, 10);   // 动态日期：build 当天
 const BOARD_TITLE_MAP = {'上海主板':'沪市主板','深圳主板':'深市主板','创业板':'深市创业板','科创板':'沪市科创板'};
 
 // —— 1) 读取汇总看板 HTML 内嵌的 DATA（其唯一 const DATA 声明即运行时数据）——
@@ -21,6 +21,36 @@ let T = fs.readFileSync(TPL, 'utf8');
 
 function safeName(n){
   return String(n).replace(/[\/\\?:*<>|"\s]/g, '').trim();
+}
+
+// 预抓今收价：腾讯 qt.gtimg.cn 并发 6 路，单只 5s timeout；失败留空 → buildSingle 用 d.price fallback
+async function prefetchLivePrices(codes){
+  const CONCURRENCY = 6, TIMEOUT = 5000;
+  const out = {};
+  const queue = codes.slice();
+  async function worker(){
+    while (queue.length){
+      const code = queue.shift();
+      try {
+        const mkt = String(code)[0] === '6' ? 'sh' : 'sz';
+        const ctrl = new AbortController();
+        const tm = setTimeout(()=>ctrl.abort(), TIMEOUT);
+        const r = await fetch('https://qt.gtimg.cn/q=' + mkt + code, { signal: ctrl.signal });
+        clearTimeout(tm);
+        const t = await r.text();
+        const m = t.match(/="([^"]+)"/);
+        if (m) {
+          const parts = m[1].split('~');
+          const p = parseFloat(parts[3]);
+          if (isFinite(p) && p > 0) out[code] = p;
+        }
+      } catch(e){ /* 失败静默，留空让 fallback */ }
+    }
+  }
+  const ws = [];
+  for (let i = 0; i < CONCURRENCY; i++) ws.push(worker());
+  await Promise.all(ws);
+  return out;
 }
 
 function fmt(n, dp){
@@ -40,7 +70,12 @@ function buildSingle(d){
   h = h.replace(/{{BOARD_TITLE}}/g, BOARD_TITLE_MAP[d.board] || d.board);
   h = h.replace(/{{stockName}}/g, d.name || '');
 
-  const map = {code:d.code, name:d.name, bondName:d.bond, price:d.price, perShare:d.perShare,
+  // 真实价（预抓今收价）优先；fallback 用生成时注入价
+  const livePrice = parseFloat(d._livePrice) || 0;
+  const basePrice = parseFloat(d.price) || 0;
+  const usePrice = (livePrice > 0 ? livePrice : basePrice);
+
+  const map = {code:d.code, name:d.name, bondName:d.bond, price:(usePrice > 0 ? usePrice.toFixed(2) : d.price), perShare:d.perShare,
     regDate:d.reg, payDate:d.pay, issueSize:d.issue, rating:d.rating, convPrice:d.conv,
     listingPrice:d.aggrPrice || '157.3', lockShares:d.lockShares || '', lockRatio:'100',
     floatScale:(d.fs === null || d.fs === undefined || d.fs === '') ? '' : d.fs,
@@ -52,8 +87,16 @@ function buildSingle(d){
   }
   h = h.replace(/id="tableDateValue">—</, 'id="tableDateValue">'+GEN_DATE+'<');
 
+  // 实时价参考提示：build 时若已抓到今收价，直接落到初始文本（不依赖运行时 fetch）
+  if (usePrice > 0) {
+    h = h.replace(/id="priceLiveTick">[^<]*/,
+      'id="priceLiveTick">实时参考 ' + usePrice.toFixed(2) + '（build-time 锁定）');
+    h = h.replace(/id="liveStatusText">[^<]*/,
+      'id="liveStatusText">实时价 ' + usePrice.toFixed(2) + ' · ' + GEN_DATE + ' 收盘已锁定（与输入框一致，无需刷新）');
+  }
+
   const TIERS = [100,200,300,400,500,600,700,800,900,1000,2000,3000,4000];
-  const P = parseFloat(d.price) || 0;
+  const P = usePrice;
   const A = parseFloat(d.perShare) || 0;
   const noScheme = !(A > 0);
   const L = parseFloat(d.aggrPrice) || 157.3;
@@ -97,31 +140,42 @@ function buildSingle(d){
 const bondsDir = path.join(OUT, 'bonds');
 fs.mkdirSync(bondsDir, { recursive: true });
 
-const used = {};
-let ok = 0;
-for (const d of DATA){
-  let base = safeName(d.name);
-  if (!base) base = d.code;
-  let fname = base + '.html';
-  if (used[fname]) fname = base + '_' + d.code + '.html';  // 重名兜底
-  used[fname] = true;
-  fs.writeFileSync(path.join(bondsDir, fname), buildSingle(d), 'utf8');
-  ok++;
-}
-console.log('bonds written:', ok);
+(async () => {
+  // 预抓：跑一次抓全部 83 只今收价，写入 d._livePrice
+  const codes = DATA.map(d => d.code).filter(Boolean);
+  console.log('预抓今收价 codes:', codes.length);
+  const t0 = Date.now();
+  const priceMap = await prefetchLivePrices(codes);
+  console.log('命中:', Object.keys(priceMap).length, '用时', ((Date.now() - t0) / 1000).toFixed(1) + 's');
 
-// —— 4) 生成 index.html（汇总页）。
-// 点击明细：用 Blob 内联打开新窗口（线上/离线单文件都能用，不依赖 bonds/ 子目录）。
-// bonds/ 文件仍照常生成，作为可独立部署的镜像备份。
-let board = fs.readFileSync(BOARD, 'utf8');
-const blobBlock = "    const blob = new Blob([h], {type:'text/html'});\n    const url = URL.createObjectURL(blob);\n    window.open(url, '_blank');\n    setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);";
-const navLine = "    window.location.href = './bonds/' + String(d.name).replace(/[\\/\\\\?:*<>|\"\\s]/g,'') + '.html';";
-if (board.includes(navLine)){
-  board = board.replace(navLine, blobBlock);
-  console.log('index nav: relative redirect -> Blob inline open (offline-friendly)');
-} else if (!board.includes(blobBlock)){
-  console.log('WARN: nav block not found — index nav NOT changed');
-}
-fs.writeFileSync(path.join(OUT, 'index.html'), board, 'utf8');
-console.log('index.html written:', path.join(OUT, 'index.html'));
-console.log('DONE');
+  const used = {};
+  let ok = 0, missed = 0;
+  for (const d of DATA){
+    d._livePrice = priceMap[d.code] || 0;
+    if (!d._livePrice) missed++;
+    let base = safeName(d.name);
+    if (!base) base = d.code;
+    let fname = base + '.html';
+    if (used[fname]) fname = base + '_' + d.code + '.html';  // 重名兜底
+    used[fname] = true;
+    fs.writeFileSync(path.join(bondsDir, fname), buildSingle(d), 'utf8');
+    ok++;
+  }
+  console.log('bonds written:', ok, '（预抓未命中 fallback d.price:', missed + '）');
+
+  // —— 4) 生成 index.html（汇总页）。
+  // 点击明细：用 Blob 内联打开新窗口（线上/离线单文件都能用，不依赖 bonds/ 子目录）。
+  // bonds/ 文件仍照常生成，作为可独立部署的镜像备份。
+  let board = fs.readFileSync(BOARD, 'utf8');
+  const blobBlock = "    const blob = new Blob([h], {type:'text/html'});\n    const url = URL.createObjectURL(blob);\n    window.open(url, '_blank');\n    setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);";
+  const navLine = "    window.location.href = './bonds/' + String(d.name).replace(/[\\/\\\\?:*<>|\"\\s]/g,'') + '.html';";
+  if (board.includes(navLine)){
+    board = board.replace(navLine, blobBlock);
+    console.log('index nav: relative redirect -> Blob inline open (offline-friendly)');
+  } else if (!board.includes(blobBlock)){
+    console.log('WARN: nav block not found — index nav NOT changed');
+  }
+  fs.writeFileSync(path.join(OUT, 'index.html'), board, 'utf8');
+  console.log('index.html written:', path.join(OUT, 'index.html'));
+  console.log('DONE');
+})().catch(e => { console.error('FATAL:', e); process.exit(1); });
