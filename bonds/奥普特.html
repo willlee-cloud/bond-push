@@ -4,9 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>可转债潜伏配债量化测算</title>
-<link rel="icon" type="image/x-icon" href="https://www.pythonanywhere.com/static/anywhere/images/favicon.ico">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23e0a82e'/%3E%3Ctext x='16' y='23' font-size='20' font-family='sans-serif' font-weight='700' text-anchor='middle' fill='%233d2f00'%3E可%3C/text%3E%3C/svg%3E">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
   * { box-sizing: border-box; }
   :root {
     /* 与汇总看板统一的设计令牌 */
@@ -28,7 +27,7 @@
   .num-tabular { font-variant-numeric: tabular-nums; font-family:"JetBrains Mono","SF Mono",ui-monospace,monospace; }
 
   /* 与汇总看板一致的标题：左对齐 + 琥珀左边框（无黄色色块、无居中套路） */
-  .page-head { margin-bottom: 22px; }
+  .page-head { position: relative; margin-bottom: 22px; }
   .page-head h1 {
     font-size: 36px; font-weight: 800; letter-spacing: -.02em; color: var(--ink);
     margin: 0; line-height: 1.12; padding-left: 18px; border-left: 6px solid var(--amber);
@@ -38,6 +37,48 @@
     text-transform: uppercase; margin-bottom: 10px;
   }
   .page-head .sub { font-size: 13px; color: var(--muted); margin: 10px 0 0 18px; line-height: 1.7; }
+
+  /* 实时价状态徽标：交易时段每 8s 刷一次显示最新抓取价，停止更新/非交易时段显灰 */
+  .live-status {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; line-height: 1;
+    color: var(--amber-deep); background: var(--amber-tint);
+    border: 1px solid var(--amber-line); border-radius: 999px;
+    padding: 5px 10px; margin-bottom: 8px;
+  }
+  .live-status .dot { width: 7px; height: 7px; border-radius: 50%; background: #2bb55d; box-shadow: 0 0 0 3px rgba(43,181,93,.18); animation: livePulse 1.6s ease-in-out infinite; flex: none; }
+  .live-status.idle .dot { background: #9aa0aa; box-shadow: none; animation: none; }
+  .live-status.err  .dot { background: #c0392b; box-shadow: 0 0 0 3px rgba(192,57,43,.18); animation: none; }
+  @keyframes livePulse { 0%,100%{ opacity: 1; } 50%{ opacity: .35; } }
+
+  /* 单元 cell 短暂高亮：每次重算后被改动 cell flash 一次（配 input 监听，让人确认"它确实算过了"）*/
+  tbody td.flash {
+    animation: cellFlash .9s ease-out;
+  }
+  @keyframes cellFlash {
+    0%   { background: rgba(43,181,93,.32); }
+    100% { background: inherit; }
+  }
+  tbody td.cushion.flash { animation: cushionFlash .9s ease-out; }
+  @keyframes cushionFlash {
+    0%   { background: rgba(224,168,46,.45); box-shadow: inset 0 0 0 2px #e0a82e; }
+    100% { background: var(--cush-bg); box-shadow: none; }
+  }
+
+  /* 已关注 N 天 · 右上角小角标（选项 B）：从「加表日期」算到今天 */
+  .watch-badge {
+    position: absolute; top: 2px; right: 0;
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 600; line-height: 1; white-space: nowrap;
+    color: var(--amber-deep); background: var(--amber-tint);
+    border: 1px solid var(--amber-line); border-radius: 999px;
+    padding: 6px 11px; box-shadow: 0 2px 6px -2px rgba(138,99,16,.25);
+  }
+  .watch-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber-deep); flex: none; }
+  .watch-badge.empty { display: none; }
+  @media (max-width:600px){
+    .watch-badge { position: static; display: inline-flex; margin-top: 12px; }
+  }
 
   .card {
     background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
@@ -94,6 +135,15 @@
   }
   .btn-print:hover { background: #d29a24; }
   .btn-print:active { transform: translateY(1px) scale(.985); }
+
+  /* 立即重算：白底琥珀描边，与打印按钮成对（一手→一键重算；兜底用，永不出错） */
+  .btn-recompute {
+    margin-top: 16px; margin-right: 10px; padding: 9px 20px; background: #fff;
+    color: var(--amber-deep); border: 1px solid var(--amber-line); border-radius: 9px;
+    font-size: 14px; font-weight: 700; cursor: pointer; transition: transform .1s ease, background .15s;
+  }
+  .btn-recompute:hover { background: var(--amber-tint); }
+  .btn-recompute:active { transform: translateY(1px) scale(.985); }
 
   /* 表格：与汇总看板一致 —— 固定布局 + 琥珀表头吸顶 + 数字等宽 */
   .table-scroll { overflow-x: auto; }
@@ -188,6 +238,7 @@
     <div class="eyebrow">可转债潜伏配债 · 量化测算</div>
     <h1>沪市科创抢权配售 · 奥普特</h1>
     <div class="sub">参数可自定义 · 全档位自动演算 · 风险评级对标</div>
+    <div class="watch-badge empty" id="watchBadge"><span class="dot"></span><span id="watchBadgeText">已关注 — 天</span></div>
   </div>
 
   <div class="float-warning">
@@ -198,28 +249,31 @@
   <div class="card">
     <div class="section-h">一、参数录入</div>
     <div class="hint">修改任意参数，下方测算结果与风险评级将实时联动刷新。带（可自定义）的为预期上市价，其余为标的公告数据。</div>
+    <div class="live-status idle" id="liveStatus" title="交易时段 09:15–11:30 / 13:00–15:00 每 8s 自动刷新（东财 push2 主源 + 腾讯 qt.gtimg 兜底）"><span class="dot"></span><span id="liveStatusText">实时价 · 等待刷新</span></div>
     <div class="form-grid">
       <div class="field"><label>股票代码</label><input id="code" value="688686"></div>
       <div class="field"><label>股票名称</label><input id="name" value="奥普特"></div>
       <div class="field"><label>对应转债名称</label><input id="bondName" value="奥普转债"></div>
-      <div class="field"><label>标的当日收盘价（确权基准价）</label><input id="price" value="116.13"><span class="u">元</span></div>
-      <div class="field"><label>官方每股配售金额（4位小数）</label><input id="perShare" value="10.396"><span class="u">元/股</span></div>
+      <div class="field"><label>标的当日收盘价（确权基准价）</label><input id="price" type="number" step="0.01" value="116.13"><span class="u">元</span></div>
+      <div class="field"><label>官方每股配售金额（4位小数）</label><input id="perShare" type="number" step="0.0001" value="10.396"><span class="u">元/股</span></div>
+      <div class="field"><label>加表日期</label><input id="addDate" value="" placeholder="YYYY-MM-DD"></div>
       <div class="field"><label>股权登记日</label><input id="regDate" value="2026-07-28"></div>
       <div class="field"><label>配债缴款日</label><input id="payDate" value="2026-07-29"></div>
       <div class="field"><label>转债发行总规模</label><input id="issueSize" value="12.7"><span class="u">亿元</span></div>
       <div class="field"><label>转债信用评级</label><input id="rating" value="AA"></div>
-      <div class="field"><label>正股最新转股价</label><input id="convPrice" value="150.03"><span class="u">元</span></div>
-      <div class="field"><label>转债预期上市价格（可自定义）</label><input id="listingPrice" value="157.3"><span class="u">元（默认激进价，可手动改为保守价）</span></div>
-      <div class="field" title="控股股东、实控人及其一致行动人（即使单个<5%只要属一致行动人也计入）合计持股数"><label>锁定持股数</label><input id="lockShares" value="88207566"><span class="u">股</span></div>
-      <div class="field"><label>锁定股东配售参与比例</label><input id="lockRatio" value="100"><span class="u">%（默认100，放弃则调低）</span></div>
-      <div class="field"><label>转债可流通规模（自动倒推·不可改）</label><input id="floatScale" value="3.53"><span class="u">亿元</span></div>
+      <div class="field"><label>正股最新转股价</label><input id="convPrice" type="number" step="0.01" value="150.03"><span class="u">元</span></div>
+      <div class="field"><label>转债预期上市价格（可自定义）</label><input id="listingPrice" type="number" step="0.1" value="157.3"><span class="u">元（默认激进价，可手动改为保守价）</span></div>
+      <div class="field" title="控股股东、实控人及其一致行动人（即使单个<5%只要属一致行动人也计入）合计持股数"><label>锁定持股数</label><input id="lockShares" type="number" step="1" value="88207566"><span class="u">股</span></div>
+      <div class="field"><label>锁定股东配售参与比例</label><input id="lockRatio" type="number" step="1" value="100"><span class="u">%（默认100，放弃则调低）</span></div>
+      <div class="field"><label>转债可流通规模（自动倒推·不可改）</label><input id="floatScale" type="number" step="0.01" readonly value="3.53"><span class="u">亿元</span></div>
     </div>
     <div class="core-params">
       <div class="cp"><div class="k">单张转债盈利 = 上市价 − 100</div><div class="v num-tabular" id="profitPerBond">57.3 元</div></div>
       <div class="cp"><div class="k">理论安全垫（满配·忽略碎面损耗）</div><div class="v num-tabular" id="theoCushion">5.13%</div></div>
       <div class="cp"><div class="k">制表日期</div><div class="v num-tabular" id="tableDateValue">2026-08-15</div></div>
     </div>
-    <button class="btn-print" onclick="window.print()">打印 / 导出 PDF</button>
+    <button class="btn-recompute" onclick="recompute(true)" type="button">立即重算</button>
+    <button class="btn-print" onclick="window.print()" type="button">打印 / 导出 PDF</button>
   </div>
 
   <div class="card">
@@ -340,7 +394,7 @@
   // 预期盈利 = (实际获配 ÷ 100) × (上市价 − 100)
   // 安全垫   = 预期盈利 ÷ 所需资金 × 100%   （保留2位小数）
   // 需要金额 = 正股所需资金 + 实际获配转债面值
-  function recompute(){
+  function recompute(manual){
     try {
     const P  = parseFloat(document.getElementById('price').value) || 0;
     const A  = parseFloat(document.getElementById('perShare').value) || 0;
@@ -409,12 +463,44 @@
     }
     const err = document.getElementById('calcError');
     if (err) err.style.display = 'none';
+
+    // —— 视觉反馈：被改动的 cell 短暂高亮，让用户确信「确实重算过了」——
+    flashCells();
+    if (manual) console.log('[潜伏配债] 手动重算完成 P=' + P + ' A=' + A);
   } catch (e) {
     showError(e.message);
   }
-}
+  }
 
-  document.querySelectorAll('input').forEach(function(i){ i.addEventListener('input', recompute); });
+  // 单元 cell 短暂高亮（手动/轮询/编辑 三种触发都能看到反馈）
+  function flashCells(){
+    const cells = document.querySelectorAll('tbody#tierBody td.num, tbody#tierBody td.cushion');
+    cells.forEach(function(c){
+      c.classList.remove('flash');
+      // 强制 reflow 重启动画
+      void c.offsetWidth;
+      c.classList.add('flash');
+    });
+  }
+
+  // —— 多重事件监听（兜底覆盖所有输入路径，永远不出错）——
+  // 覆盖：input(键入/paste/spinner) / change(失焦/spinner确定) / keyup(方向键/spinner) / blur(失焦)
+  function attachListeners(){
+    var inputs = document.querySelectorAll('.form-grid input');
+    for (var i = 0; i < inputs.length; i++){
+      (function(el){
+        el.addEventListener('input',  function(){ recompute(); });
+        el.addEventListener('change', function(){ recompute(); });
+        el.addEventListener('keyup',  function(){ recompute(); });
+        el.addEventListener('blur',   function(){ recompute(); });
+      })(inputs[i]);
+    }
+    // 表单级事件委托：万一某天动态添加了 input 没绑到，也不漏
+    var form = document.querySelector('.form-grid');
+    if (form){
+      form.addEventListener('input', function(){ recompute(); });
+    }
+  }
 
   // 制表日期：生成时已写入则保留；打开时仍为占位符则补为当天，便于回溯
   (function initDate(){
@@ -425,6 +511,157 @@
       d.textContent = t.getFullYear() + '-' + p(t.getMonth()+1) + '-' + p(t.getDate());
     }
   })();
+
+  // 已关注 N 天 · 右上角小角标（选项 B）：从「加表日期」算到今天，每天自然 +1
+  function watchDays(addDate){
+    if (!addDate) return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(addDate).trim());
+    if (!m) return null;
+    const d = new Date(+m[1], +m[2]-1, +m[3]);
+    const t = new Date();
+    const today = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+    const diff = Math.floor((today - d) / 86400000);
+    return isNaN(diff) || diff < 0 ? null : diff;
+  }
+  function updateWatchBadge(){
+    const el = document.getElementById('watchBadge');
+    if (!el) return;
+    const addDate = (document.getElementById('addDate') || {}).value;
+    const n = watchDays(addDate);
+    if (n == null){ el.classList.add('empty'); }
+    else {
+      el.classList.remove('empty');
+      document.getElementById('watchBadgeText').textContent = '已关注 ' + n + ' 天';
+    }
+  }
+  updateWatchBadge();
+  const _addDateInput = document.getElementById('addDate');
+  if (_addDateInput) _addDateInput.addEventListener('input', updateWatchBadge);
+
+  // ===========================================================
+  // 实时行情模块（继承汇总看板：东财 push2 主源 + 腾讯 qt.gtimg 兜底）
+  // 交易时段 09:15–11:30 / 13:00–15:00 每 8 秒刷新；用户正在编辑时不覆盖
+  // ===========================================================
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function isTradingNow(){
+    var now = new Date();
+    // 用北京时间判定
+    var utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    var bj = new Date(utc + 8 * 3600000);
+    var day = bj.getDay();
+    if (day === 0 || day === 6) return false;
+    var t = bj.getHours() * 60 + bj.getMinutes();
+    return (t >= 9 * 60 + 15 && t <= 11 * 60 + 30) || (t >= 13 * 60 && t <= 15 * 60);
+  }
+  function jsonp(url, cbName, timeout){
+    return new Promise(function(resolve, reject){
+      var s = document.createElement('script');
+      var cb = cbName + '_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+      var timer = setTimeout(function(){ cleanup(); reject(new Error('timeout')); }, timeout || 6000);
+      function cleanup(){ clearTimeout(timer); delete window[cb]; if (s.parentNode) s.parentNode.removeChild(s); }
+      window[cb] = function(data){ cleanup(); resolve(data); };
+      s.onerror = function(){ cleanup(); reject(new Error('script error')); };
+      s.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'cb=' + cb;
+      document.head.appendChild(s);
+    });
+  }
+
+  // 东财 push2 · 单标的行情（f2=最新价元 / f3=涨跌幅%）
+  function fetchEMPrice(code){
+    var secid = (String(code)[0] === '6' ? '1.' : '0.') + String(code);
+    var url = 'https://push2.eastmoney.com/api/qt/ulist.np/get?ut=fa5fd1943c7b386f172d6893dbfba10b&invt=2&fltt=2&secids=' + encodeURIComponent(secid) + '&fields=f2,f3,f4';
+    return jsonp(url, 'emcb').then(function(data){
+      if (!data || data.rc !== 0 || !data.data || !data.data.diff) throw new Error('em empty');
+      var k = Object.keys(data.data.diff)[0];
+      var it = data.data.diff[k];
+      var p = parseFloat(it.f2);
+      if (!isFinite(p) || p <= 0) throw new Error('em no price');
+      return p;
+    });
+  }
+
+  // 腾讯 qt.gtimg 兜底（响应里挂的是 v_sh601xxx 全局变量，需要 eval-on-load）
+  function fetchTXPrice(code){
+    return new Promise(function(resolve, reject){
+      var market = String(code)[0] === '6' ? 'sh' : 'sz';
+      var fullVar = 'v_' + market + code;
+      var s = document.createElement('script');
+      var timer = setTimeout(function(){ reject(new Error('tx timeout')); if (s.parentNode) s.parentNode.removeChild(s); }, 6000);
+      s.onload = function(){
+        clearTimeout(timer);
+        try {
+          var raw = window[fullVar];
+          if (!raw) return reject(new Error('tx empty'));
+          var p = raw.split('~');
+          var price = parseFloat(p[3]);
+          if (!isFinite(price) || price <= 0) return reject(new Error('tx no price'));
+          resolve(price);
+        } catch(e){ reject(e); }
+        if (s.parentNode) s.parentNode.removeChild(s);
+      };
+      s.onerror = function(){ clearTimeout(timer); reject(new Error('tx error')); };
+      s.src = 'https://qt.gtimg.cn/q=' + market + code;
+      document.head.appendChild(s);
+    });
+  }
+
+  // 用户正在编辑：focus/blur 标记，期间不覆盖输入框
+  var _priceEl = document.getElementById('price');
+  var _userEditing = false;
+  if (_priceEl){
+    _priceEl.addEventListener('focus', function(){ _userEditing = true; });
+    _priceEl.addEventListener('blur',  function(){ _userEditing = false; });
+  }
+
+  function setLiveStatus(text, kind){
+    var el = document.getElementById('liveStatus');
+    if (!el) return;
+    el.classList.remove('idle', 'err');
+    if (kind === 'err') el.classList.add('err');
+    else if (kind === 'idle') el.classList.add('idle');
+    document.getElementById('liveStatusText').textContent = text;
+  }
+
+  var _lastEmAt = 0;
+  function refreshLivePrice(){
+    var codeEl = document.getElementById('code');
+    if (!codeEl || !codeEl.value) return;
+    var code = String(codeEl.value);
+    // 用户正在编辑 → 不覆盖；保留当前输入值
+    if (_userEditing){
+      setLiveStatus('实时价 · 已暂停（你正在编辑）', 'idle');
+      return;
+    }
+    if (!isTradingNow()){
+      var now = new Date();
+      var utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      var bj = new Date(utc + 8 * 3600000);
+      setLiveStatus('实时价 · 非交易时段（' + pad(bj.getHours()) + ':' + pad(bj.getMinutes()) + '），价格保持当前输入', 'idle');
+      recompute();
+      return;
+    }
+
+    fetchEMPrice(code).catch(function(){ return fetchTXPrice(code); }).then(function(price){
+      _lastEmAt = Date.now();
+      if (_priceEl && !_userEditing){
+        // 价格变动才覆写，避免无谓抖动
+        var cur = parseFloat(_priceEl.value);
+        if (!isFinite(cur) || Math.abs(cur - price) >= 0.005){
+          _priceEl.value = price.toFixed(2);
+          // 主动触发 recompute（直接设置 .value 不会冒泡 input 事件）
+          recompute();
+        }
+      }
+      var t = new Date();
+      setLiveStatus('实时价 ' + price.toFixed(2) + ' · ' + pad(t.getHours()) + ':' + pad(t.getMinutes()) + ':' + pad(t.getSeconds()) + '（8s 自动刷新）', null);
+    }).catch(function(){
+      setLiveStatus('实时价 · 获取失败，沿用当前输入（将自动重试）', 'err');
+    });
+  }
+
+  // 立即拉一次 + 8s 轮询（交易时段才刷；非交易时段只拉初始一次）
+  refreshLivePrice();
+  setInterval(function(){ refreshLivePrice(); }, 8000);
 
   // 计算入口：立即执行 + DOMReady + Load 三重保险，确保在各种预览环境都能渲染
   function runCompute(){
@@ -447,6 +684,8 @@
       window.addEventListener('load', runCompute);
     }
   }
+  // 多重事件监听 - 最后挂上
+  attachListeners();
 </script>
 </body>
 </html>

@@ -4,9 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>可转债潜伏配债 · 汇总看板</title>
-<link rel="icon" type="image/x-icon" href="https://www.pythonanywhere.com/static/anywhere/images/favicon.ico">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23e0a82e'/%3E%3Ctext x='16' y='23' font-size='20' font-family='sans-serif' font-weight='700' text-anchor='middle' fill='%233d2f00'%3E可%3C/text%3E%3C/svg%3E">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
   :root{
     --amber:#e0a82e; --amber-deep:#8a6310; --amber-tint:#fbf6ea; --amber-ink:#3d2f00; --amber-line:#d8b25a;
     --ink:#1f2430; --muted:#737a89; --line:#e9ebef; --bg:#f5f6f8; --surface:#ffffff;
@@ -76,7 +75,8 @@
   .g-cyan{background:var(--grp-cyan);} .g-lgreen{background:var(--grp-lgreen);} .g-ygreen{background:var(--grp-ygreen);}
   .g-gray{background:var(--grp-gray);} .g-purple{background:var(--grp-purple);} .g-red{background:var(--grp-red);}
   .num{background:var(--num-bg); color:var(--num-ink);}
-  .cush{background:var(--cush-bg); color:var(--cush); font-weight:700;}
+  .cush{background:var(--cush-bg); color:var(--cush); font-weight:700; text-align:center; line-height:1.35; padding:6px 2px;}
+  .star-mark{font-size:11px; color:var(--amber-deep); letter-spacing:-1px;}
   .rate4{color:var(--up); font-weight:800;} .rate1{color:var(--down); font-weight:800;}
   .rate5{color:var(--rate5); font-weight:800;} .rate3{color:var(--rate3); font-weight:700;} .rate2{color:var(--rate2); font-weight:700;}
   .name-cell{font-weight:700;}
@@ -99,6 +99,12 @@
   .detail-item{display:flex; justify-content:space-between; gap:12px; font-size:14px; padding:8px 0; border-bottom:1px solid #eef0f3;}
   .detail-item .k{color:var(--muted); white-space:nowrap;}
   .detail-item .v{font-weight:700; text-align:right; color:var(--ink); font-variant-numeric:tabular-nums;}
+  /* 已关注 N 天 · 展开明细右上角小角标（选项 B） */
+  .detail-wrap{position:relative; padding-top:32px;}
+  .detail-corner{position:absolute; top:6px; right:10px;}
+  .watch-badge{display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; line-height:1; white-space:nowrap; color:var(--amber-deep); background:var(--amber-tint); border:1px solid var(--amber-line); border-radius:999px; padding:6px 11px; box-shadow:0 2px 6px -2px rgba(138,99,16,.25);}
+  .watch-badge .dot{width:6px; height:6px; border-radius:50%; background:var(--amber-deep); flex:none;}
+  .watch-badge.empty{display:none;}
 </style>
 </head>
 <body>
@@ -136,10 +142,10 @@
     <div class="scroll">
       <table id="board">
         <colgroup>
-          <col style="width:6.5%"><col style="width:7%"><col style="width:5%"><col style="width:6%"><col style="width:4%">
+          <col style="width:6.5%"><col style="width:5.5%"><col style="width:5%"><col style="width:6%"><col style="width:4%">
           <col style="width:4%"><col style="width:4%"><col style="width:4%"><col style="width:4%"><col style="width:4%">
           <col style="width:5.5%"><col style="width:3.5%"><col style="width:4%"><col style="width:4%"><col style="width:4%">
-          <col style="width:4%"><col style="width:5%"><col style="width:4%"><col style="width:5%"><col style="width:4%">
+          <col style="width:4%"><col style="width:4.5%"><col style="width:4%"><col style="width:6%"><col style="width:3.5%">
           <col style="width:4%"><col style="width:4.5%"><col style="width:4.5%"><col style="width:3%">
         </colgroup>
         <thead>
@@ -170,9 +176,9 @@
 
 <script>
 const LISTING = 157.3;
-const PRICE_DATE = '2026-08-14';
-const GEN_DATE = '2026-08-14';
-const TEMPLATE = "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>可转债潜伏配债量化测算</title>\n<link rel=\"icon\" type=\"image/x-icon\" href=\"https://www.pythonanywhere.com/static/anywhere/images/favicon.ico\">\n<style>\n  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');\n  * { box-sizing: border-box; }\n  :root {\n    /* 与汇总看板统一的设计令牌 */\n    --amber:#e0a82e; --amber-deep:#8a6310; --amber-tint:#fbf6ea; --amber-ink:#3d2f00; --amber-line:#d8b25a;\n    --ink:#1f2430; --muted:#737a89; --line:#e9ebef; --bg:#f5f6f8; --surface:#ffffff;\n    --num-bg:#f7f9fb; --num-ink:#2a3142;\n    --cush:#1f7a5c; --cush-bg:#eef7f2;\n    --up:#c0392b;\n    --radius:16px;\n    --shadow:0 24px 48px -20px rgba(20,28,46,.10);\n  }\n  body {\n    font-family:\"Manrope\",\"PingFang SC\",\"Microsoft YaHei\",\"Hiragino Sans GB\",system-ui,-apple-system,\"Segoe UI\",sans-serif;\n    margin: 0; padding: 26px 20px 56px; background: var(--bg); color: var(--ink);\n    -webkit-font-smoothing: antialiased; text-rendering:optimizeLegibility;\n    -webkit-print-color-adjust: exact; print-color-adjust: exact;\n  }\n  .wrap { max-width: 1080px; margin: 0 auto; }\n  .num-tabular { font-variant-numeric: tabular-nums; font-family:\"JetBrains Mono\",\"SF Mono\",ui-monospace,monospace; }\n\n  /* 与汇总看板一致的标题：左对齐 + 琥珀左边框（无黄色色块、无居中套路） */\n  .page-head { margin-bottom: 22px; }\n  .page-head h1 {\n    font-size: 36px; font-weight: 800; letter-spacing: -.02em; color: var(--ink);\n    margin: 0; line-height: 1.12; padding-left: 18px; border-left: 6px solid var(--amber);\n  }\n  .page-head .eyebrow {\n    font-size: 11.5px; letter-spacing: .2em; color: var(--amber-deep); font-weight: 700;\n    text-transform: uppercase; margin-bottom: 10px;\n  }\n  .page-head .sub { font-size: 13px; color: var(--muted); margin: 10px 0 0 18px; line-height: 1.7; }\n\n  .card {\n    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);\n    padding: 18px 22px 22px; margin-bottom: 20px; box-shadow: var(--shadow);\n  }\n  /* 小节标题：与 h1 同构的琥珀左边框（去色块化，弱化 AI 套路） */\n  .section-h {\n    display: block; font-size: 15px; font-weight: 800; color: var(--ink);\n    padding: 2px 0 2px 11px; border-left: 4px solid var(--amber); margin: 2px 0 14px;\n  }\n  .hint { font-size: 12.5px; color: var(--muted); margin: -8px 0 14px; line-height: 1.65; }\n  .hint b { color: var(--ink); }\n\n  /* 参数录入网格：标签在上、输入在下 */\n  .form-grid {\n    display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px 18px;\n  }\n  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }\n  .field .u { color: #9ca3af; font-size: 11px; margin-left: 3px; }\n  .field input {\n    width: 100%; padding: 9px 11px; border: 1px solid #d1d5db; border-radius: 9px;\n    font-size: 14px; font-family: inherit; background: #fffef8; color: var(--ink);\n    transition: border-color .15s, box-shadow .15s;\n  }\n  .field input:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(224,168,46,.16); }\n  .field input[readonly] { background: #f3f4f6; color: var(--muted); cursor: default; }\n\n  /* 核心参数条 */\n  .core-params { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }\n  .cp {\n    background: var(--amber-tint); border: 1px solid var(--amber-line); border-radius: 11px;\n    padding: 11px 16px; transition: transform .12s ease;\n  }\n  .cp:hover { transform: translateY(-1px); }\n  .cp .k { font-size: 12px; color: var(--amber-deep); }\n  .cp .v { font-size: 19px; font-weight: 800; color: var(--amber-deep); margin-top: 2px; }\n\n  /* 流通规模提醒横幅（去渐变，纯色块 + 顶部琥珀强调线） */\n  .float-warning {\n    background: var(--amber-tint); border: 1px solid var(--amber-line); border-top: 3px solid var(--amber);\n    border-radius: 0 0 var(--radius) var(--radius); padding: 14px 20px; margin: 0 0 18px 0; box-shadow: var(--shadow);\n  }\n  .float-warning .tag {\n    display: inline-block; background: var(--amber); color: var(--amber-ink);\n    font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 4px; margin-right: 8px;\n  }\n  .float-warning p { margin: 4px 0 0; font-size: 13px; color: var(--amber-deep); line-height: 1.7; }\n  .float-warning b { color: var(--amber-ink); }\n\n  .btn-print {\n    margin-top: 16px; padding: 9px 20px; background: var(--amber); color: var(--amber-ink);\n    border: 1px solid var(--amber-line); border-radius: 9px; font-size: 14px; font-weight: 700;\n    cursor: pointer; transition: transform .1s ease, background .15s;\n  }\n  .btn-print:hover { background: #d29a24; }\n  .btn-print:active { transform: translateY(1px) scale(.985); }\n\n  /* 表格：与汇总看板一致 —— 固定布局 + 琥珀表头吸顶 + 数字等宽 */\n  .table-scroll { overflow-x: auto; }\n  table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 13px; margin-top: 2px; }\n  thead th {\n    background: var(--amber); color: var(--amber-ink); padding: 11px 8px; text-align: center;\n    border: 1px solid var(--amber-line); font-weight: 700; white-space: normal; line-height: 1.3;\n    position: sticky; top: 0; z-index: 3; font-size: 13px; box-shadow: 0 3px 6px -2px rgba(0,0,0,.18);\n  }\n  tbody td {\n    padding: 9px 8px; text-align: center; border: 1px solid var(--line);\n    font-family:\"JetBrains Mono\",\"SF Mono\",ui-monospace,monospace; font-variant-numeric: tabular-nums;\n    transition: background .12s ease; font-size: 13px;\n  }\n  .num { background: var(--num-bg); color: var(--num-ink); }\n  .cushion { background: var(--cush-bg); color: var(--cush); font-weight: 700; }\n  .stars { font-size: 12px; white-space: nowrap; }\n  .tier { background: #f7f9fb; font-weight: 700; color: #37474f; }\n  /* 评级色与汇总看板对齐 */\n  .r5 { color: #8a6310; font-weight: 800; }\n  .r4 { color: var(--up); font-weight: 800; }\n  .r3 { color: #5b8c5a; font-weight: 800; }\n  .r2 { color: #c2772e; font-weight: 800; }\n  .r1 { color: #9aa0aa; font-weight: 800; }\n\n  /* 十字高亮：与汇总看板一致（琥珀低饱和底 + 琥珀描边） */\n  tbody tr:hover td {\n    background: rgba(224,168,46,.16) !important;\n    box-shadow: inset 0 0 0 2px var(--amber);\n  }\n  table:has(tbody td:nth-child(1):hover) tbody td:nth-child(1),\n  table:has(tbody td:nth-child(1):hover) thead th:nth-child(1),\n  table:has(tbody td:nth-child(2):hover) tbody td:nth-child(2),\n  table:has(tbody td:nth-child(2):hover) thead th:nth-child(2),\n  table:has(tbody td:nth-child(3):hover) tbody td:nth-child(3),\n  table:has(tbody td:nth-child(3):hover) thead th:nth-child(3),\n  table:has(tbody td:nth-child(4):hover) tbody td:nth-child(4),\n  table:has(tbody td:nth-child(4):hover) thead th:nth-child(4),\n  table:has(tbody td:nth-child(5):hover) tbody td:nth-child(5),\n  table:has(tbody td:nth-child(5):hover) thead th:nth-child(5),\n  table:has(tbody td:nth-child(6):hover) tbody td:nth-child(6),\n  table:has(tbody td:nth-child(6):hover) thead th:nth-child(6),\n  table:has(tbody td:nth-child(7):hover) tbody td:nth-child(7),\n  table:has(tbody td:nth-child(7):hover) thead th:nth-child(7),\n  table:has(tbody td:nth-child(8):hover) tbody td:nth-child(8),\n  table:has(tbody td:nth-child(8):hover) thead th:nth-child(8) {\n    background: rgba(224,168,46,.16) !important;\n    box-shadow: inset 0 0 0 2px var(--amber);\n  }\n  table:has(tbody td:nth-child(1):hover) tbody tr:hover td:nth-child(1),\n  table:has(tbody td:nth-child(2):hover) tbody tr:hover td:nth-child(2),\n  table:has(tbody td:nth-child(3):hover) tbody tr:hover td:nth-child(3),\n  table:has(tbody td:nth-child(4):hover) tbody tr:hover td:nth-child(4),\n  table:has(tbody td:nth-child(5):hover) tbody tr:hover td:nth-child(5),\n  table:has(tbody td:nth-child(6):hover) tbody tr:hover td:nth-child(6),\n  table:has(tbody td:nth-child(7):hover) tbody tr:hover td:nth-child(7),\n  table:has(tbody td:nth-child(8):hover) tbody tr:hover td:nth-child(8) {\n    background: rgba(224,168,46,.26) !important;\n    box-shadow: inset 0 0 0 3px var(--amber);\n  }\n\n  /* 评级结论 */\n  .verdict { background: var(--amber-tint); border: 1px solid var(--amber-line); border-radius: 12px; padding: 18px 22px; }\n  .verdict .big-stars { font-size: 30px; color: var(--amber-deep); letter-spacing: 4px; }\n  .verdict .label { font-size: 20px; font-weight: 800; margin-left: 10px; }\n  .verdict .line { font-size: 14px; margin-top: 10px; color: var(--muted); line-height: 1.7; }\n  .verdict .line b { color: var(--ink); }\n\n  /* 注释说明 */\n  .notes h4 { margin: 18px 0 7px; font-size: 14px; font-weight: 800; color: var(--ink); padding-left: 11px; border-left: 4px solid var(--amber); }\n  .notes ul { margin: 4px 0 4px; padding-left: 20px; }\n  .notes li { font-size: 13px; line-height: 1.75; color: #4b5563; margin-bottom: 4px; }\n  .bench { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; margin-top: 8px; }\n  .bench th { background: var(--amber); color: var(--amber-ink); padding: 8px 10px; border: 1px solid var(--amber-line); text-align: left; font-weight: 700; }\n  .bench td { padding: 8px 10px; border: 1px solid var(--line); }\n\n  @media print {\n    body { background: #fff; padding: 0; }\n    .card { border: 1px solid var(--line); border-radius: 0; box-shadow: none; }\n    .btn-print { display: none; }\n  }\n  @media (max-width:600px){\n    .page-head h1 { font-size: 26px; }\n    .table-scroll table { min-width: 760px; }\n  }\n</style>\n</head>\n<body>\n<div class=\"wrap\">\n\n  <div class=\"page-head\">\n    <div class=\"eyebrow\">可转债潜伏配债 · 量化测算</div>\n    <h1>{{BOARD_TITLE}}抢权配售 · {{stockName}}</h1>\n    <div class=\"sub\">参数可自定义 · 全档位自动演算 · 风险评级对标</div>\n  </div>\n\n  <div class=\"float-warning\">\n    <div><span class=\"tag\">流通规模提醒</span><b id=\"floatScaleTag\">—</b></div>\n    <p>可流通规模越小，上市越易被资金集中炒作推高、上市溢价空间越大；但对应波动与回撤风险也同步放大。小盘债需重点盯住炒作情绪与兑现时点，避免在情绪高点接盘。</p>\n  </div>\n\n  <div class=\"card\">\n    <div class=\"section-h\">一、参数录入</div>\n    <div class=\"hint\">修改任意参数，下方测算结果与风险评级将实时联动刷新。带（可自定义）的为预期上市价，其余为标的公告数据。</div>\n    <div class=\"form-grid\">\n      <div class=\"field\"><label>股票代码</label><input id=\"code\" value=\"300815\"></div>\n      <div class=\"field\"><label>股票名称</label><input id=\"name\" value=\"玉禾田\"></div>\n      <div class=\"field\"><label>对应转债名称</label><input id=\"bondName\" value=\"玉禾转债\"></div>\n      <div class=\"field\"><label>标的当日收盘价（确权基准价）</label><input id=\"price\" type=\"number\" step=\"0.01\" value=\"16.35\"><span class=\"u\">元</span></div>\n      <div class=\"field\"><label>官方每股配售金额（4位小数）</label><input id=\"perShare\" type=\"number\" step=\"0.0001\" value=\"3.0969\"><span class=\"u\">元/股</span></div>\n      <div class=\"field\"><label>股权登记日</label><input id=\"regDate\" value=\"2026-07-28\"></div>\n      <div class=\"field\"><label>配债缴款日</label><input id=\"payDate\" value=\"2026-07-29\"></div>\n      <div class=\"field\"><label>转债发行总规模</label><input id=\"issueSize\" value=\"15.00\"><span class=\"u\">亿元</span></div>\n      <div class=\"field\"><label>转债信用评级</label><input id=\"rating\" value=\"AA\"></div>\n      <div class=\"field\"><label>正股最新转股价</label><input id=\"convPrice\" type=\"number\" step=\"0.01\" value=\"16.35\"><span class=\"u\">元</span></div>\n      <div class=\"field\"><label>转债预期上市价格（可自定义）</label><input id=\"listingPrice\" type=\"number\" step=\"0.1\" value=\"157.3\"><span class=\"u\">元（默认激进价，可手动改为保守价）</span></div>\n      <div class=\"field\" title=\"控股股东、实控人及其一致行动人（即使单个<5%只要属一致行动人也计入）合计持股数\"><label>锁定持股数</label><input id=\"lockShares\" type=\"number\" step=\"1\" value=\"171057001\"><span class=\"u\">股</span></div>\n      <div class=\"field\"><label>锁定股东配售参与比例</label><input id=\"lockRatio\" type=\"number\" step=\"1\" value=\"100\"><span class=\"u\">%（默认100，放弃则调低）</span></div>\n      <div class=\"field\"><label>转债可流通规模（自动倒推·不可改）</label><input id=\"floatScale\" type=\"number\" step=\"0.01\" readonly value=\"\"><span class=\"u\">亿元</span></div>\n    </div>\n    <div class=\"core-params\">\n      <div class=\"cp\"><div class=\"k\">单张转债盈利 = 上市价 − 100</div><div class=\"v num-tabular\" id=\"profitPerBond\">—</div></div>\n      <div class=\"cp\"><div class=\"k\">理论安全垫（满配·忽略碎面损耗）</div><div class=\"v num-tabular\" id=\"theoCushion\">—</div></div>\n      <div class=\"cp\"><div class=\"k\">制表日期</div><div class=\"v num-tabular\" id=\"tableDateValue\">—</div></div>\n    </div>\n    <button class=\"btn-print\" onclick=\"window.print()\">打印 / 导出 PDF</button>\n  </div>\n\n  <div class=\"card\">\n    <div class=\"section-h\">二、全档位仓位测算</div>\n    <div id=\"calcError\" style=\"display:none; color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:10px 12px; margin-bottom:10px; font-size:13px;\"></div>\n    <div class=\"table-scroll\">\n      <table>\n        <colgroup><col style=\"width:9%\"><col style=\"width:14%\"><col style=\"width:12%\"><col style=\"width:12%\"><col style=\"width:12%\"><col style=\"width:11%\"><col style=\"width:15%\"><col style=\"width:15%\"></colgroup>\n        <thead>\n          <tr>\n            <th>股数档位</th>\n            <th>所需资金(正股)</th>\n            <th>理论获配</th>\n            <th>实际获配</th>\n            <th>预期盈利</th>\n            <th>安全垫</th>\n            <th>星级评级</th>\n            <th>该档评级</th>\n          </tr>\n        </thead>\n        <tbody id=\"tierBody\" class=\"num-tabular\"><tr><td colspan=\"8\" style=\"padding:24px;color:#9ca3af;text-align:center;\">正在计算档位数据，请稍候…</td></tr></tbody>\n      </table>\n    </div>\n    <div class=\"hint\" style=\"margin-top:12px;\">\n      说明：深市配债按张计算，理论获配金额<b>向下取整百元</b>，舍去不足100元的零碎面值（不四舍五入、不进位）。\n      持仓体量越小，碎面损耗越高、实际安全垫越低。上表「实际获配」已套用该铁规。\n    </div>\n  </div>\n\n  <div class=\"card\">\n    <div class=\"section-h\">三、风险评级结论</div>\n    <div class=\"verdict\">\n      <div><span class=\"big-stars\" id=\"headlineStars\">—</span><span class=\"label\" id=\"headlineLabel\">—</span></div>\n      <div class=\"line\">基准安全垫（满配理论）：<b id=\"headlineCushion\">—</b> ｜ 评级阈值：≥9%★★★★★ ｜ 7–9%★★★★ ｜ 4–7%★★★ ｜ 2–4%★★ ｜ &lt;2%★</div>\n      <div class=\"line\">注：基准安全垫按「忽略碎面损耗」测算，代表大资金满配下的理想安全垫；小仓位实际安全垫见上表各档，会低于基准值。</div>\n    </div>\n  </div>\n\n  <div class=\"card notes\">\n    <div class=\"section-h\">四、注释说明</div>\n\n    <h4>核心策略模型</h4>\n    <ul>\n      <li>登记日潜伏买入正股 → 收盘确权获取转债配售权 → 缴款日清仓正股 → 持有转债上市套利。</li>\n    </ul>\n\n    <h4>标准交易执行策略</h4>\n    <ul>\n      <li><b>低风险潜伏打法（首选推荐）</b>：登记日前 3–5 天分批建底仓，不一次性满仓；股价上涨则减仓兑现浮盈、保留核心底仓锁定配债权、被动增厚安全垫；股价下跌则分批加仓摊薄成本、主动增厚安全垫；股权登记日收盘锁定最终持仓确保确权；配债缴款日开盘无条件清仓全部正股，仅保留转债等待上市套利。</li>\n      <li><b>短线尾盘突击打法（高风险）</b>：登记日尾盘 14:40–14:55 集中建仓，最小化资金占用时间；优势是资金闲置成本极低，劣势是无择时、摊成本空间，尾盘抢筹易抬高成本、压缩安全垫。</li>\n    </ul>\n\n    <h4>核心风控铁律（永久通用）</h4>\n    <ul>\n      <li>所有盈利、安全垫测算基于「自定义转债上市价格」，行情走弱/走强需手动调整参数重新演算风险。</li>\n      <li>深市零碎配债面值全部舍去，持仓体量越小，配售资金损耗越高。</li>\n      <li>抢权套利最大风险：缴款日套利资金集体兑现砸盘，单日踩踏下跌击穿安全垫。</li>\n      <li>配债为股东权利，确权后需<b>手动缴款</b>，未缴款自动放弃配售额度。</li>\n      <li>本策略为纯短线套利，正股不做中长期持有，杜绝趋势博弈。</li>\n    </ul>\n\n    <h4>五星风险评级体系（永久复用）</h4>\n    <ul>\n      <li>★★★★★ 极致优质：安全垫 ≥9%，小盘转债、潜伏窗口期充足、容错极高。</li>\n      <li>★★★★ 优质稳健：安全垫 7%–9%，性价比优异，适合主力重仓参与。</li>\n      <li>★★★ 中性博弈：安全垫 4%–7%，容错一般，仅适合小仓位试错。</li>\n      <li>★★ 风险偏弱：安全垫 2%–4%，回撤风险高，不建议常规参与。</li>\n      <li>★ 极致垃圾：安全垫 &lt;2%，极易总账亏损，直接放弃标的。</li>\n    </ul>\n\n    <h4>可流通规模倒推逻辑（永久复用 · 禁止瞎估）</h4>\n    <ul>\n      <li>规则依据：2023 年《证券发行与承销管理办法》修订后，原股东优先配售的可转债中，<b>持股 ≥5% 的股东、实际控制人及其一致行动人、董监高</b>参与配售的部分，自发行结束之日起 <b>6 个月内不得转让（锁定）</b>；其余持股 &lt;5% 且非一致行动人的原股东配售部分，以及网上/网下中签部分，上市首日即可全流通。</li>\n      <li>倒推公式：<b>锁定部分（亿元）= 锁定股东合计持股数 × 每股配售金额 × 大股东配售参与比例 ÷ 1 亿</b>；<b>可流通规模 = 发行总规模 − 锁定部分</b>。</li>\n      <li>锁定股东范围：控股股东 + 实际控制人 + 其一致行动人（即使单个持股 &lt;5%，只要属一致行动人也计入）。大股东若<b>放弃配售</b>，相应份额转网上发行、变为全流通，流通规模会显著变大——因此「大股东配不配债」是流通盘的核心变量。</li>\n      <li>本页「转债可流通规模」由上述公式<b>自动倒推、不接受手填</b>，确保每页数字都可回溯到公告披露的大股东持股与配售参与比例，杜绝主观乱估。</li>\n    </ul>\n\n    <h4>经典标的对标案例（固化参考 · 默认上市价 157.3）</h4>\n    <table class=\"bench\">\n      <thead><tr><th>标的</th><th>基准安全垫（默认157.3）</th><th>风险评级</th><th>核心优劣总结</th></tr></thead>\n      <tbody>\n        <tr><td>玉禾田（玉禾转债）</td><td>10%+</td><td>★★★★★</td><td>厚安全垫（10%+）、容错极高；但流通盘约 9.7 亿非迷你债，炒作弹性有限</td></tr>\n        <tr><td>丰茂股份（丰茂转债）</td><td>9%+</td><td>★★★★★</td><td>迷你债（流通约 1.5 亿）易爆炒、安全垫充足，当期最优套利标的</td></tr>\n        <tr><td>震裕科技（震裕转02）</td><td>4.2%左右</td><td>★★★</td><td>安全垫极薄、无潜伏窗口期、波动大，仅适合博弈型小仓位</td></tr>\n      </tbody>\n    </table>\n  </div>\n\n</div>\n\n<script>\n  // —— 固定测算仓位档位（统一标准，无需自定义）——\n  const TIERS = [100,200,300,400,500,600,700,800,900,1000,2000,3000,4000];\n  const DEFAULT_LISTING = 157.3;\n\n  function ratingFor(c){\n    if (c >= 9) return { stars:'★★★★★', label:'极致优质', cls:'r5' };\n    if (c >= 7) return { stars:'★★★★',   label:'优质稳健', cls:'r4' };\n    if (c >= 4) return { stars:'★★★',    label:'中性博弈', cls:'r3' };\n    if (c >= 2) return { stars:'★★',     label:'风险偏弱', cls:'r2' };\n    return        { stars:'★',       label:'极致垃圾', cls:'r1' };\n  }\n  function fmt(n, d){\n    if (!isFinite(n)) return '—';\n    return Number(n).toLocaleString('zh-CN', { minimumFractionDigits:d, maximumFractionDigits:d });\n  }\n\n  function showError(msg){\n    const err = document.getElementById('calcError');\n    if (err) { err.textContent = '计算异常：' + msg; err.style.display = 'block'; }\n  }\n\n  // 核心公式（参数联动）\n  // 所需资金 = 持股数量 × 收盘价\n  // 理论获配 = 持股数量 × 每股配售金额\n  // 实际获配 = 沪市(60/688) FLOOR(理论获配 ÷ 1000) × 1000；深市(00/30) FLOOR(理论获配 ÷ 100) × 100\n  // 预期盈利 = (实际获配 ÷ 100) × (上市价 − 100)\n  // 安全垫   = 预期盈利 ÷ 所需资金 × 100%   （保留2位小数）\n  // 需要金额 = 正股所需资金 + 实际获配转债面值\n  function recompute(){\n    try {\n    const P  = parseFloat(document.getElementById('price').value) || 0;\n    const A  = parseFloat(document.getElementById('perShare').value) || 0;\n    const noScheme = !(A > 0);   // 方案未定（无每股配售）→ 获配/安全垫用横杠，不误导\n    const L  = parseFloat(document.getElementById('listingPrice').value) || DEFAULT_LISTING;\n    const profitPerBond = L - 100;\n\n    document.getElementById('profitPerBond').textContent = noScheme ? '—' : (fmt(profitPerBond, 1) + ' 元');\n\n    const tbody = document.getElementById('tierBody');\n    tbody.innerHTML = '';\n    TIERS.forEach(function(N){\n      const cost   = N * P;                       // 所需资金(正股)\n      const theo   = noScheme ? null : N * A;       // 理论获配\n      const codeEl = document.getElementById('code');\n      const isSH   = codeEl && String(codeEl.value)[0] === '6'; // 沪市(60/688)按手(1000)取整\n      const actual = noScheme ? null : (isSH ? Math.floor(theo / 1000) * 1000 : Math.floor(theo / 100) * 100); // 实际获配：沪市floor1000 / 深市floor100\n      const profit = noScheme ? null : (actual / 100) * profitPerBond; // 预期盈利\n      const cushion = (noScheme || cost <= 0) ? null : profit / cost * 100; // 安全垫%\n      const r = cushion == null ? null : ratingFor(cushion);\n      const tr = document.createElement('tr');\n      tr.innerHTML =\n        '<td class=\"tier\">' + N + '</td>' +\n        '<td class=\"num\">' + fmt(cost, 0) + '</td>' +\n        '<td class=\"num\">' + (noScheme ? '—' : fmt(theo, 2)) + '</td>' +\n        '<td class=\"num\">' + (noScheme ? '—' : fmt(actual, 0)) + '</td>' +\n        '<td class=\"num\">' + (noScheme ? '—' : fmt(profit, 2)) + '</td>' +\n        '<td class=\"cushion\">' + (noScheme ? '—' : fmt(cushion, 2) + '%') + '</td>' +\n        '<td class=\"stars ' + (r ? r.cls : '') + '\">' + (noScheme ? '—' : r.stars) + '</td>' +\n        '<td class=\"' + (r ? r.cls : '') + '\">' + (noScheme ? '—' : r.label) + '</td>';\n      tbody.appendChild(tr);\n    });\n\n    // 理论安全垫（满配·忽略碎面损耗）= 每股配售盈利 ÷ 每股股价，已是百分比\n    // 每股配售盈利 = (A/100) × 上市盈利；÷ 股价 P；×100%  ⇒  A × 上市盈利 ÷ P\n    const theoCushion = (P > 0 && A > 0) ? (A * profitPerBond) / P : null;\n    const head = noScheme ? null : ratingFor(theoCushion);\n    document.getElementById('theoCushion').textContent = noScheme ? '—' : fmt(theoCushion, 2) + '%';\n    document.getElementById('headlineStars').textContent = noScheme ? '—' : head.stars;\n    document.getElementById('headlineLabel').textContent = noScheme ? '方案未定' : head.label;\n    document.getElementById('headlineCushion').textContent = noScheme ? '—' : fmt(theoCushion, 2) + '%';\n\n    // 可流通规模倒推（底层逻辑：总规模 − 锁定股东优先配售锁定部分）\n    // 规则：2023《证券发行与承销管理办法》修订后，持股≥5%股东、实控人及其一致行动人、董监高\n    //       通过优先配售取得的可转债，发行结束日起 6 个月内不得转让（锁定）；其余原股东及网申中签上市首日全流通。\n    // 倒推公式：锁定部分(亿元) = 锁定股东合计持股数(股) × 每股配售(元/股) × 参与比例 ÷ 1e8\n    //           可流通规模      = 发行总规模 − 锁定部分\n    const issue      = parseFloat(document.getElementById('issueSize').value) || 0;\n    const lockShares = parseFloat(document.getElementById('lockShares').value) || 0;\n    const lockRatio  = parseFloat(document.getElementById('lockRatio').value) || 0;\n    const floatEl    = document.getElementById('floatScale');\n    if (lockShares > 0) {\n      const locked     = lockShares * A * (lockRatio / 100) / 1e8;   // 亿元\n      const floatScale = issue - locked;                            // 亿元（自动倒推，只读）\n      floatEl.value = fmt(floatScale, 2);\n      document.getElementById('floatScaleTag').textContent = floatScale > 0\n        ? ('本转债倒推可流通规模约 ' + fmt(floatScale, 2) + ' 亿元（总规模 ' + fmt(issue,2) + ' − 锁定 ' + fmt(locked,2) + '）')\n        : '（请填写锁定股东合计持股数）';\n    } else {\n      // 无锁定股东数据时保留生成器注入值，不瞎算\n      const current = parseFloat(floatEl.value) || 0;\n      if (!current) floatEl.value = '';\n      document.getElementById('floatScaleTag').textContent = current > 0\n        ? ('本转债可流通规模约 ' + fmt(current, 2) + ' 亿元')\n        : '（锁定股东持股数未提供，可流通规模待补）';\n    }\n    const err = document.getElementById('calcError');\n    if (err) err.style.display = 'none';\n  } catch (e) {\n    showError(e.message);\n  }\n}\n\n  document.querySelectorAll('input').forEach(function(i){ i.addEventListener('input', recompute); });\n\n  // 制表日期：生成时已写入则保留；打开时仍为占位符则补为当天，便于回溯\n  (function initDate(){\n    const d = document.getElementById('tableDateValue');\n    if (!d || d.textContent === '—' || !d.textContent.trim()) {\n      const t = new Date();\n      const p = function(n){ return String(n).padStart(2,'0'); };\n      d.textContent = t.getFullYear() + '-' + p(t.getMonth()+1) + '-' + p(t.getDate());\n    }\n  })();\n\n  // 计算入口：立即执行 + DOMReady + Load 三重保险，确保在各种预览环境都能渲染\n  function runCompute(){\n    try {\n      recompute();\n      console.log('[潜伏配债] 档位计算完成');\n    } catch(e) {\n      console.error('[潜伏配债] 计算异常:', e);\n      showError(e.message + '（请按 F12 查看控制台详情）');\n    }\n  }\n  runCompute();\n  if (document.readyState === 'loading') {\n    document.addEventListener('DOMContentLoaded', runCompute);\n    window.addEventListener('load', runCompute);\n  } else {\n    // DOM 已就绪，但仍可能在 load 后某些资源加载导致重排，再补一次\n    runCompute();\n    if (document.readyState !== 'complete') {\n      window.addEventListener('load', runCompute);\n    }\n  }\n<\\/script>\n</body>\n</html>\n";
+const PRICE_DATE = '2026-08-17';
+const GEN_DATE = '2026-08-17';
+const TEMPLATE = "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>可转债潜伏配债量化测算</title>\n<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23e0a82e'/%3E%3Ctext x='16' y='23' font-size='20' font-family='sans-serif' font-weight='700' text-anchor='middle' fill='%233d2f00'%3E可%3C/text%3E%3C/svg%3E\">\n<style>\n  * { box-sizing: border-box; }\n  :root {\n    /* 与汇总看板统一的设计令牌 */\n    --amber:#e0a82e; --amber-deep:#8a6310; --amber-tint:#fbf6ea; --amber-ink:#3d2f00; --amber-line:#d8b25a;\n    --ink:#1f2430; --muted:#737a89; --line:#e9ebef; --bg:#f5f6f8; --surface:#ffffff;\n    --num-bg:#f7f9fb; --num-ink:#2a3142;\n    --cush:#1f7a5c; --cush-bg:#eef7f2;\n    --up:#c0392b;\n    --radius:16px;\n    --shadow:0 24px 48px -20px rgba(20,28,46,.10);\n  }\n  body {\n    font-family:\"Manrope\",\"PingFang SC\",\"Microsoft YaHei\",\"Hiragino Sans GB\",system-ui,-apple-system,\"Segoe UI\",sans-serif;\n    margin: 0; padding: 26px 20px 56px; background: var(--bg); color: var(--ink);\n    -webkit-font-smoothing: antialiased; text-rendering:optimizeLegibility;\n    -webkit-print-color-adjust: exact; print-color-adjust: exact;\n  }\n  .wrap { max-width: 1080px; margin: 0 auto; }\n  .num-tabular { font-variant-numeric: tabular-nums; font-family:\"JetBrains Mono\",\"SF Mono\",ui-monospace,monospace; }\n\n  /* 与汇总看板一致的标题：左对齐 + 琥珀左边框（无黄色色块、无居中套路） */\n  .page-head { position: relative; margin-bottom: 22px; }\n  .page-head h1 {\n    font-size: 36px; font-weight: 800; letter-spacing: -.02em; color: var(--ink);\n    margin: 0; line-height: 1.12; padding-left: 18px; border-left: 6px solid var(--amber);\n  }\n  .page-head .eyebrow {\n    font-size: 11.5px; letter-spacing: .2em; color: var(--amber-deep); font-weight: 700;\n    text-transform: uppercase; margin-bottom: 10px;\n  }\n  .page-head .sub { font-size: 13px; color: var(--muted); margin: 10px 0 0 18px; line-height: 1.7; }\n\n  /* 已关注 N 天 · 右上角小角标（选项 B）：从「加表日期」算到今天 */\n  .watch-badge {\n    position: absolute; top: 2px; right: 0;\n    display: inline-flex; align-items: center; gap: 5px;\n    font-size: 12px; font-weight: 600; line-height: 1; white-space: nowrap;\n    color: var(--amber-deep); background: var(--amber-tint);\n    border: 1px solid var(--amber-line); border-radius: 999px;\n    padding: 6px 11px; box-shadow: 0 2px 6px -2px rgba(138,99,16,.25);\n  }\n  .watch-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber-deep); flex: none; }\n  .watch-badge.empty { display: none; }\n  @media (max-width:600px){\n    .watch-badge { position: static; display: inline-flex; margin-top: 12px; }\n  }\n\n  .card {\n    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);\n    padding: 18px 22px 22px; margin-bottom: 20px; box-shadow: var(--shadow);\n  }\n  /* 小节标题：与 h1 同构的琥珀左边框（去色块化，弱化 AI 套路） */\n  .section-h {\n    display: block; font-size: 15px; font-weight: 800; color: var(--ink);\n    padding: 2px 0 2px 11px; border-left: 4px solid var(--amber); margin: 2px 0 14px;\n  }\n  .hint { font-size: 12.5px; color: var(--muted); margin: -8px 0 14px; line-height: 1.65; }\n  .hint b { color: var(--ink); }\n\n  /* 参数录入网格：标签在上、输入在下 */\n  .form-grid {\n    display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px 18px;\n  }\n  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }\n  .field .u { color: #9ca3af; font-size: 11px; margin-left: 3px; }\n  .field input {\n    width: 100%; padding: 9px 11px; border: 1px solid #d1d5db; border-radius: 9px;\n    font-size: 14px; font-family: inherit; background: #fffef8; color: var(--ink);\n    transition: border-color .15s, box-shadow .15s;\n  }\n  .field input:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(224,168,46,.16); }\n  .field input[readonly] { background: #f3f4f6; color: var(--muted); cursor: default; }\n\n  /* 核心参数条 */\n  .core-params { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }\n  .cp {\n    background: var(--amber-tint); border: 1px solid var(--amber-line); border-radius: 11px;\n    padding: 11px 16px; transition: transform .12s ease;\n  }\n  .cp:hover { transform: translateY(-1px); }\n  .cp .k { font-size: 12px; color: var(--amber-deep); }\n  .cp .v { font-size: 19px; font-weight: 800; color: var(--amber-deep); margin-top: 2px; }\n\n  /* 流通规模提醒横幅（去渐变，纯色块 + 顶部琥珀强调线） */\n  .float-warning {\n    background: var(--amber-tint); border: 1px solid var(--amber-line); border-top: 3px solid var(--amber);\n    border-radius: 0 0 var(--radius) var(--radius); padding: 14px 20px; margin: 0 0 18px 0; box-shadow: var(--shadow);\n  }\n  .float-warning .tag {\n    display: inline-block; background: var(--amber); color: var(--amber-ink);\n    font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 4px; margin-right: 8px;\n  }\n  .float-warning p { margin: 4px 0 0; font-size: 13px; color: var(--amber-deep); line-height: 1.7; }\n  .float-warning b { color: var(--amber-ink); }\n\n  .btn-print {\n    margin-top: 16px; padding: 9px 20px; background: var(--amber); color: var(--amber-ink);\n    border: 1px solid var(--amber-line); border-radius: 9px; font-size: 14px; font-weight: 700;\n    cursor: pointer; transition: transform .1s ease, background .15s;\n  }\n  .btn-print:hover { background: #d29a24; }\n  .btn-print:active { transform: translateY(1px) scale(.985); }\n\n  /* 表格：与汇总看板一致 —— 固定布局 + 琥珀表头吸顶 + 数字等宽 */\n  .table-scroll { overflow-x: auto; }\n  table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 13px; margin-top: 2px; }\n  thead th {\n    background: var(--amber); color: var(--amber-ink); padding: 11px 8px; text-align: center;\n    border: 1px solid var(--amber-line); font-weight: 700; white-space: normal; line-height: 1.3;\n    position: sticky; top: 0; z-index: 3; font-size: 13px; box-shadow: 0 3px 6px -2px rgba(0,0,0,.18);\n  }\n  tbody td {\n    padding: 9px 8px; text-align: center; border: 1px solid var(--line);\n    font-family:\"JetBrains Mono\",\"SF Mono\",ui-monospace,monospace; font-variant-numeric: tabular-nums;\n    transition: background .12s ease; font-size: 13px;\n  }\n  .num { background: var(--num-bg); color: var(--num-ink); }\n  .cushion { background: var(--cush-bg); color: var(--cush); font-weight: 700; }\n  .stars { font-size: 12px; white-space: nowrap; }\n  .tier { background: #f7f9fb; font-weight: 700; color: #37474f; }\n  /* 评级色与汇总看板对齐 */\n  .r5 { color: #8a6310; font-weight: 800; }\n  .r4 { color: var(--up); font-weight: 800; }\n  .r3 { color: #5b8c5a; font-weight: 800; }\n  .r2 { color: #c2772e; font-weight: 800; }\n  .r1 { color: #9aa0aa; font-weight: 800; }\n\n  /* 十字高亮：与汇总看板一致（琥珀低饱和底 + 琥珀描边） */\n  tbody tr:hover td {\n    background: rgba(224,168,46,.16) !important;\n    box-shadow: inset 0 0 0 2px var(--amber);\n  }\n  table:has(tbody td:nth-child(1):hover) tbody td:nth-child(1),\n  table:has(tbody td:nth-child(1):hover) thead th:nth-child(1),\n  table:has(tbody td:nth-child(2):hover) tbody td:nth-child(2),\n  table:has(tbody td:nth-child(2):hover) thead th:nth-child(2),\n  table:has(tbody td:nth-child(3):hover) tbody td:nth-child(3),\n  table:has(tbody td:nth-child(3):hover) thead th:nth-child(3),\n  table:has(tbody td:nth-child(4):hover) tbody td:nth-child(4),\n  table:has(tbody td:nth-child(4):hover) thead th:nth-child(4),\n  table:has(tbody td:nth-child(5):hover) tbody td:nth-child(5),\n  table:has(tbody td:nth-child(5):hover) thead th:nth-child(5),\n  table:has(tbody td:nth-child(6):hover) tbody td:nth-child(6),\n  table:has(tbody td:nth-child(6):hover) thead th:nth-child(6),\n  table:has(tbody td:nth-child(7):hover) tbody td:nth-child(7),\n  table:has(tbody td:nth-child(7):hover) thead th:nth-child(7),\n  table:has(tbody td:nth-child(8):hover) tbody td:nth-child(8),\n  table:has(tbody td:nth-child(8):hover) thead th:nth-child(8) {\n    background: rgba(224,168,46,.16) !important;\n    box-shadow: inset 0 0 0 2px var(--amber);\n  }\n  table:has(tbody td:nth-child(1):hover) tbody tr:hover td:nth-child(1),\n  table:has(tbody td:nth-child(2):hover) tbody tr:hover td:nth-child(2),\n  table:has(tbody td:nth-child(3):hover) tbody tr:hover td:nth-child(3),\n  table:has(tbody td:nth-child(4):hover) tbody tr:hover td:nth-child(4),\n  table:has(tbody td:nth-child(5):hover) tbody tr:hover td:nth-child(5),\n  table:has(tbody td:nth-child(6):hover) tbody tr:hover td:nth-child(6),\n  table:has(tbody td:nth-child(7):hover) tbody tr:hover td:nth-child(7),\n  table:has(tbody td:nth-child(8):hover) tbody tr:hover td:nth-child(8) {\n    background: rgba(224,168,46,.26) !important;\n    box-shadow: inset 0 0 0 3px var(--amber);\n  }\n\n  /* 评级结论 */\n  .verdict { background: var(--amber-tint); border: 1px solid var(--amber-line); border-radius: 12px; padding: 18px 22px; }\n  .verdict .big-stars { font-size: 30px; color: var(--amber-deep); letter-spacing: 4px; }\n  .verdict .label { font-size: 20px; font-weight: 800; margin-left: 10px; }\n  .verdict .line { font-size: 14px; margin-top: 10px; color: var(--muted); line-height: 1.7; }\n  .verdict .line b { color: var(--ink); }\n\n  /* 注释说明 */\n  .notes h4 { margin: 18px 0 7px; font-size: 14px; font-weight: 800; color: var(--ink); padding-left: 11px; border-left: 4px solid var(--amber); }\n  .notes ul { margin: 4px 0 4px; padding-left: 20px; }\n  .notes li { font-size: 13px; line-height: 1.75; color: #4b5563; margin-bottom: 4px; }\n  .bench { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; margin-top: 8px; }\n  .bench th { background: var(--amber); color: var(--amber-ink); padding: 8px 10px; border: 1px solid var(--amber-line); text-align: left; font-weight: 700; }\n  .bench td { padding: 8px 10px; border: 1px solid var(--line); }\n\n  @media print {\n    body { background: #fff; padding: 0; }\n    .card { border: 1px solid var(--line); border-radius: 0; box-shadow: none; }\n    .btn-print { display: none; }\n  }\n  @media (max-width:600px){\n    .page-head h1 { font-size: 26px; }\n    .table-scroll table { min-width: 760px; }\n  }\n</style>\n</head>\n<body>\n<div class=\"wrap\">\n\n  <div class=\"page-head\">\n    <div class=\"eyebrow\">可转债潜伏配债 · 量化测算</div>\n    <h1>{{BOARD_TITLE}}抢权配售 · {{stockName}}</h1>\n    <div class=\"sub\">参数可自定义 · 全档位自动演算 · 风险评级对标</div>\n    <div class=\"watch-badge empty\" id=\"watchBadge\"><span class=\"dot\"></span><span id=\"watchBadgeText\">已关注 — 天</span></div>\n  </div>\n\n  <div class=\"float-warning\">\n    <div><span class=\"tag\">流通规模提醒</span><b id=\"floatScaleTag\">—</b></div>\n    <p>可流通规模越小，上市越易被资金集中炒作推高、上市溢价空间越大；但对应波动与回撤风险也同步放大。小盘债需重点盯住炒作情绪与兑现时点，避免在情绪高点接盘。</p>\n  </div>\n\n  <div class=\"card\">\n    <div class=\"section-h\">一、参数录入</div>\n    <div class=\"hint\">修改任意参数，下方测算结果与风险评级将实时联动刷新。带（可自定义）的为预期上市价，其余为标的公告数据。</div>\n    <div class=\"form-grid\">\n      <div class=\"field\"><label>股票代码</label><input id=\"code\" value=\"300815\"></div>\n      <div class=\"field\"><label>股票名称</label><input id=\"name\" value=\"玉禾田\"></div>\n      <div class=\"field\"><label>对应转债名称</label><input id=\"bondName\" value=\"玉禾转债\"></div>\n      <div class=\"field\"><label>标的当日收盘价（确权基准价）</label><input id=\"price\" type=\"number\" step=\"0.01\" value=\"16.35\"><span class=\"u\">元</span></div>\n      <div class=\"field\"><label>官方每股配售金额（4位小数）</label><input id=\"perShare\" type=\"number\" step=\"0.0001\" value=\"3.0969\"><span class=\"u\">元/股</span></div>\n      <div class=\"field\"><label>加表日期</label><input id=\"addDate\" value=\"\" placeholder=\"YYYY-MM-DD\"></div>\n      <div class=\"field\"><label>股权登记日</label><input id=\"regDate\" value=\"2026-07-28\"></div>\n      <div class=\"field\"><label>配债缴款日</label><input id=\"payDate\" value=\"2026-07-29\"></div>\n      <div class=\"field\"><label>转债发行总规模</label><input id=\"issueSize\" value=\"15.00\"><span class=\"u\">亿元</span></div>\n      <div class=\"field\"><label>转债信用评级</label><input id=\"rating\" value=\"AA\"></div>\n      <div class=\"field\"><label>正股最新转股价</label><input id=\"convPrice\" type=\"number\" step=\"0.01\" value=\"16.35\"><span class=\"u\">元</span></div>\n      <div class=\"field\"><label>转债预期上市价格（可自定义）</label><input id=\"listingPrice\" type=\"number\" step=\"0.1\" value=\"157.3\"><span class=\"u\">元（默认激进价，可手动改为保守价）</span></div>\n      <div class=\"field\" title=\"控股股东、实控人及其一致行动人（即使单个<5%只要属一致行动人也计入）合计持股数\"><label>锁定持股数</label><input id=\"lockShares\" type=\"number\" step=\"1\" value=\"171057001\"><span class=\"u\">股</span></div>\n      <div class=\"field\"><label>锁定股东配售参与比例</label><input id=\"lockRatio\" type=\"number\" step=\"1\" value=\"100\"><span class=\"u\">%（默认100，放弃则调低）</span></div>\n      <div class=\"field\"><label>转债可流通规模（自动倒推·不可改）</label><input id=\"floatScale\" type=\"number\" step=\"0.01\" readonly value=\"\"><span class=\"u\">亿元</span></div>\n    </div>\n    <div class=\"core-params\">\n      <div class=\"cp\"><div class=\"k\">单张转债盈利 = 上市价 − 100</div><div class=\"v num-tabular\" id=\"profitPerBond\">—</div></div>\n      <div class=\"cp\"><div class=\"k\">理论安全垫（满配·忽略碎面损耗）</div><div class=\"v num-tabular\" id=\"theoCushion\">—</div></div>\n      <div class=\"cp\"><div class=\"k\">制表日期</div><div class=\"v num-tabular\" id=\"tableDateValue\">—</div></div>\n    </div>\n    <button class=\"btn-print\" onclick=\"window.print()\">打印 / 导出 PDF</button>\n  </div>\n\n  <div class=\"card\">\n    <div class=\"section-h\">二、全档位仓位测算</div>\n    <div id=\"calcError\" style=\"display:none; color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:10px 12px; margin-bottom:10px; font-size:13px;\"></div>\n    <div class=\"table-scroll\">\n      <table>\n        <colgroup><col style=\"width:9%\"><col style=\"width:14%\"><col style=\"width:12%\"><col style=\"width:12%\"><col style=\"width:12%\"><col style=\"width:11%\"><col style=\"width:15%\"><col style=\"width:15%\"></colgroup>\n        <thead>\n          <tr>\n            <th>股数档位</th>\n            <th>所需资金(正股)</th>\n            <th>理论获配</th>\n            <th>实际获配</th>\n            <th>预期盈利</th>\n            <th>安全垫</th>\n            <th>星级评级</th>\n            <th>该档评级</th>\n          </tr>\n        </thead>\n        <tbody id=\"tierBody\" class=\"num-tabular\"><tr><td colspan=\"8\" style=\"padding:24px;color:#9ca3af;text-align:center;\">正在计算档位数据，请稍候…</td></tr></tbody>\n      </table>\n    </div>\n    <div class=\"hint\" style=\"margin-top:12px;\">\n      说明：深市配债按张计算，理论获配金额<b>向下取整百元</b>，舍去不足100元的零碎面值（不四舍五入、不进位）。\n      持仓体量越小，碎面损耗越高、实际安全垫越低。上表「实际获配」已套用该铁规。\n    </div>\n  </div>\n\n  <div class=\"card\">\n    <div class=\"section-h\">三、风险评级结论</div>\n    <div class=\"verdict\">\n      <div><span class=\"big-stars\" id=\"headlineStars\">—</span><span class=\"label\" id=\"headlineLabel\">—</span></div>\n      <div class=\"line\">基准安全垫（满配理论）：<b id=\"headlineCushion\">—</b> ｜ 评级阈值：≥9%★★★★★ ｜ 7–9%★★★★ ｜ 4–7%★★★ ｜ 2–4%★★ ｜ &lt;2%★</div>\n      <div class=\"line\">注：基准安全垫按「忽略碎面损耗」测算，代表大资金满配下的理想安全垫；小仓位实际安全垫见上表各档，会低于基准值。</div>\n    </div>\n  </div>\n\n  <div class=\"card notes\">\n    <div class=\"section-h\">四、注释说明</div>\n\n    <h4>核心策略模型</h4>\n    <ul>\n      <li>登记日潜伏买入正股 → 收盘确权获取转债配售权 → 缴款日清仓正股 → 持有转债上市套利。</li>\n    </ul>\n\n    <h4>标准交易执行策略</h4>\n    <ul>\n      <li><b>低风险潜伏打法（首选推荐）</b>：登记日前 3–5 天分批建底仓，不一次性满仓；股价上涨则减仓兑现浮盈、保留核心底仓锁定配债权、被动增厚安全垫；股价下跌则分批加仓摊薄成本、主动增厚安全垫；股权登记日收盘锁定最终持仓确保确权；配债缴款日开盘无条件清仓全部正股，仅保留转债等待上市套利。</li>\n      <li><b>短线尾盘突击打法（高风险）</b>：登记日尾盘 14:40–14:55 集中建仓，最小化资金占用时间；优势是资金闲置成本极低，劣势是无择时、摊成本空间，尾盘抢筹易抬高成本、压缩安全垫。</li>\n    </ul>\n\n    <h4>核心风控铁律（永久通用）</h4>\n    <ul>\n      <li>所有盈利、安全垫测算基于「自定义转债上市价格」，行情走弱/走强需手动调整参数重新演算风险。</li>\n      <li>深市零碎配债面值全部舍去，持仓体量越小，配售资金损耗越高。</li>\n      <li>抢权套利最大风险：缴款日套利资金集体兑现砸盘，单日踩踏下跌击穿安全垫。</li>\n      <li>配债为股东权利，确权后需<b>手动缴款</b>，未缴款自动放弃配售额度。</li>\n      <li>本策略为纯短线套利，正股不做中长期持有，杜绝趋势博弈。</li>\n    </ul>\n\n    <h4>五星风险评级体系（永久复用）</h4>\n    <ul>\n      <li>★★★★★ 极致优质：安全垫 ≥9%，小盘转债、潜伏窗口期充足、容错极高。</li>\n      <li>★★★★ 优质稳健：安全垫 7%–9%，性价比优异，适合主力重仓参与。</li>\n      <li>★★★ 中性博弈：安全垫 4%–7%，容错一般，仅适合小仓位试错。</li>\n      <li>★★ 风险偏弱：安全垫 2%–4%，回撤风险高，不建议常规参与。</li>\n      <li>★ 极致垃圾：安全垫 &lt;2%，极易总账亏损，直接放弃标的。</li>\n    </ul>\n\n    <h4>可流通规模倒推逻辑（永久复用 · 禁止瞎估）</h4>\n    <ul>\n      <li>规则依据：2023 年《证券发行与承销管理办法》修订后，原股东优先配售的可转债中，<b>持股 ≥5% 的股东、实际控制人及其一致行动人、董监高</b>参与配售的部分，自发行结束之日起 <b>6 个月内不得转让（锁定）</b>；其余持股 &lt;5% 且非一致行动人的原股东配售部分，以及网上/网下中签部分，上市首日即可全流通。</li>\n      <li>倒推公式：<b>锁定部分（亿元）= 锁定股东合计持股数 × 每股配售金额 × 大股东配售参与比例 ÷ 1 亿</b>；<b>可流通规模 = 发行总规模 − 锁定部分</b>。</li>\n      <li>锁定股东范围：控股股东 + 实际控制人 + 其一致行动人（即使单个持股 &lt;5%，只要属一致行动人也计入）。大股东若<b>放弃配售</b>，相应份额转网上发行、变为全流通，流通规模会显著变大——因此「大股东配不配债」是流通盘的核心变量。</li>\n      <li>本页「转债可流通规模」由上述公式<b>自动倒推、不接受手填</b>，确保每页数字都可回溯到公告披露的大股东持股与配售参与比例，杜绝主观乱估。</li>\n    </ul>\n\n    <h4>经典标的对标案例（固化参考 · 默认上市价 157.3）</h4>\n    <table class=\"bench\">\n      <thead><tr><th>标的</th><th>基准安全垫（默认157.3）</th><th>风险评级</th><th>核心优劣总结</th></tr></thead>\n      <tbody>\n        <tr><td>玉禾田（玉禾转债）</td><td>10%+</td><td>★★★★★</td><td>厚安全垫（10%+）、容错极高；但流通盘约 9.7 亿非迷你债，炒作弹性有限</td></tr>\n        <tr><td>丰茂股份（丰茂转债）</td><td>9%+</td><td>★★★★★</td><td>迷你债（流通约 1.5 亿）易爆炒、安全垫充足，当期最优套利标的</td></tr>\n        <tr><td>震裕科技（震裕转02）</td><td>4.2%左右</td><td>★★★</td><td>安全垫极薄、无潜伏窗口期、波动大，仅适合博弈型小仓位</td></tr>\n      </tbody>\n    </table>\n  </div>\n\n</div>\n\n<script>\n  // —— 固定测算仓位档位（统一标准，无需自定义）——\n  const TIERS = [100,200,300,400,500,600,700,800,900,1000,2000,3000,4000];\n  const DEFAULT_LISTING = 157.3;\n\n  function ratingFor(c){\n    if (c >= 9) return { stars:'★★★★★', label:'极致优质', cls:'r5' };\n    if (c >= 7) return { stars:'★★★★',   label:'优质稳健', cls:'r4' };\n    if (c >= 4) return { stars:'★★★',    label:'中性博弈', cls:'r3' };\n    if (c >= 2) return { stars:'★★',     label:'风险偏弱', cls:'r2' };\n    return        { stars:'★',       label:'极致垃圾', cls:'r1' };\n  }\n  function fmt(n, d){\n    if (!isFinite(n)) return '—';\n    return Number(n).toLocaleString('zh-CN', { minimumFractionDigits:d, maximumFractionDigits:d });\n  }\n\n  function showError(msg){\n    const err = document.getElementById('calcError');\n    if (err) { err.textContent = '计算异常：' + msg; err.style.display = 'block'; }\n  }\n\n  // 核心公式（参数联动）\n  // 所需资金 = 持股数量 × 收盘价\n  // 理论获配 = 持股数量 × 每股配售金额\n  // 实际获配 = 沪市(60/688) FLOOR(理论获配 ÷ 1000) × 1000；深市(00/30) FLOOR(理论获配 ÷ 100) × 100\n  // 预期盈利 = (实际获配 ÷ 100) × (上市价 − 100)\n  // 安全垫   = 预期盈利 ÷ 所需资金 × 100%   （保留2位小数）\n  // 需要金额 = 正股所需资金 + 实际获配转债面值\n  function recompute(){\n    try {\n    const P  = parseFloat(document.getElementById('price').value) || 0;\n    const A  = parseFloat(document.getElementById('perShare').value) || 0;\n    const noScheme = !(A > 0);   // 方案未定（无每股配售）→ 获配/安全垫用横杠，不误导\n    const L  = parseFloat(document.getElementById('listingPrice').value) || DEFAULT_LISTING;\n    const profitPerBond = L - 100;\n\n    document.getElementById('profitPerBond').textContent = noScheme ? '—' : (fmt(profitPerBond, 1) + ' 元');\n\n    const tbody = document.getElementById('tierBody');\n    tbody.innerHTML = '';\n    TIERS.forEach(function(N){\n      const cost   = N * P;                       // 所需资金(正股)\n      const theo   = noScheme ? null : N * A;       // 理论获配\n      const codeEl = document.getElementById('code');\n      const isSH   = codeEl && String(codeEl.value)[0] === '6'; // 沪市(60/688)按手(1000)取整\n      const actual = noScheme ? null : (isSH ? Math.floor(theo / 1000) * 1000 : Math.floor(theo / 100) * 100); // 实际获配：沪市floor1000 / 深市floor100\n      const profit = noScheme ? null : (actual / 100) * profitPerBond; // 预期盈利\n      const cushion = (noScheme || cost <= 0) ? null : profit / cost * 100; // 安全垫%\n      const r = cushion == null ? null : ratingFor(cushion);\n      const tr = document.createElement('tr');\n      tr.innerHTML =\n        '<td class=\"tier\">' + N + '</td>' +\n        '<td class=\"num\">' + fmt(cost, 0) + '</td>' +\n        '<td class=\"num\">' + (noScheme ? '—' : fmt(theo, 2)) + '</td>' +\n        '<td class=\"num\">' + (noScheme ? '—' : fmt(actual, 0)) + '</td>' +\n        '<td class=\"num\">' + (noScheme ? '—' : fmt(profit, 2)) + '</td>' +\n        '<td class=\"cushion\">' + (noScheme ? '—' : fmt(cushion, 2) + '%') + '</td>' +\n        '<td class=\"stars ' + (r ? r.cls : '') + '\">' + (noScheme ? '—' : r.stars) + '</td>' +\n        '<td class=\"' + (r ? r.cls : '') + '\">' + (noScheme ? '—' : r.label) + '</td>';\n      tbody.appendChild(tr);\n    });\n\n    // 理论安全垫（满配·忽略碎面损耗）= 每股配售盈利 ÷ 每股股价，已是百分比\n    // 每股配售盈利 = (A/100) × 上市盈利；÷ 股价 P；×100%  ⇒  A × 上市盈利 ÷ P\n    const theoCushion = (P > 0 && A > 0) ? (A * profitPerBond) / P : null;\n    const head = noScheme ? null : ratingFor(theoCushion);\n    document.getElementById('theoCushion').textContent = noScheme ? '—' : fmt(theoCushion, 2) + '%';\n    document.getElementById('headlineStars').textContent = noScheme ? '—' : head.stars;\n    document.getElementById('headlineLabel').textContent = noScheme ? '方案未定' : head.label;\n    document.getElementById('headlineCushion').textContent = noScheme ? '—' : fmt(theoCushion, 2) + '%';\n\n    // 可流通规模倒推（底层逻辑：总规模 − 锁定股东优先配售锁定部分）\n    // 规则：2023《证券发行与承销管理办法》修订后，持股≥5%股东、实控人及其一致行动人、董监高\n    //       通过优先配售取得的可转债，发行结束日起 6 个月内不得转让（锁定）；其余原股东及网申中签上市首日全流通。\n    // 倒推公式：锁定部分(亿元) = 锁定股东合计持股数(股) × 每股配售(元/股) × 参与比例 ÷ 1e8\n    //           可流通规模      = 发行总规模 − 锁定部分\n    const issue      = parseFloat(document.getElementById('issueSize').value) || 0;\n    const lockShares = parseFloat(document.getElementById('lockShares').value) || 0;\n    const lockRatio  = parseFloat(document.getElementById('lockRatio').value) || 0;\n    const floatEl    = document.getElementById('floatScale');\n    if (lockShares > 0) {\n      const locked     = lockShares * A * (lockRatio / 100) / 1e8;   // 亿元\n      const floatScale = issue - locked;                            // 亿元（自动倒推，只读）\n      floatEl.value = fmt(floatScale, 2);\n      document.getElementById('floatScaleTag').textContent = floatScale > 0\n        ? ('本转债倒推可流通规模约 ' + fmt(floatScale, 2) + ' 亿元（总规模 ' + fmt(issue,2) + ' − 锁定 ' + fmt(locked,2) + '）')\n        : '（请填写锁定股东合计持股数）';\n    } else {\n      // 无锁定股东数据时保留生成器注入值，不瞎算\n      const current = parseFloat(floatEl.value) || 0;\n      if (!current) floatEl.value = '';\n      document.getElementById('floatScaleTag').textContent = current > 0\n        ? ('本转债可流通规模约 ' + fmt(current, 2) + ' 亿元')\n        : '（锁定股东持股数未提供，可流通规模待补）';\n    }\n    const err = document.getElementById('calcError');\n    if (err) err.style.display = 'none';\n  } catch (e) {\n    showError(e.message);\n  }\n}\n\n  document.querySelectorAll('input').forEach(function(i){ i.addEventListener('input', recompute); });\n\n  // 制表日期：生成时已写入则保留；打开时仍为占位符则补为当天，便于回溯\n  (function initDate(){\n    const d = document.getElementById('tableDateValue');\n    if (!d || d.textContent === '—' || !d.textContent.trim()) {\n      const t = new Date();\n      const p = function(n){ return String(n).padStart(2,'0'); };\n      d.textContent = t.getFullYear() + '-' + p(t.getMonth()+1) + '-' + p(t.getDate());\n    }\n  })();\n\n  // 已关注 N 天 · 右上角小角标（选项 B）：从「加表日期」算到今天，每天自然 +1\n  function watchDays(addDate){\n    if (!addDate) return null;\n    const m = /^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(String(addDate).trim());\n    if (!m) return null;\n    const d = new Date(+m[1], +m[2]-1, +m[3]);\n    const t = new Date();\n    const today = new Date(t.getFullYear(), t.getMonth(), t.getDate());\n    const diff = Math.floor((today - d) / 86400000);\n    return isNaN(diff) || diff < 0 ? null : diff;\n  }\n  function updateWatchBadge(){\n    const el = document.getElementById('watchBadge');\n    if (!el) return;\n    const addDate = (document.getElementById('addDate') || {}).value;\n    const n = watchDays(addDate);\n    if (n == null){ el.classList.add('empty'); }\n    else {\n      el.classList.remove('empty');\n      document.getElementById('watchBadgeText').textContent = '已关注 ' + n + ' 天';\n    }\n  }\n  updateWatchBadge();\n  const _addDateInput = document.getElementById('addDate');\n  if (_addDateInput) _addDateInput.addEventListener('input', updateWatchBadge);\n\n  // 计算入口：立即执行 + DOMReady + Load 三重保险，确保在各种预览环境都能渲染\n  function runCompute(){\n    try {\n      recompute();\n      console.log('[潜伏配债] 档位计算完成');\n    } catch(e) {\n      console.error('[潜伏配债] 计算异常:', e);\n      showError(e.message + '（请按 F12 查看控制台详情）');\n    }\n  }\n  runCompute();\n  if (document.readyState === 'loading') {\n    document.addEventListener('DOMContentLoaded', runCompute);\n    window.addEventListener('load', runCompute);\n  } else {\n    // DOM 已就绪，但仍可能在 load 后某些资源加载导致重排，再补一次\n    runCompute();\n    if (document.readyState !== 'complete') {\n      window.addEventListener('load', runCompute);\n    }\n  }\n<\\/script>\n</body>\n</html>\n";
 const DATA = [
   {
     "code": "605123",
@@ -188,7 +194,7 @@ const DATA = [
     "reg": "2026-08-05",
     "pay": "2026-08-06",
     "fs": 6.98,
-    "ind": "金属锻件",
+    "ind": "航空装备Ⅱ",
     "rating": "AA",
     "progressDate": "2026-08-06",
     "consPrice": 130,
@@ -209,14 +215,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-03-31",
-    "rtPrice": 78.12,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 80.06,
+    "tableGain": 0.02483358934971835,
     "optimalShares": 1000,
-    "optimalCost": 78120,
+    "optimalCost": 80060,
     "optimalTheo": 13039,
     "optimalActual": 13000,
-    "optimalCushionCons": 0.04992319508448541,
-    "optimalCushionAggr": 0.09535330261136715,
+    "optimalCushionCons": 0.048713464901324006,
+    "optimalCushionAggr": 0.09304271796152888,
     "minShares": 100
   },
   {
@@ -233,19 +240,20 @@ const DATA = [
     "reg": "2026-08-05",
     "pay": "2026-08-06",
     "fs": null,
-    "ind": "半导体零部件",
+    "ind": "半导体",
     "rating": "AA",
     "progressDate": "2026-08-06",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 78.1,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 79.91,
+    "tableGain": 0.02317541613316264,
     "optimalShares": 300,
-    "optimalCost": 23430,
+    "optimalCost": 23973,
     "optimalTheo": 1111.5,
     "optimalActual": 1000,
-    "optimalCushionCons": 0.012804097311139564,
-    "optimalCushionAggr": 0.024455825864276574,
+    "optimalCushionCons": 0.012514078338130397,
+    "optimalCushionAggr": 0.02390188962582906,
     "minShares": 300
   },
   {
@@ -262,7 +270,7 @@ const DATA = [
     "reg": "2026-08-05",
     "pay": "2026-08-06",
     "fs": 3.04,
-    "ind": "功能性薄膜(BOPA)",
+    "ind": "塑料",
     "rating": "AA-",
     "progressDate": "2026-08-06",
     "consPrice": 130,
@@ -287,14 +295,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-06-30",
-    "rtPrice": 19.63,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 19.97,
+    "tableGain": 0.0173204279164544,
     "optimalShares": 300,
-    "optimalCost": 5889,
+    "optimalCost": 5991,
     "optimalTheo": 800.97,
     "optimalActual": 800,
-    "optimalCushionCons": 0.04075394803871625,
-    "optimalCushionAggr": 0.07784004075394806,
+    "optimalCushionCons": 0.04006009013520281,
+    "optimalCushionAggr": 0.07651477215823738,
     "minShares": 100
   },
   {
@@ -311,7 +320,7 @@ const DATA = [
     "reg": "2026-07-28",
     "pay": "2026-07-29",
     "fs": 3.53,
-    "ind": "机器视觉",
+    "ind": "自动化设备",
     "rating": "AA",
     "progressDate": "2026-07-29",
     "consPrice": 130,
@@ -336,14 +345,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-03-31",
-    "rtPrice": 116.13,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 124.78,
+    "tableGain": 0.07448549039869118,
     "optimalShares": 100,
-    "optimalCost": 11613,
+    "optimalCost": 12478,
     "optimalTheo": 1039.6000000000001,
     "optimalActual": 1000,
-    "optimalCushionCons": 0.025833118057349523,
-    "optimalCushionAggr": 0.0493412554895376,
+    "optimalCushionCons": 0.02404231447347331,
+    "optimalCushionAggr": 0.04592082064433404,
     "minShares": 100
   },
   {
@@ -360,15 +370,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "益生元/膳食纤维",
+    "ind": "化学制品",
     "rating": "-",
     "progressDate": "2026-05-06",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 19.79,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 19.99,
+    "tableGain": 0.010106114199090414,
     "optimalShares": 100,
-    "optimalCost": 1979,
+    "optimalCost": 1998.9999999999998,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -389,15 +400,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "企业信息化软件",
+    "ind": "IT服务Ⅱ",
     "rating": "-",
     "progressDate": "2026-04-29",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 21.87,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 21.19,
+    "tableGain": -0.03109282121627799,
     "optimalShares": 100,
-    "optimalCost": 2187,
+    "optimalCost": 2119,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -418,15 +430,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "航空材料分销",
+    "ind": "炼化及贸易",
     "rating": "-",
     "progressDate": "2026-04-25",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 26.6,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 27.05,
+    "tableGain": 0.016917293233082678,
     "optimalShares": 100,
-    "optimalCost": 2660,
+    "optimalCost": 2705,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -447,15 +460,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "军工线缆",
+    "ind": "军工电子Ⅱ",
     "rating": "-",
     "progressDate": "2026-04-20",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 13.86,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 14.12,
+    "tableGain": 0.018759018759018746,
     "optimalShares": 100,
-    "optimalCost": 1386,
+    "optimalCost": 1412,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -476,15 +490,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "精密温控",
+    "ind": "通用设备",
     "rating": "-",
     "progressDate": "2026-04-10",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 92.6,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 99.27,
+    "tableGain": 0.07203023758099354,
     "optimalShares": 100,
-    "optimalCost": 9260,
+    "optimalCost": 9927,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -505,15 +520,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "液晶显示模组",
+    "ind": "光学光电子",
     "rating": "-",
     "progressDate": "2026-03-11",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 23.33,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 24.09,
+    "tableGain": 0.03257608229747114,
     "optimalShares": 100,
-    "optimalCost": 2333,
+    "optimalCost": 2409,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -534,15 +550,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "中药(乌灵)",
+    "ind": "中药Ⅱ",
     "rating": "-",
     "progressDate": "2026-02-27",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 14.94,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 14.67,
+    "tableGain": -0.018072289156626477,
     "optimalShares": 100,
-    "optimalCost": 1494,
+    "optimalCost": 1467,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -563,15 +580,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "微特电机",
+    "ind": "电机Ⅱ",
     "rating": "-",
     "progressDate": "2025-12-09",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 26.75,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 27.07,
+    "tableGain": 0.011962616822429916,
     "optimalShares": 100,
-    "optimalCost": 2675,
+    "optimalCost": 2707,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -592,15 +610,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "变压器/输变电",
+    "ind": "电网设备",
     "rating": "-",
     "progressDate": "2025-09-27",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 20.87,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 21,
+    "tableGain": 0.006229036895064638,
     "optimalShares": 100,
-    "optimalCost": 2087,
+    "optimalCost": 2100,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -621,15 +640,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "漆包线/电磁线",
+    "ind": "电网设备",
     "rating": "-",
     "progressDate": "2025-06-26",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 8.11,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 8.21,
+    "tableGain": 0.01233045622688057,
     "optimalShares": 100,
-    "optimalCost": 811,
+    "optimalCost": 821.0000000000001,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -650,15 +670,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "期货",
+    "ind": "多元金融",
     "rating": "-",
     "progressDate": "2023-05-18",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 11.89,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 12.12,
+    "tableGain": 0.019343986543313596,
     "optimalShares": 100,
-    "optimalCost": 1189,
+    "optimalCost": 1212,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -679,15 +700,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "银行",
+    "ind": "银行Ⅱ",
     "rating": "-",
     "progressDate": "2023-01-20",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 4.86,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 4.84,
+    "tableGain": -0.0041152263374486546,
     "optimalShares": 100,
-    "optimalCost": 486.00000000000006,
+    "optimalCost": 484,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -708,11 +730,12 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "银行",
+    "ind": "银行Ⅱ",
     "rating": "-",
     "progressDate": "2022-09-28",
     "consPrice": 130,
     "aggrPrice": 157.3,
+    "addDate": "",
     "rtPrice": 9.18,
     "tableGain": 0,
     "optimalShares": 100,
@@ -737,15 +760,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "银行",
+    "ind": "银行Ⅱ",
     "rating": "-",
     "progressDate": "2022-09-27",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 7.37,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 7.36,
+    "tableGain": -0.001356852103120731,
     "optimalShares": 100,
-    "optimalCost": 737,
+    "optimalCost": 736,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -766,15 +790,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "光学镜头",
+    "ind": "光学光电子",
     "rating": "-",
     "progressDate": "2026-08-10",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 55.36,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 55.39,
+    "tableGain": 0.0005419075144508876,
     "optimalShares": 100,
-    "optimalCost": 5536,
+    "optimalCost": 5539,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -795,15 +820,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "轮毂轴承",
+    "ind": "汽车零部件",
     "rating": "-",
     "progressDate": "2026-07-31",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 51.96,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 52.66,
+    "tableGain": 0.013471901462663504,
     "optimalShares": 100,
-    "optimalCost": 5196,
+    "optimalCost": 5266,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -824,15 +850,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "功率半导体",
+    "ind": "半导体",
     "rating": "-",
     "progressDate": "2026-07-21",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 71.35,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 75.41,
+    "tableGain": 0.05690259285213739,
     "optimalShares": 100,
-    "optimalCost": 7134.999999999999,
+    "optimalCost": 7541,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -853,15 +880,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "铝合金车轮",
+    "ind": "汽车零部件",
     "rating": "-",
     "progressDate": "2026-07-20",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 18.67,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 18.79,
+    "tableGain": 0.00642742367434373,
     "optimalShares": 100,
-    "optimalCost": 1867.0000000000002,
+    "optimalCost": 1879,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -882,15 +910,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "钒钛矿",
+    "ind": "小金属",
     "rating": "-",
     "progressDate": "2026-06-17",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 26.04,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 25.98,
+    "tableGain": -0.002304147465437739,
     "optimalShares": 100,
-    "optimalCost": 2604,
+    "optimalCost": 2598,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -916,10 +945,11 @@ const DATA = [
     "progressDate": "2026-06-16",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 12.75,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 12.7,
+    "tableGain": -0.003921568627451036,
     "optimalShares": 100,
-    "optimalCost": 1275,
+    "optimalCost": 1270,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -940,15 +970,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "铁矿石",
+    "ind": "冶钢原料",
     "rating": "-",
     "progressDate": "2026-06-02",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 27.77,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 27.81,
+    "tableGain": 0.001440403312927589,
     "optimalShares": 100,
-    "optimalCost": 2777,
+    "optimalCost": 2781,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -969,15 +1000,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "数码喷印墨水",
+    "ind": "化学制品",
     "rating": "-",
     "progressDate": "2026-05-27",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 27.52,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 27.69,
+    "tableGain": 0.006177325581395411,
     "optimalShares": 100,
-    "optimalCost": 2752,
+    "optimalCost": 2769,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -998,15 +1030,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "芯片测试",
+    "ind": "半导体",
     "rating": "-",
     "progressDate": "2026-05-23",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 130.01,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 137.8,
+    "tableGain": 0.05991846781016861,
     "optimalShares": 100,
-    "optimalCost": 13001,
+    "optimalCost": 13780.000000000002,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1027,15 +1060,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "光伏逆变器",
+    "ind": "光伏设备",
     "rating": "-",
     "progressDate": "2026-05-21",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 67.26,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 69.18,
+    "tableGain": 0.028545941123996454,
     "optimalShares": 100,
-    "optimalCost": 6726.000000000001,
+    "optimalCost": 6918.000000000001,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1056,15 +1090,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "医药(代理)",
+    "ind": "化学制药",
     "rating": "-",
     "progressDate": "2026-05-20",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 20.65,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 20.1,
+    "tableGain": -0.02663438256658582,
     "optimalShares": 100,
-    "optimalCost": 2065,
+    "optimalCost": 2010.0000000000002,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1085,15 +1120,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "高温合金",
+    "ind": "金属新材料",
     "rating": "-",
     "progressDate": "2026-05-20",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 23.35,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 23.97,
+    "tableGain": 0.026552462526766483,
     "optimalShares": 100,
-    "optimalCost": 2335,
+    "optimalCost": 2397,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1114,15 +1150,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "数控机床",
+    "ind": "通用设备",
     "rating": "-",
     "progressDate": "2026-05-19",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 129.1,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 130.54,
+    "tableGain": 0.011154144074360944,
     "optimalShares": 100,
-    "optimalCost": 12910,
+    "optimalCost": 13054,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1143,15 +1180,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "离子交换树脂",
+    "ind": "塑料",
     "rating": "-",
     "progressDate": "2026-05-19",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 45.21,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 46.41,
+    "tableGain": 0.026542800265427907,
     "optimalShares": 100,
-    "optimalCost": 4521,
+    "optimalCost": 4641,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1163,8 +1201,8 @@ const DATA = [
     "name": "艾森股份",
     "bond": "艾森股份转债",
     "board": "沪市科创",
-    "stage": "股东大会通过",
-    "grp": "lgreen",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
     "issue": 5.14,
     "conv": 61.94,
     "price": 66.22,
@@ -1172,15 +1210,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "电子化学品",
+    "ind": "半导体",
     "rating": "-",
-    "progressDate": "2026-05-16",
+    "progressDate": "2026-08-15",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 66.22,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 70.15,
+    "tableGain": 0.05934762911507108,
     "optimalShares": 100,
-    "optimalCost": 6622,
+    "optimalCost": 7015.000000000001,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1201,15 +1240,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "汽车曲轴/锻件",
+    "ind": "汽车零部件",
     "rating": "-",
     "progressDate": "2026-05-16",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 11.32,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 11.41,
+    "tableGain": 0.007950530035335676,
     "optimalShares": 100,
-    "optimalCost": 1132,
+    "optimalCost": 1141,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1230,15 +1270,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "LED显示屏",
+    "ind": "光学光电子",
     "rating": "-",
     "progressDate": "2026-05-15",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 12.31,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 12.49,
+    "tableGain": 0.014622258326563746,
     "optimalShares": 100,
-    "optimalCost": 1231,
+    "optimalCost": 1249,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1259,15 +1300,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "汽车饰件",
+    "ind": "汽车零部件",
     "rating": "-",
     "progressDate": "2026-05-09",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 17.61,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 17.74,
+    "tableGain": 0.00738216922203288,
     "optimalShares": 100,
-    "optimalCost": 1761,
+    "optimalCost": 1773.9999999999998,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1279,8 +1321,8 @@ const DATA = [
     "name": "永和股份",
     "bond": "永和股份转债",
     "board": "沪市主板",
-    "stage": "股东大会通过",
-    "grp": "lgreen",
+    "stage": "交易所已受理",
+    "grp": "ygreen",
     "issue": 22,
     "conv": 33.35,
     "price": 34.76,
@@ -1288,15 +1330,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "氟化工",
+    "ind": "化学制品",
     "rating": "-",
-    "progressDate": "2026-05-09",
+    "progressDate": "2026-08-17",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 34.76,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 35.06,
+    "tableGain": 0.008630609896432804,
     "optimalShares": 100,
-    "optimalCost": 3476,
+    "optimalCost": 3506,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1317,15 +1360,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "新能源发电",
+    "ind": "电力",
     "rating": "-",
     "progressDate": "2026-03-25",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 11.82,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 11.73,
+    "tableGain": -0.007614213197969531,
     "optimalShares": 100,
-    "optimalCost": 1182,
+    "optimalCost": 1173,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1346,15 +1390,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "清洁小家电",
+    "ind": "小家电",
     "rating": "-",
     "progressDate": "2026-01-24",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 14.51,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 14.5,
+    "tableGain": -0.0006891798759476077,
     "optimalShares": 100,
-    "optimalCost": 1451,
+    "optimalCost": 1450,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1375,15 +1420,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "电线电缆",
+    "ind": "电网设备",
     "rating": "-",
     "progressDate": "2025-11-07",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 35.07,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 35.62,
+    "tableGain": 0.01568291987453656,
     "optimalShares": 100,
-    "optimalCost": 3507,
+    "optimalCost": 3561.9999999999995,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1404,15 +1450,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "MIM精密金属",
+    "ind": "消费电子",
     "rating": "-",
     "progressDate": "2025-08-19",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 40.15,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 41.54,
+    "tableGain": 0.03462017434620176,
     "optimalShares": 100,
-    "optimalCost": 4015,
+    "optimalCost": 4154,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1438,10 +1485,11 @@ const DATA = [
     "progressDate": "2025-06-16",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 178.39,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 186.28,
+    "tableGain": 0.04422893659958527,
     "optimalShares": 100,
-    "optimalCost": 17839,
+    "optimalCost": 18628,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1462,11 +1510,12 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "银行",
+    "ind": "银行Ⅱ",
     "rating": "-",
     "progressDate": "2025-05-31",
     "consPrice": 130,
     "aggrPrice": 157.3,
+    "addDate": "",
     "rtPrice": 3.49,
     "tableGain": 0,
     "optimalShares": 100,
@@ -1491,15 +1540,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "汽车零部件/锂电正极",
+    "ind": "电池",
     "rating": "-",
     "progressDate": "2024-12-06",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 16.23,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 16.59,
+    "tableGain": 0.02218114602587797,
     "optimalShares": 100,
-    "optimalCost": 1623,
+    "optimalCost": 1659,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1520,15 +1570,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "永磁材料",
+    "ind": "金属新材料",
     "rating": "-",
     "progressDate": "2026-08-11",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 43.29,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 42.5,
+    "tableGain": -0.01824901824901823,
     "optimalShares": 100,
-    "optimalCost": 4329,
+    "optimalCost": 4250,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1549,15 +1600,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "有机颜料",
+    "ind": "化学制品",
     "rating": "-",
     "progressDate": "2026-07-08",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 31.46,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 32.03,
+    "tableGain": 0.018118245390972672,
     "optimalShares": 100,
-    "optimalCost": 3146,
+    "optimalCost": 3203,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1578,15 +1630,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "PCB(服务器)",
+    "ind": "元件",
     "rating": "-",
     "progressDate": "2026-06-23",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 169.46,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 170.81,
+    "tableGain": 0.00796648176560837,
     "optimalShares": 100,
-    "optimalCost": 16946,
+    "optimalCost": 17081,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1607,15 +1660,16 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "银行",
+    "ind": "银行Ⅱ",
     "rating": "-",
     "progressDate": "2025-08-29",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 5.67,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 5.69,
+    "tableGain": 0.0035273368606702753,
     "optimalShares": 100,
-    "optimalCost": 567,
+    "optimalCost": 569,
     "optimalTheo": 0,
     "optimalActual": 0,
     "optimalCushionCons": 0,
@@ -1636,7 +1690,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 6.11,
-    "ind": "冷链装备",
+    "ind": "通用设备",
     "rating": "AA",
     "lockShares": "124596915",
     "progressDate": "2026-07-11",
@@ -1649,14 +1703,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-06-30",
-    "rtPrice": 13.74,
-    "tableGain": -0.0021786492374727207,
+    "addDate": "2026-08-14",
+    "rtPrice": 14.04,
+    "tableGain": 0.01960784313725487,
     "optimalShares": 1600,
-    "optimalCost": 21984,
+    "optimalCost": 22464,
     "optimalTheo": 5290.24,
     "optimalActual": 5000,
-    "optimalCushionCons": 0.06823144104803494,
-    "optimalCushionAggr": 0.09097525473071325,
+    "optimalCushionCons": 0.06677350427350427,
+    "optimalCushionAggr": 0.08903133903133903,
     "minShares": 400
   },
   {
@@ -1673,7 +1728,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 3.63,
-    "ind": "电子/PCB",
+    "ind": "元件",
     "rating": "AA",
     "lockShares": "202000000",
     "progressDate": "2026-07-11",
@@ -1690,14 +1745,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-03-31",
-    "rtPrice": 56.75,
-    "tableGain": -0.002285513361462773,
+    "addDate": "",
+    "rtPrice": 58.6,
+    "tableGain": 0.030239099859353004,
     "optimalShares": 2000,
-    "optimalCost": 113500,
+    "optimalCost": 117200,
     "optimalTheo": 6302.6,
     "optimalActual": 6300,
-    "optimalCushionCons": 0.016651982378854624,
-    "optimalCushionAggr": 0.03180528634361234,
+    "optimalCushionCons": 0.016126279863481228,
+    "optimalCushionAggr": 0.030801194539249153,
     "minShares": 100
   },
   {
@@ -1714,7 +1770,7 @@ const DATA = [
     "reg": "2026-08-17",
     "pay": "2026-08-18",
     "fs": 1.6,
-    "ind": "橡胶管路",
+    "ind": "橡胶",
     "rating": "AA-",
     "lockShares": "76830000",
     "progressDate": "2026-07-31",
@@ -1735,14 +1791,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-03-31",
-    "rtPrice": 37.57,
-    "tableGain": 0.006968641114982525,
+    "addDate": "",
+    "rtPrice": 38.8,
+    "tableGain": 0.039935674082015406,
     "optimalShares": 600,
-    "optimalCost": 22542,
+    "optimalCost": 23280,
     "optimalTheo": 3500.8199999999997,
     "optimalActual": 3500,
-    "optimalCushionCons": 0.04657971785999468,
-    "optimalCushionAggr": 0.08896726111258985,
+    "optimalCushionCons": 0.045103092783505154,
+    "optimalCushionAggr": 0.08614690721649486,
     "minShares": 100
   },
   {
@@ -1759,7 +1816,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 7.34,
-    "ind": "医药/肝素",
+    "ind": "化学制药",
     "rating": "AA",
     "lockShares": "340811600",
     "progressDate": "2026-07-31",
@@ -1776,14 +1833,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-06-30",
-    "rtPrice": 7.2,
-    "tableGain": 0.005586592178770954,
+    "addDate": "",
+    "rtPrice": 7.13,
+    "tableGain": -0.004189944134078247,
     "optimalShares": 900,
-    "optimalCost": 6480,
+    "optimalCost": 6417,
     "optimalTheo": 703.08,
     "optimalActual": 700,
-    "optimalCushionCons": 0.032407407407407406,
-    "optimalCushionAggr": 0.043209876543209874,
+    "optimalCushionCons": 0.03272557269752221,
+    "optimalCushionAggr": 0.043634096930029606,
     "minShares": 200
   },
   {
@@ -1800,7 +1858,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 3.24,
-    "ind": "汽车电子",
+    "ind": "元件",
     "rating": "AA",
     "lockShares": "85000000",
     "progressDate": "2026-07-31",
@@ -1825,14 +1883,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-03-31",
-    "rtPrice": 35.52,
-    "tableGain": 0.0031064670996895382,
+    "addDate": "",
+    "rtPrice": 37.56,
+    "tableGain": 0.060717311493928436,
     "optimalShares": 800,
-    "optimalCost": 28416.000000000004,
+    "optimalCost": 30048,
     "optimalTheo": 4105.68,
     "optimalActual": 4100,
-    "optimalCushionCons": 0.043285472972972965,
-    "optimalCushionAggr": 0.05771396396396396,
+    "optimalCushionCons": 0.040934504792332266,
+    "optimalCushionAggr": 0.05457933972310969,
     "minShares": 100
   },
   {
@@ -1849,20 +1908,21 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 11.49,
-    "ind": "密封件",
+    "ind": "汽车零部件",
     "rating": "AA",
     "lockShares": "528480362",
     "progressDate": "2026-07-31",
     "consPrice": 130,
     "aggrPrice": 140,
-    "rtPrice": 21.82,
-    "tableGain": 0.003218390804597714,
+    "addDate": "",
+    "rtPrice": 20.41,
+    "tableGain": -0.061609195402298846,
     "optimalShares": 2000,
-    "optimalCost": 43640,
+    "optimalCost": 40820,
     "optimalTheo": 2917.8,
     "optimalActual": 2900,
-    "optimalCushionCons": 0.01993583868010999,
-    "optimalCushionAggr": 0.026581118240146653,
+    "optimalCushionCons": 0.021313081822635964,
+    "optimalCushionAggr": 0.028417442430181284,
     "minShares": 100
   },
   {
@@ -1875,12 +1935,12 @@ const DATA = [
     "issue": 5.5,
     "conv": 72.66,
     "price": 84.29,
-    "perShare": 6.8992,
-    "reg": "—",
-    "pay": "—",
+    "perShare": 7.2967,
+    "reg": "2026-08-18",
+    "pay": "2026-08-19",
     "fs": 2.2,
-    "ind": "PCB/光模块",
-    "rating": "AA",
+    "ind": "元件",
+    "rating": "AA-",
     "lockShares": "47849564",
     "progressDate": "2026-07-31",
     "consPrice": 130,
@@ -1912,14 +1972,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-03-31",
-    "rtPrice": 84.88,
-    "tableGain": 0.006999644085893809,
-    "optimalShares": 900,
-    "optimalCost": 76392,
-    "optimalTheo": 6209.280000000001,
-    "optimalActual": 6200,
-    "optimalCushionCons": 0.02434809927741125,
-    "optimalCushionAggr": 0.04650486961985549,
+    "addDate": "",
+    "rtPrice": 90.07,
+    "tableGain": 0.0685727844346896,
+    "optimalShares": 700,
+    "optimalCost": 63048.99999999999,
+    "optimalTheo": 5107.6900000000005,
+    "optimalActual": 5100,
+    "optimalCushionCons": 0.024266840076765692,
+    "optimalCushionAggr": 0.04634966454662248,
     "minShares": 100
   },
   {
@@ -1936,7 +1997,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 2.22,
-    "ind": "OLED材料",
+    "ind": "电子化学品Ⅱ",
     "rating": "AA",
     "lockShares": "231866984",
     "progressDate": "2026-07-31",
@@ -1969,14 +2030,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-03-31",
-    "rtPrice": 40.44,
-    "tableGain": -0.00024721878862806216,
+    "addDate": "",
+    "rtPrice": 41.96,
+    "tableGain": 0.03733003708281824,
     "optimalShares": 800,
-    "optimalCost": 32352,
+    "optimalCost": 33568,
     "optimalTheo": 1044.72,
     "optimalActual": 1000,
-    "optimalCushionCons": 0.009272997032640949,
-    "optimalCushionAggr": 0.012363996043521267,
+    "optimalCushionCons": 0.008937082936129647,
+    "optimalCushionAggr": 0.011916110581506196,
     "minShares": 800
   },
   {
@@ -1993,20 +2055,21 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 4.6,
-    "ind": "聚氨酯/聚醚",
+    "ind": "化学制品",
     "rating": "AA",
     "lockShares": "291154720",
     "progressDate": "2026-07-31",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 7.87,
-    "tableGain": -0.0012690355329948969,
+    "addDate": "",
+    "rtPrice": 8,
+    "tableGain": 0.0152284263959391,
     "optimalShares": 700,
-    "optimalCost": 5509,
+    "optimalCost": 5600,
     "optimalTheo": 1202.1100000000001,
     "optimalActual": 1200,
-    "optimalCushionCons": 0.06534761299691413,
-    "optimalCushionAggr": 0.12481394082410603,
+    "optimalCushionCons": 0.06428571428571428,
+    "optimalCushionAggr": 0.1227857142857143,
     "minShares": 100
   },
   {
@@ -2023,7 +2086,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 2.77,
-    "ind": "红外探测器",
+    "ind": "军工电子Ⅱ",
     "rating": "AA",
     "lockShares": "72434350",
     "progressDate": "2026-07-31",
@@ -2060,14 +2123,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-03-31",
-    "rtPrice": 68.46,
-    "tableGain": -0.0008756567425569509,
+    "addDate": "",
+    "rtPrice": 68.92,
+    "tableGain": 0.005837711617046201,
     "optimalShares": 1500,
-    "optimalCost": 102689.99999999999,
+    "optimalCost": 103380,
     "optimalTheo": 7114.500000000001,
     "optimalActual": 7100,
-    "optimalCushionCons": 0.020742039146947125,
-    "optimalCushionAggr": 0.0276560521959295,
+    "optimalCushionCons": 0.02060359837492745,
+    "optimalCushionAggr": 0.02747146449990327,
     "minShares": 100
   },
   {
@@ -2084,20 +2148,21 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "离子交换树脂",
+    "ind": "化学制品",
     "rating": "AA",
     "lockShares": "",
     "progressDate": "2026-07-31",
     "consPrice": 130,
     "aggrPrice": 140,
-    "rtPrice": 24.19,
-    "tableGain": 0.0033181252592286124,
+    "addDate": "",
+    "rtPrice": 24.65,
+    "tableGain": 0.02239734549979258,
     "optimalShares": 1600,
-    "optimalCost": 38704,
+    "optimalCost": 39440,
     "optimalTheo": 3160.48,
     "optimalActual": 3000,
-    "optimalCushionCons": 0.023253410500206698,
-    "optimalCushionAggr": 0.03100454733360893,
+    "optimalCushionCons": 0.02281947261663286,
+    "optimalCushionAggr": 0.030425963488843813,
     "minShares": 600
   },
   {
@@ -2114,7 +2179,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 3.73,
-    "ind": "绿色电力/环保",
+    "ind": "环境治理",
     "rating": "AA",
     "lockShares": "72434350",
     "progressDate": "2026-07-31",
@@ -2151,14 +2216,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-06-30",
-    "rtPrice": 5.45,
-    "tableGain": -0.0018315018315017925,
+    "addDate": "",
+    "rtPrice": 5.46,
+    "tableGain": 0,
     "optimalShares": 4000,
-    "optimalCost": 21800,
+    "optimalCost": 21840,
     "optimalTheo": 2717.2000000000003,
     "optimalActual": 2700,
-    "optimalCushionCons": 0.037155963302752296,
-    "optimalCushionAggr": 0.04954128440366973,
+    "optimalCushionCons": 0.03708791208791209,
+    "optimalCushionAggr": 0.04945054945054945,
     "minShares": 200
   },
   {
@@ -2175,7 +2241,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 2.15,
-    "ind": "汽车零部件/弹簧",
+    "ind": "汽车零部件",
     "rating": "AA",
     "lockShares": "169354284",
     "progressDate": "2026-07-31",
@@ -2196,14 +2262,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-06-30",
-    "rtPrice": 16.61,
-    "tableGain": 0.000602409638554097,
+    "addDate": "",
+    "rtPrice": 16.89,
+    "tableGain": 0.017469879518072235,
     "optimalShares": 2500,
-    "optimalCost": 41525,
+    "optimalCost": 42225,
     "optimalTheo": 5307.25,
     "optimalActual": 5300,
-    "optimalCushionCons": 0.038290186634557494,
-    "optimalCushionAggr": 0.07313425647200483,
+    "optimalCushionCons": 0.037655417406749554,
+    "optimalCushionAggr": 0.07192184724689167,
     "minShares": 100
   },
   {
@@ -2220,7 +2287,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 14.32,
-    "ind": "高速公路",
+    "ind": "铁路公路",
     "rating": "AA",
     "lockShares": "841452568",
     "progressDate": "2026-07-31",
@@ -2237,14 +2304,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-03-31",
-    "rtPrice": 3.93,
-    "tableGain": -0.0025380710659897937,
+    "addDate": "",
+    "rtPrice": 3.98,
+    "tableGain": 0.0101522842639594,
     "optimalShares": 600,
-    "optimalCost": 2358,
+    "optimalCost": 2388,
     "optimalTheo": 1118.28,
     "optimalActual": 1000,
-    "optimalCushionCons": 0.08481764206955046,
-    "optimalCushionAggr": 0.10602205258693809,
+    "optimalCushionCons": 0.08375209380234507,
+    "optimalCushionAggr": 0.10469011725293133,
     "minShares": 600
   },
   {
@@ -2261,7 +2329,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 0,
-    "ind": "有机硅/助剂",
+    "ind": "化学制品",
     "rating": "AA",
     "lockShares": "94070116",
     "progressDate": "2026-07-31",
@@ -2286,14 +2354,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-06-30",
-    "rtPrice": 28,
-    "tableGain": 0.0010725777618877776,
+    "addDate": "",
+    "rtPrice": 28.62,
+    "tableGain": 0.023239184840901043,
     "optimalShares": 2000,
-    "optimalCost": 56000,
+    "optimalCost": 57240,
     "optimalTheo": 4111,
     "optimalActual": 4100,
-    "optimalCushionCons": 0.021964285714285714,
-    "optimalCushionAggr": 0.041951785714285726,
+    "optimalCushionCons": 0.02148846960167715,
+    "optimalCushionAggr": 0.04104297693920336,
     "minShares": 100
   },
   {
@@ -2310,7 +2379,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 3.47,
-    "ind": "连接器/精密结构件",
+    "ind": "光学光电子",
     "rating": "AA",
     "lockShares": "80720106",
     "progressDate": "2026-07-31",
@@ -2335,14 +2404,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-06-30",
-    "rtPrice": 54.32,
-    "tableGain": 0.003695491500369602,
+    "addDate": "",
+    "rtPrice": 54.68,
+    "tableGain": 0.010347376201034781,
     "optimalShares": 400,
-    "optimalCost": 21728,
+    "optimalCost": 21872,
     "optimalTheo": 1502.88,
     "optimalActual": 1500,
-    "optimalCushionCons": 0.02071060382916053,
-    "optimalCushionAggr": 0.039557253313696625,
+    "optimalCushionCons": 0.020574250182882226,
+    "optimalCushionAggr": 0.039296817849305055,
     "minShares": 100
   },
   {
@@ -2359,20 +2429,21 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 4.02,
-    "ind": "汽车零部件/模具",
+    "ind": "汽车零部件",
     "rating": "AA",
     "lockShares": "86527329",
     "progressDate": "2026-07-31",
     "consPrice": 130,
     "aggrPrice": 140,
-    "rtPrice": 27.01,
-    "tableGain": -0.0018477457501846696,
+    "addDate": "",
+    "rtPrice": 27.99,
+    "tableGain": 0.034368070953436795,
     "optimalShares": 2500,
-    "optimalCost": 67525,
+    "optimalCost": 69975,
     "optimalTheo": 8205.5,
     "optimalActual": 8200,
-    "optimalCushionCons": 0.03643095149944465,
-    "optimalCushionAggr": 0.04857460199925953,
+    "optimalCushionCons": 0.03515541264737406,
+    "optimalCushionAggr": 0.046873883529832086,
     "minShares": 100
   },
   {
@@ -2389,7 +2460,7 @@ const DATA = [
     "reg": "2026-08-14",
     "pay": "2026-08-17",
     "fs": 13.24,
-    "ind": "精密模具/锂电池结构件",
+    "ind": "电池",
     "rating": "AA-",
     "lockShares": "71933596",
     "progressDate": "2026-07-31",
@@ -2410,14 +2481,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-06-30",
-    "rtPrice": 105.5,
-    "tableGain": -0.002269718176659683,
+    "addDate": "",
+    "rtPrice": 105.8,
+    "tableGain": 0.0005674295441649544,
     "optimalShares": 4000,
-    "optimalCost": 422000,
+    "optimalCost": 423200,
     "optimalTheo": 30929.600000000002,
     "optimalActual": 30900,
-    "optimalCushionCons": 0.021966824644549764,
-    "optimalCushionAggr": 0.0585781990521327,
+    "optimalCushionCons": 0.02190453686200378,
+    "optimalCushionAggr": 0.058412098298676746,
     "minShares": 100
   },
   {
@@ -2434,7 +2506,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 1.39,
-    "ind": "半导体洁净室",
+    "ind": "专业工程",
     "rating": "AA",
     "lockShares": "74695500",
     "progressDate": "2026-07-31",
@@ -2459,14 +2531,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-03-31",
-    "rtPrice": 86.89,
-    "tableGain": 0.016376184349046738,
+    "addDate": "",
+    "rtPrice": 90.62,
+    "tableGain": 0.06000701836472114,
     "optimalShares": 1500,
-    "optimalCost": 130335,
+    "optimalCost": 135930,
     "optimalTheo": 8250,
     "optimalActual": 8000,
-    "optimalCushionCons": 0.018414086776383932,
-    "optimalCushionAggr": 0.04910423140369049,
+    "optimalCushionCons": 0.01765614654601633,
+    "optimalCushionAggr": 0.047083057456043555,
     "minShares": 200
   },
   {
@@ -2483,20 +2556,21 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 1.64,
-    "ind": "锻造/汽车零部件",
+    "ind": "汽车零部件",
     "rating": "AA",
     "lockShares": "174162336",
     "progressDate": "2026-07-11",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 16.24,
-    "tableGain": 0.0024691358024690833,
+    "addDate": "",
+    "rtPrice": 16.37,
+    "tableGain": 0.010493827160493933,
     "optimalShares": 900,
-    "optimalCost": 14615.999999999998,
+    "optimalCost": 14733,
     "optimalTheo": 2511.4500000000003,
     "optimalActual": 2500,
-    "optimalCushionCons": 0.0513136288998358,
-    "optimalCushionAggr": 0.0980090311986864,
+    "optimalCushionCons": 0.05090612909794339,
+    "optimalCushionAggr": 0.09723070657707189,
     "minShares": 100
   },
   {
@@ -2513,7 +2587,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 1.44,
-    "ind": "减速机/叉车",
+    "ind": "工程机械",
     "rating": "AA",
     "lockShares": "89700000",
     "progressDate": "2026-07-11",
@@ -2542,14 +2616,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-03-31",
-    "rtPrice": 20.7,
-    "tableGain": 0.0009671179883945635,
+    "addDate": "",
+    "rtPrice": 20.96,
+    "tableGain": 0.013539651837524234,
     "optimalShares": 500,
-    "optimalCost": 10350,
+    "optimalCost": 10480,
     "optimalTheo": 905.35,
     "optimalActual": 900,
-    "optimalCushionCons": 0.04982608695652174,
-    "optimalCushionAggr": 0.08695652173913043,
+    "optimalCushionCons": 0.049208015267175574,
+    "optimalCushionAggr": 0.08587786259541985,
     "minShares": 100
   },
   {
@@ -2566,20 +2641,21 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 16.32,
-    "ind": "工程机械/汽车部",
+    "ind": "专用设备",
     "rating": "AA",
     "lockShares": "1115443017",
     "progressDate": "2026-07-31",
     "consPrice": 120,
     "aggrPrice": 130,
-    "rtPrice": 15.39,
-    "tableGain": 0.0006501950585175414,
+    "addDate": "",
+    "rtPrice": 15.27,
+    "tableGain": -0.007152145643693186,
     "optimalShares": 900,
-    "optimalCost": 13851,
+    "optimalCost": 13743,
     "optimalTheo": 2193.03,
     "optimalActual": 2000,
-    "optimalCushionCons": 0.028878781315428488,
-    "optimalCushionAggr": 0.043318171973142736,
+    "optimalCushionCons": 0.029105726551699046,
+    "optimalCushionAggr": 0.04365858982754857,
     "minShares": 500
   },
   {
@@ -2617,14 +2693,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-06-30",
-    "rtPrice": 23.09,
-    "tableGain": 0.003913043478260864,
+    "addDate": "",
+    "rtPrice": 23.02,
+    "tableGain": 0.0008695652173912858,
     "optimalShares": 900,
-    "optimalCost": 20781,
+    "optimalCost": 20718,
     "optimalTheo": 3416.04,
     "optimalActual": 3400,
-    "optimalCushionCons": 0.049083297242673594,
-    "optimalCushionAggr": 0.09374909773350658,
+    "optimalCushionCons": 0.04923255140457573,
+    "optimalCushionAggr": 0.09403417318273966,
     "minShares": 100
   },
   {
@@ -2641,7 +2718,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 1.74,
-    "ind": "质谱仪/工业检测",
+    "ind": "通用设备",
     "rating": "AA",
     "lockShares": "61592039",
     "progressDate": "2026-07-31",
@@ -2662,14 +2739,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-06-30",
-    "rtPrice": 26.21,
-    "tableGain": 0.0026778882938026122,
+    "addDate": "",
+    "rtPrice": 26.54,
+    "tableGain": 0.015302218821729096,
     "optimalShares": 900,
-    "optimalCost": 23589,
+    "optimalCost": 23886,
     "optimalTheo": 2133.27,
     "optimalActual": 2000,
-    "optimalCushionCons": 0.02543558438255119,
-    "optimalCushionAggr": 0.04858196617067278,
+    "optimalCushionCons": 0.025119316754584276,
+    "optimalCushionAggr": 0.047977895001255974,
     "minShares": 500
   },
   {
@@ -2686,7 +2764,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 0.98,
-    "ind": "制药装备",
+    "ind": "专用设备",
     "rating": "AA",
     "lockShares": "69592700",
     "progressDate": "2026-07-31",
@@ -2707,14 +2785,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-06-30",
-    "rtPrice": 20.48,
-    "tableGain": -0.0034063260340632742,
+    "addDate": "",
+    "rtPrice": 20.6,
+    "tableGain": 0.0024330900243309346,
     "optimalShares": 1000,
-    "optimalCost": 20480,
+    "optimalCost": 20600,
     "optimalTheo": 1900.8,
     "optimalActual": 1900,
-    "optimalCushionCons": 0.053159179687500016,
-    "optimalCushionAggr": 0.0927734375,
+    "optimalCushionCons": 0.05284951456310681,
+    "optimalCushionAggr": 0.09223300970873786,
     "minShares": 100
   },
   {
@@ -2731,20 +2810,21 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 4.8,
-    "ind": "线束/新能源三电",
+    "ind": "汽车零部件",
     "rating": "AA",
     "lockShares": "75932615",
     "progressDate": "2026-07-31",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 66.5,
-    "tableGain": -0.0009014423076923418,
+    "addDate": "",
+    "rtPrice": 66.32,
+    "tableGain": -0.003605769230769367,
     "optimalShares": 500,
-    "optimalCost": 33250,
+    "optimalCost": 33160,
     "optimalTheo": 4609.35,
     "optimalActual": 4600,
-    "optimalCushionCons": 0.04150375939849624,
-    "optimalCushionAggr": 0.07927218045112784,
+    "optimalCushionCons": 0.04161640530759952,
+    "optimalCushionAggr": 0.0794873341375151,
     "minShares": 100
   },
   {
@@ -2761,7 +2841,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 4.89,
-    "ind": "航空发动机",
+    "ind": "航空装备Ⅱ",
     "rating": "-",
     "lockShares": "48346639",
     "progressDate": "2026-08-12",
@@ -2782,14 +2862,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-03-31",
-    "rtPrice": 23.34,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 23.83,
+    "tableGain": 0.020994001713795993,
     "optimalShares": 900,
-    "optimalCost": 21006,
+    "optimalCost": 21447,
     "optimalTheo": 2073.69,
     "optimalActual": 2000,
-    "optimalCushionCons": 0.028563267637817767,
-    "optimalCushionAggr": 0.03808435685042369,
+    "optimalCushionCons": 0.027975940691005736,
+    "optimalCushionAggr": 0.037301254254674315,
     "minShares": 500
   },
   {
@@ -2806,7 +2887,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 6.25,
-    "ind": "PCB电路板",
+    "ind": "元件",
     "rating": "-",
     "lockShares": "179446840",
     "progressDate": "2026-08-12",
@@ -2835,14 +2916,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-03-31",
-    "rtPrice": 23.42,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 24.13,
+    "tableGain": 0.030315969257045144,
     "optimalShares": 500,
-    "optimalCost": 11710,
+    "optimalCost": 12065,
     "optimalTheo": 1602.55,
     "optimalActual": 1600,
-    "optimalCushionCons": 0.04099060631938514,
-    "optimalCushionAggr": 0.05465414175918019,
+    "optimalCushionCons": 0.03978450062163282,
+    "optimalCushionAggr": 0.05304600082884376,
     "minShares": 100
   },
   {
@@ -2859,7 +2941,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 3.74,
-    "ind": "物联网/智慧城市",
+    "ind": "环境治理",
     "rating": "-",
     "lockShares": "88373000",
     "progressDate": "2026-08-11",
@@ -2888,14 +2970,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-06-30",
-    "rtPrice": 23.96,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 24.94,
+    "tableGain": 0.04090150250417364,
     "optimalShares": 3000,
-    "optimalCost": 71880,
+    "optimalCost": 74820,
     "optimalTheo": 7317,
     "optimalActual": 7300,
-    "optimalCushionCons": 0.03046744574290484,
-    "optimalCushionAggr": 0.05819282136894825,
+    "optimalCushionCons": 0.029270248596631916,
+    "optimalCushionAggr": 0.055906174819566966,
     "minShares": 100
   },
   {
@@ -2912,7 +2995,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 3.26,
-    "ind": "餐饮食品",
+    "ind": "休闲食品",
     "rating": "-",
     "lockShares": "382884544",
     "progressDate": "2026-08-01",
@@ -2933,14 +3016,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-03-31",
-    "rtPrice": 13.64,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 13.54,
+    "tableGain": -0.007331378299120338,
     "optimalShares": 600,
-    "optimalCost": 8184,
+    "optimalCost": 8123.999999999999,
     "optimalTheo": 1056.36,
     "optimalActual": 1000,
-    "optimalCushionCons": 0.036656891495601175,
-    "optimalCushionAggr": 0.04887585532746823,
+    "optimalCushionCons": 0.03692762186115214,
+    "optimalCushionAggr": 0.04923682914820286,
     "minShares": 600
   },
   {
@@ -2957,20 +3041,21 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": null,
-    "ind": "半导体设备",
+    "ind": "半导体",
     "rating": "-",
     "lockShares": "",
     "progressDate": "2026-07-31",
     "consPrice": 130,
     "aggrPrice": 157.3,
-    "rtPrice": 333.22,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 356,
+    "tableGain": 0.06836324350279085,
     "optimalShares": 1600,
-    "optimalCost": 533152,
+    "optimalCost": 569600,
     "optimalTheo": 15533.92,
     "optimalActual": 15000,
-    "optimalCushionCons": 0.008440369725706741,
-    "optimalCushionAggr": 0.016121106176099877,
+    "optimalCushionCons": 0.007900280898876405,
+    "optimalCushionAggr": 0.015089536516853935,
     "minShares": 200
   },
   {
@@ -2987,7 +3072,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 11.63,
-    "ind": "航运物流",
+    "ind": "航运港口",
     "rating": "-",
     "lockShares": "1206682881",
     "progressDate": "2026-07-03",
@@ -3000,14 +3085,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-06-30",
-    "rtPrice": 10.48,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 10.63,
+    "tableGain": 0.014312977099236674,
     "optimalShares": 800,
-    "optimalCost": 8384,
+    "optimalCost": 8504,
     "optimalTheo": 1038.96,
     "optimalActual": 1000,
-    "optimalCushionCons": 0.0357824427480916,
-    "optimalCushionAggr": 0.06834446564885498,
+    "optimalCushionCons": 0.03527751646284102,
+    "optimalCushionAggr": 0.06738005644402635,
     "minShares": 800
   },
   {
@@ -3024,7 +3110,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 2.91,
-    "ind": "汽车安全部件",
+    "ind": "汽车零部件",
     "rating": "-",
     "lockShares": "343108452",
     "progressDate": "2026-06-12",
@@ -3053,14 +3139,15 @@ const DATA = [
       }
     ],
     "lockDate": "2026-06-30",
-    "rtPrice": 16.13,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 16.1,
+    "tableGain": -0.0018598884066954487,
     "optimalShares": 4000,
-    "optimalCost": 64519.99999999999,
+    "optimalCost": 64400.00000000001,
     "optimalTheo": 8908.8,
     "optimalActual": 8900,
-    "optimalCushionCons": 0.041382517048977066,
-    "optimalCushionAggr": 0.07904060756354621,
+    "optimalCushionCons": 0.04145962732919254,
+    "optimalCushionAggr": 0.07918788819875777,
     "minShares": 100
   },
   {
@@ -3077,7 +3164,7 @@ const DATA = [
     "reg": "—",
     "pay": "—",
     "fs": 1.66,
-    "ind": "家居五金",
+    "ind": "家居用品",
     "rating": "-",
     "lockShares": "345221710",
     "progressDate": "2026-06-08",
@@ -3118,14 +3205,48 @@ const DATA = [
       }
     ],
     "lockDate": "2026-06-30",
-    "rtPrice": 39.25,
-    "tableGain": 0,
+    "addDate": "",
+    "rtPrice": 41.55,
+    "tableGain": 0.058598726114649606,
     "optimalShares": 4000,
-    "optimalCost": 157000,
+    "optimalCost": 166200,
     "optimalTheo": 11976,
     "optimalActual": 11900,
-    "optimalCushionCons": 0.022738853503184712,
-    "optimalCushionAggr": 0.030318471337579617,
+    "optimalCushionCons": 0.02148014440433213,
+    "optimalCushionAggr": 0.028640192539109505,
+    "minShares": 100
+  },
+  {
+    "code": "301297",
+    "name": "富乐德",
+    "bond": null,
+    "board": "深市创业",
+    "stage": "董事会预案",
+    "grp": "gray",
+    "issue": 11.76,
+    "conv": 32.51,
+    "price": 36.83,
+    "perShare": 0,
+    "reg": "—",
+    "pay": "—",
+    "fs": null,
+    "ind": "半导体",
+    "rating": "-",
+    "progressDate": "2026-08-15",
+    "consPrice": 120,
+    "aggrPrice": 130,
+    "lockShares": "",
+    "lockList": [],
+    "lockDate": "",
+    "addDate": "",
+    "rtPrice": 37.56,
+    "tableGain": 0.019820798262286287,
+    "optimalShares": 100,
+    "optimalCost": 3756,
+    "optimalTheo": 0,
+    "optimalActual": 0,
+    "optimalCushionCons": 0,
+    "optimalCushionAggr": 0,
     "minShares": 100
   }
 ];
@@ -3165,6 +3286,17 @@ function stageNum(s){ return STAGE_MAP[s] || s; }
 function stageText(n){ return STAGE_LABELS[n] || n; }
 
 
+  // 已关注 N 天：从「加表日期」算到今天（用于展开明细右上角小角标）
+  function watchDays(addDate){
+    if (!addDate) return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(addDate).trim());
+    if (!m) return null;
+    const d = new Date(+m[1], +m[2]-1, +m[3]);
+    const t = new Date();
+    const today = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+    const diff = Math.floor((today - d) / 86400000);
+    return isNaN(diff) || diff < 0 ? null : diff;
+  }
 function detailHtml(r){
   const noSch = !(r.perShare > 0);
   const rows = [
@@ -3205,13 +3337,17 @@ function detailHtml(r){
     ['上市价激进', fmt(r.aggrPrice,1)],
     ['安全垫激进', (noSch?'—':fmt(r.cushAggrNum*100,2)+'%')],
     ['含权量', (noSch?'—':fmt(r.contain,2))],
+    ['加表日期', r.addDate || '—'],
     ['登记日', r.reg],
     ['缴款日', r.pay]
   ];
-  let h = '<div class="detail-grid">';
+  let h = '<div class="detail-wrap"><div class="detail-grid">';
   for (const kv of rows){
     h += '<div class="detail-item"><span class="k">'+kv[0]+'</span><span class="v">'+kv[1]+'</span></div>';
   }
+  h += '</div>';
+  const wd = watchDays(r.addDate);
+  h += '<div class="detail-corner"><span class="watch-badge' + (wd==null?' empty':'') + '"><span class="dot"></span>' + (wd==null?'未记录加表日':'已关注 '+wd+' 天') + '</span></div>';
   return h + '</div>';
 }
 function toggleExpand(tr, r){
@@ -3268,9 +3404,9 @@ function render(){
       '<td class="num">'+(noScheme?'—':fmt(r.optimalTheo,0))+'</td>'+
       '<td class="num">'+(noScheme?'—':fmt(r.optimalActual,0))+'</td>'+
       '<td class="num">'+(noScheme?'—':fmt(r.consPrice,1))+'</td>'+
-      '<td class="cush">'+(noScheme?'—':(fmt(r.cushConsNum*100,2)+'% <span class="star-mark">'+'★'.repeat(r.starsCons)+'</span>'))+'</td>'+
+      '<td class="cush">'+(noScheme?'—':(fmt(r.cushConsNum*100,2)+'%<br><span class="star-mark">'+'★'.repeat(r.starsCons)+'</span>'))+'</td>'+
       '<td class="num">'+(noScheme?'—':fmt(r.aggrPrice,1))+'</td>'+
-      '<td class="cush">'+(noScheme?'—':(fmt(r.cushAggrNum*100,2)+'% <span class="star-mark">'+'★'.repeat(r.starsAggr)+'</span>'))+'</td>'+
+      '<td class="cush">'+(noScheme?'—':(fmt(r.cushAggrNum*100,2)+'%<br><span class="star-mark">'+'★'.repeat(r.starsAggr)+'</span>'))+'</td>'+
       '<td class="num">'+(noScheme?'—':fmt(r.optimalCost,0))+'</td>'+
       '<td class="num">'+(noScheme?'—':fmt(r.contain,2))+'</td>'+
       '<td>'+r.reg+'</td>'+
@@ -3303,7 +3439,7 @@ function render(){
     h = h.replace(/{{BOARD_TITLE}}/g, BOARD_TITLE_MAP[d.board] || d.board);
     h = h.replace(/{{stockName}}/g, d.name || '');
     // 参数填充：上市价默认采用激进价
-    const map = {code:d.code, name:d.name, bondName:d.bond, price:d.price, perShare:d.perShare,
+    const map = {code:d.code, name:d.name, bondName:d.bond, price:(d.rtPrice!=null?d.rtPrice:d.price), perShare:d.perShare,
       regDate:d.reg, payDate:d.pay, issueSize:d.issue, rating:d.rating, convPrice:d.conv,
       listingPrice:d.aggrPrice || '157.3', lockShares:d.lockShares || '', lockRatio:'100',
       floatScale:(d.fs === null || d.fs === undefined || d.fs === '') ? '' : d.fs};
@@ -3363,7 +3499,10 @@ function render(){
       '<tbody id="tierBody" class="num-tabular">' + rowsHtml + '</tbody>'
     );
 
-    window.location.href = './bonds/' + String(d.name).replace(/[\/\\?:*<>|"\s]/g,'') + '.html';
+    const blob = new Blob([h], {type:'text/html'});
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
   }
 
   // 点击代码联动生成单页（正式：按潜伏配债 skill 模板即时生成并打开新标签）
@@ -3376,7 +3515,7 @@ function render(){
   });
 }
 
-document.getElementById('genDate').textContent = '制表日期 '+GEN_DATE;
+document.getElementById('genDate').textContent = '标的清单快照 '+GEN_DATE+' ｜ 行情每日早晚刷新 + 交易时段实时';
 const _pd = document.getElementById('priceDate'); if(_pd) _pd.textContent = '实时价 '+PRICE_DATE;
 document.getElementById('filterStage').addEventListener('change', render);
 document.getElementById('sortBy').addEventListener('change', render);
@@ -3384,7 +3523,134 @@ render();
 
 const avg = (DATA.reduce((s,d)=>s+(d.optimalCushionCons||0),0)/DATA.length*100).toFixed(2);
 document.getElementById('foot').innerHTML =
-  '共 '+DATA.length+' 只标的 ｜ 平均最优档保守安全垫 '+avg+'% ｜ 实时价截至 '+PRICE_DATE+'（腾讯自选股）｜ 上市价按保守/激进模型价估算，可在单页测算中自定义 ｜ 安全垫/含权量为理论值，小仓位因碎面损耗实际更低 ｜ 可流通规模=发行规模−锁定股东持股×每股配售÷1e8（持股≥5%/实控人/一致行动人 6 个月锁定）'
+  '共 '+DATA.length+' 只标的 ｜ 平均最优档保守安全垫 '+avg+'% ｜ 行情每日早晚由集思录+腾讯刷新，交易时段叠加浏览器端实时行情（东财/腾讯双源）｜ 上市价按保守/激进模型价估算，可在单页测算中自定义 ｜ 安全垫/含权量为理论值，小仓位因碎面损耗实际更低 ｜ 可流通规模=发行规模−锁定股东持股×每股配售÷1e8（持股≥5%/实控人/一致行动人 6 个月锁定）'
+
+// ===== 实时行情模块：交易时段浏览器端自动刷新（东财 push2 主源 + 腾讯 qt.gtimg.cn 兜底）=====
+(function(){
+  if (typeof DATA === 'undefined' || !DATA || !DATA.length) return;
+  var pad = function(n){ return (n < 10 ? '0' : '') + n; };
+  function isTradingNow(){
+    var now = new Date();
+    var utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    var bj = new Date(utc + 8 * 3600000);
+    var day = bj.getDay();
+    if (day === 0 || day === 6) return false;
+    var t = bj.getHours() * 60 + bj.getMinutes();
+    return (t >= 9 * 60 + 15 && t <= 11 * 60 + 30) || (t >= 13 * 60 && t <= 15 * 60);
+  }
+  function jsonp(url, cbName, timeout){
+    return new Promise(function(resolve, reject){
+      var s = document.createElement('script');
+      var cb = cbName + '_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+      var timer = setTimeout(function(){ cleanup(); reject(new Error('timeout')); }, timeout || 6000);
+      function cleanup(){ clearTimeout(timer); delete window[cb]; if (s.parentNode) s.parentNode.removeChild(s); }
+      window[cb] = function(data){ cleanup(); resolve(data); };
+      s.onerror = function(){ cleanup(); reject(new Error('script error')); };
+      s.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'cb=' + cb;
+      document.head.appendChild(s);
+    });
+  }
+  function fetchEM(){
+    var secids = DATA.map(function(d){ return (d.code[0] === '6' ? '1.' : '0.') + d.code; }).join(',');
+    var url = 'https://push2.eastmoney.com/api/qt/ulist.np/get?ut=fa5fd1943c7b386f172d6893dbfba10b&invt=2&fltt=2&secids=' + encodeURIComponent(secids) + '&fields=f2,f3,f4';
+    return jsonp(url, 'emcb').then(function(data){
+      if (!data || data.rc !== 0 || !data.data || !data.data.diff) throw new Error('em empty');
+      var out = {};
+      for (var k in data.data.diff){
+        var it = data.data.diff[k];
+        var price = parseFloat(it.f2);
+        if (!isFinite(price) || price <= 0) continue;
+        var code = k.indexOf('.') >= 0 ? k.split('.')[1] : k;
+        out[code] = { price: price, gainPct: parseFloat(it.f3) };
+      }
+      if (!Object.keys(out).length) throw new Error('em no price');
+      return out;
+    });
+  }
+  function fetchTX(){
+    return new Promise(function(resolve, reject){
+      var codes = DATA.map(function(d){ return (d.code[0] === '6' ? 'sh' : 'sz') + d.code; });
+      var s = document.createElement('script');
+      var timer = setTimeout(function(){ reject(new Error('tx timeout')); if (s.parentNode) s.parentNode.removeChild(s); }, 6000);
+      s.onload = function(){
+        clearTimeout(timer);
+        try {
+          var out = {};
+          codes.forEach(function(c){
+            var raw = window['v_' + c];
+            if (!raw) return;
+            var p = raw.split('~');
+            var price = parseFloat(p[3]);
+            if (!isFinite(price) || price <= 0) return;
+            var prev = parseFloat(p[4]) || price;
+            out[c.slice(2)] = { price: price, gainPct: prev > 0 ? (price - prev) / prev * 100 : 0 };
+          });
+          if (Object.keys(out).length) resolve(out); else reject(new Error('tx empty'));
+        } catch (e) { reject(e); }
+        if (s.parentNode) s.parentNode.removeChild(s);
+      };
+      s.onerror = function(){ clearTimeout(timer); reject(new Error('tx error')); };
+      s.src = 'https://qt.gtimg.cn/q=' + codes.join(',');
+      document.head.appendChild(s);
+    });
+  }
+  function cushStars(c){ return c >= 0.09 ? 5 : c >= 0.07 ? 4 : c >= 0.04 ? 3 : c >= 0.02 ? 2 : 1; }
+  function lfmt(n, dp){ return Number(n).toFixed(dp); }
+  function applyLive(map){
+    for (var i = 0; i < DATA.length; i++){
+      var d = DATA[i];
+      var lv = map[d.code];
+      if (!lv) continue;
+      d.rtPrice = lv.price;
+      d.tableGain = (lv.price - d.price) / d.price;
+      var cost = (d.optimalShares || 0) * lv.price;
+      var profitCons = (d.optimalActual / 100) * (d.consPrice - 100);
+      var profitAggr = (d.optimalActual / 100) * (d.aggrPrice - 100);
+      d.optimalCost = cost;
+      d.optimalCushionCons = cost > 0 ? profitCons / cost : 0;
+      d.optimalCushionAggr = cost > 0 ? profitAggr / cost : 0;
+    }
+    updateDom();
+  }
+  function updateDom(){
+    var tbody = document.getElementById('tbody');
+    if (!tbody) return;
+    var cells = tbody.querySelectorAll('[data-code]');
+    for (var i = 0; i < cells.length; i++){
+      var cell = cells[i];
+      var code = cell.getAttribute('data-code');
+      var d = BYCODE[code];
+      if (!d) continue;
+      var tr = cell.closest('tr');
+      if (!tr) continue;
+      var c = tr.cells;
+      if (c[9]) c[9].textContent = lfmt(d.rtPrice, 2);
+      if (c[10]){ c[10].textContent = lfmt(d.tableGain * 100, 2) + '%'; c[10].className = 'num ' + (d.tableGain >= 0 ? 'rate4' : 'rate1'); }
+      if (c[16]){ var sc = cushStars(d.optimalCushionCons); c[16].innerHTML = lfmt(d.optimalCushionCons * 100, 2) + '%<br><span class="star-mark">' + '★'.repeat(sc) + '</span>'; }
+      if (c[18]){ var sa = cushStars(d.optimalCushionAggr); c[18].innerHTML = lfmt(d.optimalCushionAggr * 100, 2) + '%<br><span class="star-mark">' + '★'.repeat(sa) + '</span>'; }
+      if (c[19]) c[19].textContent = lfmt(d.optimalCost, 0);
+    }
+  }
+  var lastOk = false;
+  function setStatus(text){ var el = document.getElementById('priceDate'); if (el) el.textContent = text; }
+  function tick(){
+    if (!isTradingNow()){
+      setStatus('○ 非交易时段（09:15-11:30 / 13:00-15:00 自动实时刷新已暂停）');
+      return;
+    }
+    fetchEM().catch(function(){ return fetchTX(); }).then(function(map){
+      applyLive(map);
+      var t = new Date();
+      setStatus('● 实时行情 · 最后更新 ' + pad(t.getHours()) + ':' + pad(t.getMinutes()) + ':' + pad(t.getSeconds()));
+      lastOk = true;
+    }).catch(function(e){
+      setStatus(lastOk ? '○ 实时行情暂时获取失败，沿用最近快照（将自动重试）' : '○ 实时行情获取失败（将自动重试）');
+      if (window.console) console.warn('[实时行情]', e && e.message);
+    });
+  }
+  tick();
+  setInterval(tick, 8000);
+})();
 </script>
 </body>
 </html>
