@@ -270,7 +270,7 @@
       <div class="field"><label>股票名称</label><input id="name" value="玉禾田"></div>
       <div class="field"><label>对应转债名称</label><input id="bondName" value="玉禾转债"></div>
       <div class="field">
-        <label>标的当日收盘价（确权基准价）<span class="mode-badge auto" id="priceModeBadge" title="点击切换自动 / 手动模式">📡 自动</span></label>
+        <label>标的当日收盘价（确权基准价）<span class="mode-badge auto" id="priceModeBadge" title="点击切换：自动=实时价驱动，手动=你手填价测算">自动</span></label>
         <div class="price-row">
           <input id="price" type="number" step="0.01" value="16.35" data-mode="auto">
           <span class="u">元</span>
@@ -527,19 +527,33 @@
     }
     // —— 价格自动 / 手动 模式开关 ——
   window._priceAutoMode = true;  // 默认自动：实时价每 8s 覆盖 input.value
+  function setModeUI(){
+    var badge = document.getElementById('priceModeBadge');
+    if (!badge) return;
+    var auto = (window._priceAutoMode !== false);
+    badge.classList.toggle('auto', auto);
+    badge.classList.toggle('manual', !auto);
+    badge.innerHTML = auto ? '自动' : '手动';
+  }
   (function initPriceMode(){
     var badge = document.getElementById('priceModeBadge');
     var input = document.getElementById('price');
     if (!badge || !input) return;
+    // 用户一旦手动改价 → 自动切到手动模式，避免被实时轮询覆盖（测算才稳）
+    input.addEventListener('input', function(){
+      if (window._priceAutoMode !== false){
+        window._priceAutoMode = false;
+        setModeUI();
+      }
+    });
     badge.addEventListener('click', function(){
       window._priceAutoMode = !window._priceAutoMode;
-      input.dataset.mode = window._priceAutoMode ? 'auto' : 'manual';
-      badge.classList.toggle('auto',  window._priceAutoMode);
-      badge.classList.toggle('manual', !window._priceAutoMode);
-      // 切到手动 → 立即刷新一次（让用户改的值生效）
-      // 切回自动 → 立即拉一次实时价
+      setModeUI();
+      // 切回自动 → 立即拉一次实时价并应用；切到手动 → 立即重算一次
       if (typeof refreshLivePrice === 'function') refreshLivePrice();
+      else recompute();
     });
+    setModeUI();
   })();
 
   // —— setter 代理：关键字段任何「.value = X」赋值都触发 recompute ——
@@ -700,62 +714,43 @@
     document.getElementById('liveStatusText').textContent = text;
   }
 
-  var _lastEmAt = 0;
+  // 拉最新价：交易时段=实时tick，非交易时段=今收（API 直接返回最新价，无需区分）
+  // 关键修复：无论交易与否，页面加载即拉一次 —— 收盘后也应显示今收价，而非生成时的旧值
   function refreshLivePrice(){
     var codeEl = document.getElementById('code');
     if (!codeEl || !codeEl.value) return;
     var code = String(codeEl.value);
-    var badge = document.getElementById('priceModeBadge');
     var priceInput = document.getElementById('price');
     var tickEl = document.getElementById('priceLiveTick');
-    // 手动模式下轮询只更新 tick（不动 input.value，用户改的才生效）
-    if (window._priceAutoMode === false){
-      setLiveStatus('手动模式 · 已暂停自动刷新（点击徽标恢复自动）', 'idle');
-      if (badge) badge.innerHTML = '✋ 手动';
-      if (tickEl) tickEl.textContent = '已暂停';
-      return;
-    }
-    if (badge) badge.innerHTML = '📡 自动';
-    if (!isTradingNow()){
-      var now = new Date();
-      var utc = now.getTime() + now.getTimezoneOffset() * 60000;
-      var bj = new Date(utc + 8 * 3600000);
-      var hh = String(bj.getHours()).padStart(2,'0');
-      var mm = String(bj.getMinutes()).padStart(2,'0');
-      if (tickEl) tickEl.textContent = '非交易时段 ' + hh + ':' + mm;
-      setLiveStatus('实时价 · 非交易时段（' + hh + ':' + mm + '），保持当前输入', 'idle');
-      recompute();
-      return;
-    }
+    var auto = (window._priceAutoMode !== false);
 
     fetchEMPrice(code).catch(function(){ return fetchTXPrice(code); }).then(function(price){
-      _lastEmAt = Date.now();
-      // 自动模式下：直接 set value 覆盖；用户视角就是「价格在动」
-      if (priceInput){
+      if (tickEl) tickEl.textContent = '实时参考 ' + price.toFixed(2);
+      // 自动模式 → 把最新价写回输入框并立刻重算（股价一变，安全垫就变）
+      if (auto && priceInput && document.activeElement !== priceInput){
         var cur = parseFloat(priceInput.value);
         if (!isFinite(cur) || Math.abs(cur - price) >= 0.005){
           priceInput.value = price.toFixed(2);
+          recompute();
         }
       }
       var t = new Date();
-      var hh = String(t.getHours()).padStart(2,'0');
-      var mm = String(t.getMinutes()).padStart(2,'0');
-      var ss = String(t.getSeconds()).padStart(2,'0');
-      if (tickEl){
-        tickEl.textContent = hh + ':' + mm + ':' + ss + ' 刷新';
-      }
-      setLiveStatus('实时价 ' + price.toFixed(2) + ' · ' + hh + ':' + mm + ':' + ss + '（自动模式 · 8s 刷新）', null);
-      // 自动模式每一帧都强制 recompute（不走事件，不靠心跳）
-      recompute();
+      var pad2 = function(n){ return String(n).padStart(2,'0'); };
+      var clock = pad2(t.getHours()) + ':' + pad2(t.getMinutes()) + ':' + pad2(t.getSeconds());
+      var suffix = isTradingNow() ? '（自动 · 8s 刷新）' : '（今收已锁定）';
+      setLiveStatus('实时价 ' + price.toFixed(2) + ' · ' + clock + (auto ? suffix : '（手动模式）'), null);
     }).catch(function(){
       setLiveStatus('实时价 · 获取失败，沿用当前输入（将自动重试）', 'err');
       if (tickEl) tickEl.textContent = '获取失败 · 重试';
     });
   }
 
-  // 立即拉一次 + 8s 轮询（交易时段才刷；非交易时段只拉初始一次）
+  // 页面加载：无论交易与否，先拉一次最新价（收盘后=今收，盘中=实时tick）
   refreshLivePrice();
-  setInterval(function(){ refreshLivePrice(); }, 8000);
+  // 仅交易时段轮询（收盘后价格已锁定，无需反复拉）；手动模式不轮询覆盖
+  setInterval(function(){
+    if (isTradingNow() && window._priceAutoMode !== false) refreshLivePrice();
+  }, 8000);
 
   // 计算入口：立即执行 + DOMReady + Load 三重保险，确保在各种预览环境都能渲染
   function runCompute(){
