@@ -131,18 +131,7 @@
   .cp .k { font-size: 12px; color: var(--amber-deep); }
   .cp .v { font-size: 19px; font-weight: 800; color: var(--amber-deep); margin-top: 2px; }
 
-  /* 流通规模提醒横幅（去渐变，纯色块 + 顶部琥珀强调线） */
-  .float-warning {
-    background: var(--amber-tint); border: 1px solid var(--amber-line); border-top: 3px solid var(--amber);
-    border-radius: 0 0 var(--radius) var(--radius); padding: 14px 20px; margin: 0 0 18px 0; box-shadow: var(--shadow);
-  }
-  .float-warning .tag {
-    display: inline-block; background: var(--amber); color: var(--amber-ink);
-    font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 4px; margin-right: 8px;
-  }
-  .float-warning p { margin: 4px 0 0; font-size: 13px; color: var(--amber-deep); line-height: 1.7; }
-  .float-warning b { color: var(--amber-ink); }
-
+  /* 立即重算按钮 — 重新激活：必须在第一个 .card 后，紧跟参数区，方便手改价后一键同步 */
   .btn-print {
     margin-top: 16px; padding: 9px 20px; background: var(--amber); color: var(--amber-ink);
     border: 1px solid var(--amber-line); border-radius: 9px; font-size: 14px; font-weight: 700;
@@ -256,15 +245,10 @@
     <div class="watch-badge empty" id="watchBadge"><span class="dot"></span><span id="watchBadgeText">已关注 — 天</span></div>
   </div>
 
-  <div class="float-warning">
-    <div><span class="tag">流通规模提醒</span><b id="floatScaleTag">—</b></div>
-    <p>可流通规模越小，上市越易被资金集中炒作推高、上市溢价空间越大；但对应波动与回撤风险也同步放大。小盘债需重点盯住炒作情绪与兑现时点，避免在情绪高点接盘。</p>
-  </div>
-
   <div class="card">
     <div class="section-h">一、参数录入</div>
     <div class="hint">修改任意参数，下方测算结果与风险评级将实时联动刷新。带（可自定义）的为预期上市价，其余为标的公告数据。</div>
-    <div class="live-status idle" id="liveStatus" title="交易时段 09:15–11:30 / 13:00–15:00 每 8s 自动刷新（东财 push2 主源 + 腾讯 qt.gtimg 兜底）"><span class="dot"></span><span id="liveStatusText">实时价 · 等待刷新</span></div>
+    <div class="live-status idle" id="liveStatus" title="交易时段 09:15–11:30 / 13:00–15:00 每 8s 自动刷新（东财 push2 主源 + 腾讯 qt.gtimg 兜底）"><span class="dot"></span><span id="liveStatusText">实时价 · 正在连接行情源</span></div>
     <div class="form-grid">
       <div class="field"><label>股票代码</label><input id="code" value="300815"></div>
       <div class="field"><label>股票名称</label><input id="name" value="玉禾田"></div>
@@ -472,16 +456,10 @@
       const locked     = lockShares * A * (lockRatio / 100) / 1e8;   // 亿元
       const floatScale = issue - locked;                            // 亿元（自动倒推，只读）
       floatEl.value = fmt(floatScale, 2);
-      document.getElementById('floatScaleTag').textContent = floatScale > 0
-        ? ('本转债倒推可流通规模约 ' + fmt(floatScale, 2) + ' 亿元（总规模 ' + fmt(issue,2) + ' − 锁定 ' + fmt(locked,2) + '）')
-        : '（请填写锁定股东合计持股数）';
     } else {
       // 无锁定股东数据时保留生成器注入值，不瞎算
       const current = parseFloat(floatEl.value) || 0;
       if (!current) floatEl.value = '';
-      document.getElementById('floatScaleTag').textContent = current > 0
-        ? ('本转债可流通规模约 ' + fmt(current, 2) + ' 亿元')
-        : '（锁定股东持股数未提供，可流通规模待补）';
     }
     const err = document.getElementById('calcError');
     if (err) err.style.display = 'none';
@@ -723,6 +701,10 @@
     var priceInput = document.getElementById('price');
     var tickEl = document.getElementById('priceLiveTick');
     var auto = (window._priceAutoMode !== false);
+
+    // 立即给反馈：进入"正在连接"状态，避免长时间显示"等待刷新"
+    setLiveStatus('实时价 · 正在连接行情源（' + code + '）…', 'idle');
+    if (tickEl) tickEl.textContent = '正在拉取…';
 
     fetchEMPrice(code).catch(function(){ return fetchTXPrice(code); }).then(function(price){
       if (tickEl) tickEl.textContent = '实时参考 ' + price.toFixed(2);
