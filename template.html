@@ -106,6 +106,21 @@
   .field input:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(224,168,46,.16); }
   .field input[readonly] { background: #f3f4f6; color: var(--muted); cursor: default; }
 
+  /* 价格字段专属：自动 / 手动 模式徽标 + 切换按钮 */
+  .price-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .price-row input { flex: 1 1 140px; }
+  .price-row .u { color: #9ca3af; font-size: 11px; }
+  .mode-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
+    cursor: pointer; user-select: none;
+    border: 1px solid var(--amber-line); background: var(--amber-tint); color: var(--amber-deep);
+    transition: background .12s, color .12s, border-color .12s;
+  }
+  .mode-badge.auto  { border-color: #b6ddc0; background: #ecfaf0; color: #1e6b3b; }
+  .mode-badge.manual { border-color: var(--amber-line); background: var(--amber-tint); color: var(--amber-deep); }
+  .price-row .live-tick { font-size: 11px; color: var(--muted); margin-left: 2px; }
+
   /* 核心参数条 */
   .core-params { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }
   .cp {
@@ -254,7 +269,14 @@
       <div class="field"><label>股票代码</label><input id="code" value="300815"></div>
       <div class="field"><label>股票名称</label><input id="name" value="玉禾田"></div>
       <div class="field"><label>对应转债名称</label><input id="bondName" value="玉禾转债"></div>
-      <div class="field"><label>标的当日收盘价（确权基准价）</label><input id="price" type="number" step="0.01" value="16.35"><span class="u">元</span></div>
+      <div class="field">
+        <label>标的当日收盘价（确权基准价）<span class="mode-badge auto" id="priceModeBadge" title="点击切换自动 / 手动模式">📡 自动</span></label>
+        <div class="price-row">
+          <input id="price" type="number" step="0.01" value="16.35" data-mode="auto">
+          <span class="u">元</span>
+          <span class="live-tick" id="priceLiveTick">—</span>
+        </div>
+      </div>
       <div class="field"><label>官方每股配售金额（4位小数）</label><input id="perShare" type="number" step="0.0001" value="3.0969"><span class="u">元/股</span></div>
       <div class="field"><label>加表日期</label><input id="addDate" value="" placeholder="YYYY-MM-DD"></div>
       <div class="field"><label>股权登记日</label><input id="regDate" value="2026-07-28"></div>
@@ -485,6 +507,9 @@
 
   // —— 多重事件监听（兜底覆盖所有输入路径，永远不出错）——
   // 覆盖：input(键入/paste/spinner) / change(失焦/spinner确定) / keyup(方向键/spinner) / blur(失焦)
+  // 同时给关键字段（price/perShare/listingPrice/lockShares/lockRatio/issueSize）装 setter 代理：
+  //   任何方式改值（含 JS 赋值 / 实时行情轮询写回 / spinner / paste / IME）都触发 recompute
+  //   不依赖任何事件，永不出错
   function attachListeners(){
     var inputs = document.querySelectorAll('.form-grid input');
     for (var i = 0; i < inputs.length; i++){
@@ -500,7 +525,68 @@
     if (form){
       form.addEventListener('input', function(){ recompute(); });
     }
+    // —— 价格自动 / 手动 模式开关 ——
+  window._priceAutoMode = true;  // 默认自动：实时价每 8s 覆盖 input.value
+  (function initPriceMode(){
+    var badge = document.getElementById('priceModeBadge');
+    var input = document.getElementById('price');
+    if (!badge || !input) return;
+    badge.addEventListener('click', function(){
+      window._priceAutoMode = !window._priceAutoMode;
+      input.dataset.mode = window._priceAutoMode ? 'auto' : 'manual';
+      badge.classList.toggle('auto',  window._priceAutoMode);
+      badge.classList.toggle('manual', !window._priceAutoMode);
+      // 切到手动 → 立即刷新一次（让用户改的值生效）
+      // 切回自动 → 立即拉一次实时价
+      if (typeof refreshLivePrice === 'function') refreshLivePrice();
+    });
+  })();
+
+  // —— setter 代理：关键字段任何「.value = X」赋值都触发 recompute ——
+    var proxyIds = ['price', 'perShare', 'listingPrice', 'lockShares', 'lockRatio', 'issueSize'];
+    proxyIds.forEach(function(id){
+      var el = document.getElementById(id);
+      if (!el || el.__proxyWired) return;
+      el.__proxyWired = true;
+      var desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+      Object.defineProperty(el, 'value', {
+        get: function(){ return desc.get.call(this); },
+        set: function(v){
+          desc.set.call(this, v);
+          // 异步触发重算，避免 setter 同步链路里直接改 tbody 引发重排异常
+          if (typeof recompute === 'function') recompute();
+        }
+      });
+    });
   }
+
+  // —— 终极兜底：500ms 心跳对比快照，任何字段变了就强制 recompute ——
+  // 不依赖 input/change/keyup/blur 任何事件；浏览器扩展拦截、IME、缓存旧 JS、prototype setter 走私有通道等都覆盖。
+  // 输入框数量极少（<15），读取极轻，500ms 不可感知。
+  (function startHeartbeat(){
+    var ids = ['price', 'perShare', 'listingPrice', 'lockShares', 'lockRatio', 'issueSize', 'addDate', 'convPrice'];
+    function snapshot(){
+      var snap = {};
+      ids.forEach(function(id){
+        var el = document.getElementById(id);
+        if (el) snap[id] = el.value;
+      });
+      return snap;
+    }
+    var prev = snapshot();
+    setInterval(function(){
+      var cur = snapshot();
+      var changed = false;
+      for (var k in cur){
+        if (cur[k] !== prev[k]) { changed = true; break; }
+      }
+      if (changed && typeof recompute === 'function'){
+        prev = cur;
+        recompute();
+        // 心跳触发不显示 flash（避免和用户主动改价视觉混淆）
+      }
+    }, 500);
+  })();
 
   // 制表日期：生成时已写入则保留；打开时仍为占位符则补为当天，便于回溯
   (function initDate(){
@@ -605,14 +691,6 @@
     });
   }
 
-  // 用户正在编辑：focus/blur 标记，期间不覆盖输入框
-  var _priceEl = document.getElementById('price');
-  var _userEditing = false;
-  if (_priceEl){
-    _priceEl.addEventListener('focus', function(){ _userEditing = true; });
-    _priceEl.addEventListener('blur',  function(){ _userEditing = false; });
-  }
-
   function setLiveStatus(text, kind){
     var el = document.getElementById('liveStatus');
     if (!el) return;
@@ -627,35 +705,51 @@
     var codeEl = document.getElementById('code');
     if (!codeEl || !codeEl.value) return;
     var code = String(codeEl.value);
-    // 用户正在编辑 → 不覆盖；保留当前输入值
-    if (_userEditing){
-      setLiveStatus('实时价 · 已暂停（你正在编辑）', 'idle');
+    var badge = document.getElementById('priceModeBadge');
+    var priceInput = document.getElementById('price');
+    var tickEl = document.getElementById('priceLiveTick');
+    // 手动模式下轮询只更新 tick（不动 input.value，用户改的才生效）
+    if (window._priceAutoMode === false){
+      setLiveStatus('手动模式 · 已暂停自动刷新（点击徽标恢复自动）', 'idle');
+      if (badge) badge.innerHTML = '✋ 手动';
+      if (tickEl) tickEl.textContent = '已暂停';
       return;
     }
+    if (badge) badge.innerHTML = '📡 自动';
     if (!isTradingNow()){
       var now = new Date();
       var utc = now.getTime() + now.getTimezoneOffset() * 60000;
       var bj = new Date(utc + 8 * 3600000);
-      setLiveStatus('实时价 · 非交易时段（' + pad(bj.getHours()) + ':' + pad(bj.getMinutes()) + '），价格保持当前输入', 'idle');
+      var hh = String(bj.getHours()).padStart(2,'0');
+      var mm = String(bj.getMinutes()).padStart(2,'0');
+      if (tickEl) tickEl.textContent = '非交易时段 ' + hh + ':' + mm;
+      setLiveStatus('实时价 · 非交易时段（' + hh + ':' + mm + '），保持当前输入', 'idle');
       recompute();
       return;
     }
 
     fetchEMPrice(code).catch(function(){ return fetchTXPrice(code); }).then(function(price){
       _lastEmAt = Date.now();
-      if (_priceEl && !_userEditing){
-        // 价格变动才覆写，避免无谓抖动
-        var cur = parseFloat(_priceEl.value);
+      // 自动模式下：直接 set value 覆盖；用户视角就是「价格在动」
+      if (priceInput){
+        var cur = parseFloat(priceInput.value);
         if (!isFinite(cur) || Math.abs(cur - price) >= 0.005){
-          _priceEl.value = price.toFixed(2);
-          // 主动触发 recompute（直接设置 .value 不会冒泡 input 事件）
-          recompute();
+          priceInput.value = price.toFixed(2);
         }
       }
       var t = new Date();
-      setLiveStatus('实时价 ' + price.toFixed(2) + ' · ' + pad(t.getHours()) + ':' + pad(t.getMinutes()) + ':' + pad(t.getSeconds()) + '（8s 自动刷新）', null);
+      var hh = String(t.getHours()).padStart(2,'0');
+      var mm = String(t.getMinutes()).padStart(2,'0');
+      var ss = String(t.getSeconds()).padStart(2,'0');
+      if (tickEl){
+        tickEl.textContent = hh + ':' + mm + ':' + ss + ' 刷新';
+      }
+      setLiveStatus('实时价 ' + price.toFixed(2) + ' · ' + hh + ':' + mm + ':' + ss + '（自动模式 · 8s 刷新）', null);
+      // 自动模式每一帧都强制 recompute（不走事件，不靠心跳）
+      recompute();
     }).catch(function(){
       setLiveStatus('实时价 · 获取失败，沿用当前输入（将自动重试）', 'err');
+      if (tickEl) tickEl.textContent = '获取失败 · 重试';
     });
   }
 
