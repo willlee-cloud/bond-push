@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <link rel="dns-prefetch" href="https://qt.gtimg.cn">
+  <link rel="dns-prefetch" href="https://push2.eastmoney.com">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>可转债潜伏配债量化测算</title>
@@ -49,6 +51,11 @@
   .live-status .dot { width: 7px; height: 7px; border-radius: 50%; background: #2bb55d; box-shadow: 0 0 0 3px rgba(43,181,93,.18); animation: livePulse 1.6s ease-in-out infinite; flex: none; }
   .live-status.idle .dot { background: #9aa0aa; box-shadow: none; animation: none; }
   .live-status.err  .dot { background: #c0392b; box-shadow: 0 0 0 3px rgba(192,57,43,.18); animation: none; }
+  /* 实时价变动闪烁：涨红、跌绿（A股习惯） */
+  @keyframes flashUp   { 0%{box-shadow:0 0 0 0 rgba(214,48,49,0);} 22%{box-shadow:0 0 0 3px rgba(214,48,49,.40);} 100%{box-shadow:0 0 0 0 rgba(214,48,49,0);} }
+  @keyframes flashDown { 0%{box-shadow:0 0 0 0 rgba(27,153,79,0);} 22%{box-shadow:0 0 0 3px rgba(27,153,79,.40);} 100%{box-shadow:0 0 0 0 rgba(27,153,79,0);} }
+  .price-row.flash-up   { animation: flashUp   .9s ease-out; border-radius: 8px; }
+  .price-row.flash-down { animation: flashDown .9s ease-out; border-radius: 8px; }
   @keyframes livePulse { 0%,100%{ opacity: 1; } 50%{ opacity: .35; } }
 
   /* 单元 cell 短暂高亮：每次重算后被改动 cell flash 一次（配 input 监听，让人确认"它确实算过了"）*/
@@ -106,6 +113,21 @@
   .field input:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(224,168,46,.16); }
   .field input[readonly] { background: #f3f4f6; color: var(--muted); cursor: default; }
 
+  /* 价格字段专属：自动 / 手动 模式徽标 + 切换按钮 */
+  .price-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .price-row input { flex: 1 1 140px; }
+  .price-row .u { color: #9ca3af; font-size: 11px; }
+  .mode-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
+    cursor: pointer; user-select: none;
+    border: 1px solid var(--amber-line); background: var(--amber-tint); color: var(--amber-deep);
+    transition: background .12s, color .12s, border-color .12s;
+  }
+  .mode-badge.auto  { border-color: #b6ddc0; background: #ecfaf0; color: #1e6b3b; }
+  .mode-badge.manual { border-color: var(--amber-line); background: var(--amber-tint); color: var(--amber-deep); }
+  .price-row .live-tick { font-size: 11px; color: var(--muted); margin-left: 2px; }
+
   /* 核心参数条 */
   .core-params { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }
   .cp {
@@ -116,18 +138,7 @@
   .cp .k { font-size: 12px; color: var(--amber-deep); }
   .cp .v { font-size: 19px; font-weight: 800; color: var(--amber-deep); margin-top: 2px; }
 
-  /* 流通规模提醒横幅（去渐变，纯色块 + 顶部琥珀强调线） */
-  .float-warning {
-    background: var(--amber-tint); border: 1px solid var(--amber-line); border-top: 3px solid var(--amber);
-    border-radius: 0 0 var(--radius) var(--radius); padding: 14px 20px; margin: 0 0 18px 0; box-shadow: var(--shadow);
-  }
-  .float-warning .tag {
-    display: inline-block; background: var(--amber); color: var(--amber-ink);
-    font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 4px; margin-right: 8px;
-  }
-  .float-warning p { margin: 4px 0 0; font-size: 13px; color: var(--amber-deep); line-height: 1.7; }
-  .float-warning b { color: var(--amber-ink); }
-
+  /* 立即重算按钮 — 重新激活：必须在第一个 .card 后，紧跟参数区，方便手改价后一键同步 */
   .btn-print {
     margin-top: 16px; padding: 9px 20px; background: var(--amber); color: var(--amber-ink);
     border: 1px solid var(--amber-line); border-radius: 9px; font-size: 14px; font-weight: 700;
@@ -241,22 +252,24 @@
     <div class="watch-badge empty" id="watchBadge"><span class="dot"></span><span id="watchBadgeText">已关注 — 天</span></div>
   </div>
 
-  <div class="float-warning">
-    <div><span class="tag">流通规模提醒</span><b id="floatScaleTag">—</b></div>
-    <p>可流通规模越小，上市越易被资金集中炒作推高、上市溢价空间越大；但对应波动与回撤风险也同步放大。小盘债需重点盯住炒作情绪与兑现时点，避免在情绪高点接盘。</p>
-  </div>
-
   <div class="card">
     <div class="section-h">一、参数录入</div>
     <div class="hint">修改任意参数，下方测算结果与风险评级将实时联动刷新。带（可自定义）的为预期上市价，其余为标的公告数据。</div>
-    <div class="live-status idle" id="liveStatus" title="交易时段 09:15–11:30 / 13:00–15:00 每 8s 自动刷新（东财 push2 主源 + 腾讯 qt.gtimg 兜底）"><span class="dot"></span><span id="liveStatusText">实时价 · 等待刷新</span></div>
+    <div class="live-status idle" id="liveStatus" title="交易时段 09:15–11:30 / 13:00–15:00 每 3s 自动刷新（腾讯 qt.gtimg 主源 + 东财 push2 兜底）"><span class="dot"></span><span id="liveStatusText">实时价 18.75 · 2026-08-18 收盘已锁定（与输入框一致，无需刷新）</span></div>
     <div class="form-grid">
       <div class="field"><label>股票代码</label><input id="code" value="300428"></div>
       <div class="field"><label>股票名称</label><input id="name" value="立中集团"></div>
       <div class="field"><label>对应转债名称</label><input id="bondName" value="立中集团转债"></div>
-      <div class="field"><label>标的当日收盘价（确权基准价）</label><input id="price" type="number" step="0.01" value="18.67"><span class="u">元</span></div>
+      <div class="field">
+        <label>标的当日收盘价（确权基准价）<span class="mode-badge auto" id="priceModeBadge" title="点击切换：自动=实时价驱动，手动=你手填价测算">自动</span></label>
+        <div class="price-row">
+          <input id="price" type="number" step="0.01" value="18.75" data-mode="auto">
+          <span class="u">元</span>
+          <span class="live-tick" id="priceLiveTick">实时参考 18.75（build-time 锁定）</span>
+        </div>
+      </div>
       <div class="field"><label>官方每股配售金额（4位小数）</label><input id="perShare" type="number" step="0.0001" value="0"><span class="u">元/股</span></div>
-      <div class="field"><label>加表日期</label><input id="addDate" value="" placeholder="YYYY-MM-DD"></div>
+      <div class="field"><label>加表日期</label><input id="addDate" value="2026-08-14" placeholder="YYYY-MM-DD"></div>
       <div class="field"><label>股权登记日</label><input id="regDate" value="—"></div>
       <div class="field"><label>配债缴款日</label><input id="payDate" value="—"></div>
       <div class="field"><label>转债发行总规模</label><input id="issueSize" value="11.8"><span class="u">亿元</span></div>
@@ -270,7 +283,7 @@
     <div class="core-params">
       <div class="cp"><div class="k">单张转债盈利 = 上市价 − 100</div><div class="v num-tabular" id="profitPerBond">—</div></div>
       <div class="cp"><div class="k">理论安全垫（满配·忽略碎面损耗）</div><div class="v num-tabular" id="theoCushion">—</div></div>
-      <div class="cp"><div class="k">制表日期</div><div class="v num-tabular" id="tableDateValue">2026-08-15</div></div>
+      <div class="cp"><div class="k">制表日期</div><div class="v num-tabular" id="tableDateValue">2026-08-18</div></div>
     </div>
     <button class="btn-recompute" onclick="recompute(true)" type="button">立即重算</button>
     <button class="btn-print" onclick="window.print()" type="button">打印 / 导出 PDF</button>
@@ -294,7 +307,7 @@
             <th>该档评级</th>
           </tr>
         </thead>
-        <tbody id="tierBody" class="num-tabular"><tr><td class="tier">100</td><td class="num">1,867</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">200</td><td class="num">3,734</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">300</td><td class="num">5,601</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">400</td><td class="num">7,468</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">500</td><td class="num">9,335</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">600</td><td class="num">11,202</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">700</td><td class="num">13,069</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">800</td><td class="num">14,936</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">900</td><td class="num">16,803</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">1000</td><td class="num">18,670</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">2000</td><td class="num">37,340</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">3000</td><td class="num">56,010</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">4000</td><td class="num">74,680</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr></tbody>
+        <tbody id="tierBody" class="num-tabular"><tr><td class="tier">100</td><td class="num">1,875</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">200</td><td class="num">3,750</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">300</td><td class="num">5,625</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">400</td><td class="num">7,500</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">500</td><td class="num">9,375</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">600</td><td class="num">11,250</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">700</td><td class="num">13,125</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">800</td><td class="num">15,000</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">900</td><td class="num">16,875</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">1000</td><td class="num">18,750</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">2000</td><td class="num">37,500</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">3000</td><td class="num">56,250</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">4000</td><td class="num">75,000</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr></tbody>
       </table>
     </div>
     <div class="hint" style="margin-top:12px;">
@@ -450,16 +463,10 @@
       const locked     = lockShares * A * (lockRatio / 100) / 1e8;   // 亿元
       const floatScale = issue - locked;                            // 亿元（自动倒推，只读）
       floatEl.value = fmt(floatScale, 2);
-      document.getElementById('floatScaleTag').textContent = floatScale > 0
-        ? ('本转债倒推可流通规模约 ' + fmt(floatScale, 2) + ' 亿元（总规模 ' + fmt(issue,2) + ' − 锁定 ' + fmt(locked,2) + '）')
-        : '（请填写锁定股东合计持股数）';
     } else {
       // 无锁定股东数据时保留生成器注入值，不瞎算
       const current = parseFloat(floatEl.value) || 0;
       if (!current) floatEl.value = '';
-      document.getElementById('floatScaleTag').textContent = current > 0
-        ? ('本转债可流通规模约 ' + fmt(current, 2) + ' 亿元')
-        : '（锁定股东持股数未提供，可流通规模待补）';
     }
     const err = document.getElementById('calcError');
     if (err) err.style.display = 'none';
@@ -485,6 +492,9 @@
 
   // —— 多重事件监听（兜底覆盖所有输入路径，永远不出错）——
   // 覆盖：input(键入/paste/spinner) / change(失焦/spinner确定) / keyup(方向键/spinner) / blur(失焦)
+  // 同时给关键字段（price/perShare/listingPrice/lockShares/lockRatio/issueSize）装 setter 代理：
+  //   任何方式改值（含 JS 赋值 / 实时行情轮询写回 / spinner / paste / IME）都触发 recompute
+  //   不依赖任何事件，永不出错
   function attachListeners(){
     var inputs = document.querySelectorAll('.form-grid input');
     for (var i = 0; i < inputs.length; i++){
@@ -500,7 +510,82 @@
     if (form){
       form.addEventListener('input', function(){ recompute(); });
     }
+    // —— 价格自动 / 手动 模式开关 ——
+  window._priceAutoMode = true;  // 默认自动：实时价每 8s 覆盖 input.value
+  function setModeUI(){
+    var badge = document.getElementById('priceModeBadge');
+    if (!badge) return;
+    var auto = (window._priceAutoMode !== false);
+    badge.classList.toggle('auto', auto);
+    badge.classList.toggle('manual', !auto);
+    badge.innerHTML = auto ? '自动' : '手动';
   }
+  (function initPriceMode(){
+    var badge = document.getElementById('priceModeBadge');
+    var input = document.getElementById('price');
+    if (!badge || !input) return;
+    // 用户一旦手动改价 → 自动切到手动模式，避免被实时轮询覆盖（测算才稳）
+    input.addEventListener('input', function(){
+      if (window._priceAutoMode !== false){
+        window._priceAutoMode = false;
+        setModeUI();
+      }
+    });
+    badge.addEventListener('click', function(){
+      window._priceAutoMode = !window._priceAutoMode;
+      setModeUI();
+      // 切回自动 → 立即拉一次实时价并应用；切到手动 → 立即重算一次
+      if (typeof refreshLivePrice === 'function') refreshLivePrice();
+      else recompute();
+    });
+    setModeUI();
+  })();
+
+  // —— setter 代理：关键字段任何「.value = X」赋值都触发 recompute ——
+    var proxyIds = ['price', 'perShare', 'listingPrice', 'lockShares', 'lockRatio', 'issueSize'];
+    proxyIds.forEach(function(id){
+      var el = document.getElementById(id);
+      if (!el || el.__proxyWired) return;
+      el.__proxyWired = true;
+      var desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+      Object.defineProperty(el, 'value', {
+        get: function(){ return desc.get.call(this); },
+        set: function(v){
+          desc.set.call(this, v);
+          // 异步触发重算，避免 setter 同步链路里直接改 tbody 引发重排异常
+          if (typeof recompute === 'function') recompute();
+        }
+      });
+    });
+  }
+
+  // —— 终极兜底：500ms 心跳对比快照，任何字段变了就强制 recompute ——
+  // 不依赖 input/change/keyup/blur 任何事件；浏览器扩展拦截、IME、缓存旧 JS、prototype setter 走私有通道等都覆盖。
+  // 输入框数量极少（<15），读取极轻，500ms 不可感知。
+  (function startHeartbeat(){
+    var ids = ['price', 'perShare', 'listingPrice', 'lockShares', 'lockRatio', 'issueSize', 'addDate', 'convPrice'];
+    function snapshot(){
+      var snap = {};
+      ids.forEach(function(id){
+        var el = document.getElementById(id);
+        if (el) snap[id] = el.value;
+      });
+      return snap;
+    }
+    var prev = snapshot();
+    setInterval(function(){
+      var cur = snapshot();
+      var changed = false;
+      for (var k in cur){
+        if (cur[k] !== prev[k]) { changed = true; break; }
+      }
+      if (changed && typeof recompute === 'function'){
+        prev = cur;
+        recompute();
+        // 心跳触发不显示 flash（避免和用户主动改价视觉混淆）
+      }
+    }, 500);
+  })();
 
   // 制表日期：生成时已写入则保留；打开时仍为占位符则补为当天，便于回溯
   (function initDate(){
@@ -539,7 +624,7 @@
   if (_addDateInput) _addDateInput.addEventListener('input', updateWatchBadge);
 
   // ===========================================================
-  // 实时行情模块（继承汇总看板：东财 push2 主源 + 腾讯 qt.gtimg 兜底）
+  // 实时行情模块（继承汇总看板：腾讯 qt.gtimg 主源 + 东财 push2 兜底）
   // 交易时段 09:15–11:30 / 13:00–15:00 每 8 秒刷新；用户正在编辑时不覆盖
   // ===========================================================
   function pad(n){ return String(n).padStart(2,'0'); }
@@ -566,51 +651,67 @@
     });
   }
 
-  // 东财 push2 · 单标的行情（f2=最新价元 / f3=涨跌幅%）
-  function fetchEMPrice(code){
-    var secid = (String(code)[0] === '6' ? '1.' : '0.') + String(code);
-    var url = 'https://push2.eastmoney.com/api/qt/ulist.np/get?ut=fa5fd1943c7b386f172d6893dbfba10b&invt=2&fltt=2&secids=' + encodeURIComponent(secid) + '&fields=f2,f3,f4';
-    return jsonp(url, 'emcb').then(function(data){
-      if (!data || data.rc !== 0 || !data.data || !data.data.diff) throw new Error('em empty');
-      var k = Object.keys(data.data.diff)[0];
-      var it = data.data.diff[k];
-      var p = parseFloat(it.f2);
-      if (!isFinite(p) || p <= 0) throw new Error('em no price');
-      return p;
-    });
-  }
+  // —— 行情取价（腾讯 qt.gtimg 主源 + 东财 push2 兜底），支持批量 codes ——
+  // codes 形如 ['sh603339','sz300727']；返回 { '603339': {price, gainPct}, ... }
+  function marketPrefix(code){ return String(code)[0] === '6' ? 'sh' : 'sz'; }
 
-  // 腾讯 qt.gtimg 兜底（响应里挂的是 v_sh601xxx 全局变量，需要 eval-on-load）
-  function fetchTXPrice(code){
+  // 腾讯 qt.gtimg：轮询探测式。
+  // 关键改进：不再依赖 s.onload 单点回调（偶发 onload 不触发就会永久卡在"正在连接"），
+  // 改为注入 script 后每 120ms 探一次 window['v_xxx']，命中即 resolve；硬超时兜底。
+  function fetchTXPrices(codes){
     return new Promise(function(resolve, reject){
-      var market = String(code)[0] === '6' ? 'sh' : 'sz';
-      var fullVar = 'v_' + market + code;
+      if (!codes || !codes.length) return reject(new Error('no codes'));
       var s = document.createElement('script');
-      var timer = setTimeout(function(){ reject(new Error('tx timeout')); if (s.parentNode) s.parentNode.removeChild(s); }, 6000);
-      s.onload = function(){
-        clearTimeout(timer);
-        try {
-          var raw = window[fullVar];
-          if (!raw) return reject(new Error('tx empty'));
+      var TIMEOUT = 4500;
+      var start = Date.now();
+      var settled = false;
+      function finish(ok, reason){
+        if (settled) return; settled = true;
+        clearInterval(poll); clearTimeout(fail);
+        if (s.parentNode) s.parentNode.removeChild(s);
+        if (ok) resolve(ok); else reject(new Error(reason));
+      }
+      var poll = setInterval(function(){
+        var out = {};
+        for (var i = 0; i < codes.length; i++){
+          var raw = window['v_' + codes[i]];
+          if (!raw) continue;
           var p = raw.split('~');
           var price = parseFloat(p[3]);
-          if (!isFinite(price) || price <= 0) return reject(new Error('tx no price'));
-          resolve(price);
-        } catch(e){ reject(e); }
-        if (s.parentNode) s.parentNode.removeChild(s);
-      };
-      s.onerror = function(){ clearTimeout(timer); reject(new Error('tx error')); };
-      s.src = 'https://qt.gtimg.cn/q=' + market + code;
+          if (!isFinite(price) || price <= 0) continue;
+          var prev = parseFloat(p[4]) || price;
+          out[codes[i].slice(2)] = { price: price, gainPct: prev > 0 ? (price - prev) / prev * 100 : 0 };
+        }
+        if (Object.keys(out).length) return finish(out);
+        if (Date.now() - start > TIMEOUT) return finish(null, 'tx timeout');
+      }, 120);
+      var fail = setTimeout(function(){ finish(null, 'tx timeout'); }, TIMEOUT + 600);
+      s.onerror = function(){ finish(null, 'tx error'); };
+      s.src = 'https://qt.gtimg.cn/q=' + codes.join(',');
       document.head.appendChild(s);
     });
   }
 
-  // 用户正在编辑：focus/blur 标记，期间不覆盖输入框
-  var _priceEl = document.getElementById('price');
-  var _userEditing = false;
-  if (_priceEl){
-    _priceEl.addEventListener('focus', function(){ _userEditing = true; });
-    _priceEl.addEventListener('blur',  function(){ _userEditing = false; });
+  // 东财 push2 兜底（JSONP，主源失败时）
+  function fetchEMPrices(codes){
+    var secids = codes.map(function(c){
+      var num = c.slice(2);
+      return (num[0] === '6' ? '1.' : '0.') + num;
+    }).join(',');
+    var url = 'https://push2.eastmoney.com/api/qt/ulist.np/get?ut=fa5fd1943c7b386f172d6893dbfba10b&invt=2&fltt=2&secids=' + encodeURIComponent(secids) + '&fields=f2,f3,f4';
+    return jsonp(url, 'emcb').then(function(data){
+      if (!data || data.rc !== 0 || !data.data || !data.data.diff) throw new Error('em empty');
+      var out = {};
+      for (var k in data.data.diff){
+        var it = data.data.diff[k];
+        var price = parseFloat(it.f2);
+        if (!isFinite(price) || price <= 0) continue;
+        var code = k.indexOf('.') >= 0 ? k.split('.')[1] : k;
+        out[code] = { price: price, gainPct: parseFloat(it.f3) };
+      }
+      if (!Object.keys(out).length) throw new Error('em no price');
+      return out;
+    });
   }
 
   function setLiveStatus(text, kind){
@@ -622,46 +723,66 @@
     document.getElementById('liveStatusText').textContent = text;
   }
 
-  var _lastEmAt = 0;
+  // 价格变动闪烁（涨红跌绿，A股习惯）；交易时段才闪，收盘锁定不闪
+  function flashPrice(dir){
+    if (!dir || !isTradingNow()) return;
+    var row = document.querySelector('.price-row');
+    if (!row) return;
+    var cls = dir === 'up' ? 'flash-up' : 'flash-down';
+    row.classList.remove('flash-up', 'flash-down');
+    void row.offsetWidth; // 强制 reflow，重启动画
+    row.classList.add(cls);
+  }
+
+  // 拉最新价：腾讯主源 → 东财兜底；交易时段=实时tick，非交易时段=今收（API 直接返回最新价）
+  // 无论交易与否，页面加载即拉一次 —— 收盘后也显示今收价，而非生成时的旧值
   function refreshLivePrice(){
     var codeEl = document.getElementById('code');
     if (!codeEl || !codeEl.value) return;
     var code = String(codeEl.value);
-    // 用户正在编辑 → 不覆盖；保留当前输入值
-    if (_userEditing){
-      setLiveStatus('实时价 · 已暂停（你正在编辑）', 'idle');
-      return;
-    }
-    if (!isTradingNow()){
-      var now = new Date();
-      var utc = now.getTime() + now.getTimezoneOffset() * 60000;
-      var bj = new Date(utc + 8 * 3600000);
-      setLiveStatus('实时价 · 非交易时段（' + pad(bj.getHours()) + ':' + pad(bj.getMinutes()) + '），价格保持当前输入', 'idle');
-      recompute();
-      return;
-    }
+    var codes = [ marketPrefix(code) + code ];
+    var priceInput = document.getElementById('price');
+    var tickEl = document.getElementById('priceLiveTick');
 
-    fetchEMPrice(code).catch(function(){ return fetchTXPrice(code); }).then(function(price){
-      _lastEmAt = Date.now();
-      if (_priceEl && !_userEditing){
-        // 价格变动才覆写，避免无谓抖动
-        var cur = parseFloat(_priceEl.value);
+    // 立即给反馈：进入"正在连接"状态，避免长时间显示"等待刷新"
+    setLiveStatus('实时价 · 正在连接行情源（' + code + '）…', 'idle');
+    if (tickEl) tickEl.textContent = '正在拉取…';
+
+    fetchTXPrices(codes).catch(function(){ return fetchEMPrices(codes); }).then(function(map){
+      var lv = map[code];
+      if (!lv) return;
+      var price = lv.price;
+      var prevVal = parseFloat(priceInput.value);
+      var dir = (isFinite(prevVal) && price > prevVal + 1e-6) ? 'up' : (isFinite(prevVal) && price < prevVal - 1e-6) ? 'down' : '';
+      // fetch 是异步的，期间用户可能已手动改价并切到 manual 模式，必须重读全局状态
+      var autoNow = (window._priceAutoMode !== false);
+      var gainTxt = (lv.gainPct != null && isFinite(lv.gainPct)) ? ('（' + (lv.gainPct >= 0 ? '+' : '') + lv.gainPct.toFixed(2) + '%）') : '';
+      if (tickEl) tickEl.textContent = '实时参考 ' + price.toFixed(2) + gainTxt;
+      // 自动模式 → 把最新价写回输入框并立刻重算（股价一变，安全垫就变）
+      if (autoNow && priceInput && document.activeElement !== priceInput){
+        var cur = parseFloat(priceInput.value);
         if (!isFinite(cur) || Math.abs(cur - price) >= 0.005){
-          _priceEl.value = price.toFixed(2);
-          // 主动触发 recompute（直接设置 .value 不会冒泡 input 事件）
+          priceInput.value = price.toFixed(2);
           recompute();
         }
       }
+      flashPrice(dir);
       var t = new Date();
-      setLiveStatus('实时价 ' + price.toFixed(2) + ' · ' + pad(t.getHours()) + ':' + pad(t.getMinutes()) + ':' + pad(t.getSeconds()) + '（8s 自动刷新）', null);
+      var clock = pad(t.getHours()) + ':' + pad(t.getMinutes()) + ':' + pad(t.getSeconds());
+      var suffix = isTradingNow() ? '（实时 · 3s 刷新）' : '（今收已锁定）';
+      setLiveStatus('实时价 ' + price.toFixed(2) + ' · ' + clock + (autoNow ? suffix : '（手动模式）'), null);
     }).catch(function(){
       setLiveStatus('实时价 · 获取失败，沿用当前输入（将自动重试）', 'err');
+      if (tickEl) tickEl.textContent = '获取失败 · 重试';
     });
   }
 
-  // 立即拉一次 + 8s 轮询（交易时段才刷；非交易时段只拉初始一次）
+  // 页面加载：无论交易与否，先拉一次最新价（收盘后=今收，盘中=实时tick）
   refreshLivePrice();
-  setInterval(function(){ refreshLivePrice(); }, 8000);
+  // 仅交易时段轮询（收盘后价格已锁定，无需反复拉）；手动模式不轮询覆盖
+  setInterval(function(){
+    if (isTradingNow() && window._priceAutoMode !== false) refreshLivePrice();
+  }, 3000);
 
   // 计算入口：立即执行 + DOMReady + Load 三重保险，确保在各种预览环境都能渲染
   function runCompute(){

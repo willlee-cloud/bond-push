@@ -707,9 +707,12 @@
     if (tickEl) tickEl.textContent = '正在拉取…';
 
     fetchEMPrice(code).catch(function(){ return fetchTXPrice(code); }).then(function(price){
+      // 关键：fetch 是异步的，期间用户可能已手动改价并切到 manual 模式。
+      // 必须在此处重读 autoMode，不能用入口处抓的闭包变量。
+      var autoNow = (window._priceAutoMode !== false);
       if (tickEl) tickEl.textContent = '实时参考 ' + price.toFixed(2);
       // 自动模式 → 把最新价写回输入框并立刻重算（股价一变，安全垫就变）
-      if (auto && priceInput && document.activeElement !== priceInput){
+      if (autoNow && priceInput && document.activeElement !== priceInput){
         var cur = parseFloat(priceInput.value);
         if (!isFinite(cur) || Math.abs(cur - price) >= 0.005){
           priceInput.value = price.toFixed(2);
@@ -720,7 +723,7 @@
       var pad2 = function(n){ return String(n).padStart(2,'0'); };
       var clock = pad2(t.getHours()) + ':' + pad2(t.getMinutes()) + ':' + pad2(t.getSeconds());
       var suffix = isTradingNow() ? '（自动 · 8s 刷新）' : '（今收已锁定）';
-      setLiveStatus('实时价 ' + price.toFixed(2) + ' · ' + clock + (auto ? suffix : '（手动模式）'), null);
+      setLiveStatus('实时价 ' + price.toFixed(2) + ' · ' + clock + (autoNow ? suffix : '（手动模式）'), null);
     }).catch(function(){
       setLiveStatus('实时价 · 获取失败，沿用当前输入（将自动重试）', 'err');
       if (tickEl) tickEl.textContent = '获取失败 · 重试';
