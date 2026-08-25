@@ -24,14 +24,14 @@
   html{ -webkit-text-size-adjust:100%; }
   body{
     font-family:"Manrope","PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,-apple-system,"Segoe UI",sans-serif;
-    background:var(--bg); color:var(--ink); margin:0; padding:26px 20px 64px; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    background:var(--bg); color:var(--ink); margin:0; padding:18px 10px 48px; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
   }
-  .wrap{max-width:1420px; margin:0 auto;}
+  .wrap{max-width:1680px; margin:0 auto; padding:0 4px;}
   .topbar{display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:6px;}
   h1{font-size:36px; font-weight:800; letter-spacing:-.02em; margin:0; color:var(--ink); line-height:1.12; padding-left:18px; border-left:6px solid var(--amber);}
   .eyebrow{font-size:11.5px; letter-spacing:.2em; color:var(--amber-deep); font-weight:700; text-transform:uppercase; margin-bottom:10px;}
   .meta{font-size:13px; color:var(--muted); font-family:"JetBrains Mono","SF Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;}
-  .sub{font-size:12.5px; color:var(--muted); margin:8px 0 18px; line-height:1.75; max-width:92ch;}
+  .sub{font-size:13px; color:var(--muted); margin:8px 0 18px; line-height:1.75; max-width:92ch;}
   .toolbar{display:flex; flex-wrap:wrap; gap:9px; align-items:center; margin-bottom:16px;}
   .toolbar select,.toolbar input{
     font-family:inherit; font-size:14px; padding:7px 11px; border:1px solid var(--line); border-radius:9px;
@@ -40,31 +40,33 @@
   .toolbar select:focus,.toolbar input:focus{outline:none; border-color:var(--amber); box-shadow:0 0 0 3px rgba(224,168,46,.16);}
   .toolbar label{font-size:13px; color:var(--muted); margin-left:6px;}
   .card{
-    background:var(--surface); border:1px solid var(--line); border-radius:16px;
-    box-shadow:0 24px 48px -20px rgba(20,28,46,.10); padding:16px 18px; margin-bottom:20px; overflow:visible;
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    box-shadow:0 24px 48px -20px rgba(20,28,46,.10); padding:14px 10px; margin-bottom:20px; overflow:visible;
   }
-  .scroll{overflow:visible;}
+  .scroll{overflow-x:auto;}
   /* 字号放大后，窄屏防御：保持桌面布局不变，仅手机端允许表格横向滚动，避免窄列挤压 */
   @media (max-width:600px){
     .card{overflow:hidden;}
     .scroll{overflow-x:auto; -webkit-overflow-scrolling:touch;}
-    #board{min-width:1100px;}
+    #board{min-width:1200px;}
     h1{font-size:26px;}
     .detail-grid{grid-template-columns:repeat(2, 1fr); gap:4px 16px;}
   }
-  table{border-collapse:separate; border-spacing:0; width:100%; table-layout:fixed; font-size:13px;}
+  /* 桌面表格：容器撑满 + 表格至少 1520px（保持 22 列原比例，每列实际像素自然变大以容纳更大字号） */
+  #board{min-width:1520px; width:100%;}
+  table{border-collapse:separate; border-spacing:0; width:100%; table-layout:fixed; font-size:14px;}
   thead{position:sticky; top:0; z-index:5;}
   thead th{
-    background:var(--amber); color:var(--amber-ink); padding:11px 6px; text-align:center; border:1px solid var(--amber-line);
-    font-weight:700; white-space:nowrap; position:sticky; top:0; z-index:3; letter-spacing:.02em; font-size:13px;
+    background:var(--amber); color:var(--amber-ink); padding:12px 7px; text-align:center; border:1px solid var(--amber-line);
+    font-weight:700; white-space:nowrap; position:sticky; top:0; z-index:3; letter-spacing:.02em; font-size:14px;
     box-shadow:0 3px 6px -2px rgba(0,0,0,.18);
   }
   tbody td{
-    padding:9px 6px; text-align:center; border:1px solid var(--line); white-space:normal; font-size:13px; line-height:1.45;
+    padding:10px 7px; text-align:center; border:1px solid var(--line); white-space:normal; font-size:14px; line-height:1.5;
     font-family:"JetBrains Mono","SF Mono",ui-monospace,"Cascadia Code",monospace; font-variant-numeric:tabular-nums;
   }
-  tbody td.ind-col{font-family:inherit; white-space:normal; line-height:1.4; text-align:left; font-size:12.5px; color:var(--muted); overflow-wrap:anywhere; word-break:keep-all; padding:9px 5px;}
-  tbody td.name-cell{font-family:inherit; font-weight:700; text-align:left; padding-left:9px;}
+  tbody td.ind-col{font-family:inherit; white-space:normal; line-height:1.4; text-align:left; font-size:13.5px; color:var(--muted); overflow-wrap:anywhere; word-break:keep-all; padding:10px 6px;}
+  tbody td.name-cell{font-family:inherit; font-weight:700; text-align:left; padding-left:11px;}
   tbody td.click{font-family:inherit;}
   tbody td.stage{font-family:inherit;}
   tbody td.bond-cell{font-family:inherit;}
@@ -87,23 +89,23 @@
   .cell-flash-down { animation: cellFlashDown .9s ease-out; }
   .rate5{color:var(--rate5); font-weight:800;} .rate3{color:var(--rate3); font-weight:700;} .rate2{color:var(--rate2); font-weight:700;}
   .name-cell{font-weight:700;}
-  .bond-cell{color:#5d5247; font-size:13px;}
-  .stage{font-size:12.5px; color:var(--muted);}
+  .bond-cell{color:#5d5247; font-size:14px;}
+  .stage{font-size:13.5px; color:var(--muted);}
   .click{cursor:pointer;}
   .click:hover{text-decoration:underline; color:var(--amber-deep);}
   tbody td.hl-row, tbody td.hl-col{background:rgba(224,168,46,.18); outline:1px solid var(--amber);}
   thead th.hl-col{background:#e8b84a !important;}
-  .foot{font-size:12.5px; color:var(--muted); margin-top:16px; line-height:1.75;}
+  .foot{font-size:13px; color:var(--muted); margin-top:16px; line-height:1.75;}
   .legend{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;}
-  .legend span{font-size:12px; padding:2px 8px; border-radius:6px; color:#fff;}
-  .star-mark{font-size:11px; color:var(--amber-deep);}
-  .stage-legend{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line);}
-  .stage-legend-label{font-size:14px; font-weight:800; color:var(--ink);}
-  .stage-item{display:flex; align-items:center; gap:5px; font-size:13px; color:var(--ink);}
-  .stage-num{display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; background:var(--amber); color:var(--amber-ink); font-weight:800; font-size:11px;}
+  .legend span{font-size:12.5px; padding:2px 8px; border-radius:6px; color:#fff;}
+  .star-mark{font-size:11.5px; color:var(--amber-deep);}
+  .stage-legend{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line);}
+  .stage-legend-label{font-size:15px; font-weight:800; color:var(--ink);}
+  .stage-item{display:flex; align-items:center; gap:6px; font-size:14px; color:var(--ink);}
+  .stage-num{display:inline-flex; align-items:center; justify-content:center; width:21px; height:21px; border-radius:50%; background:var(--amber); color:var(--amber-ink); font-weight:800; font-size:11.5px;}
   .detail-row td{background:#fafbfc; padding:0; border:none;}
-  .detail-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:4px 30px; padding:18px 22px;}
-  .detail-item{display:flex; justify-content:space-between; gap:12px; font-size:14px; padding:8px 0; border-bottom:1px solid #eef0f3;}
+  .detail-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:6px 30px; padding:18px 22px;}
+  .detail-item{display:flex; justify-content:space-between; gap:12px; font-size:14.5px; padding:8px 0; border-bottom:1px solid #eef0f3;}
   .detail-item .k{color:var(--muted); white-space:nowrap;}
   .detail-item .v{font-weight:700; text-align:right; color:var(--ink); font-variant-numeric:tabular-nums;}
   /* 已关注 N 天 · 展开明细右上角小角标（选项 B） */
@@ -121,7 +123,6 @@
       <div class="eyebrow">Convertible Bond · Latent Allocation</div>
       <h1>可转债潜伏配债 · 汇总看板</h1>
     </div>
-    <div class="meta"><span id="genDate"></span> <span id="priceDate"></span></div>
   </div>
   <div class="toolbar">
     <label>进度筛选</label>
@@ -143,6 +144,16 @@
       <option value="gain">加表后涨幅（高→低）</option>
       <option value="reg">股权登记日（近→远）</option>
     </select>
+  </div>
+
+  <div class="stage-legend">
+    <span class="stage-legend-label">进度说明：</span>
+    <div class="stage-item"><span class="stage-num">1</span>董事会预案</div>
+    <div class="stage-item"><span class="stage-num">2</span>股东大会通过</div>
+    <div class="stage-item"><span class="stage-num">3</span>交易所受理</div>
+    <div class="stage-item"><span class="stage-num">4</span>上市委通过（过会）</div>
+    <div class="stage-item"><span class="stage-num">5</span>同意注册（已获批）</div>
+    <div class="stage-item"><span class="stage-num">6</span>公告</div>
   </div>
 
   <div class="card">
@@ -167,16 +178,7 @@
         <tbody id="tbody"></tbody>
       </table>
     </div>
-    <div class="stage-legend">
-      <span class="stage-legend-label">进度说明：</span>
-      <div class="stage-item"><span class="stage-num">1</span>董事会预案</div>
-      <div class="stage-item"><span class="stage-num">2</span>股东大会通过</div>
-      <div class="stage-item"><span class="stage-num">3</span>交易所受理</div>
-      <div class="stage-item"><span class="stage-num">4</span>上市委通过（过会）</div>
-      <div class="stage-item"><span class="stage-num">5</span>同意注册（已获批）</div>
-      <div class="stage-item"><span class="stage-num">6</span>公告</div>
-    </div>
-  </div>
+      </div>
 
   <div class="foot" id="foot"></div>
 </div>
@@ -3522,8 +3524,6 @@ function render(){
   });
 }
 
-document.getElementById('genDate').textContent = '标的清单快照 '+GEN_DATE+' ｜ 行情每日早晚刷新 + 交易时段实时';
-const _pd = document.getElementById('priceDate'); if(_pd) _pd.textContent = '实时价 '+PRICE_DATE;
 document.getElementById('filterStage').addEventListener('change', render);
 document.getElementById('sortBy').addEventListener('change', render);
 render();
@@ -3533,7 +3533,7 @@ document.getElementById('foot').innerHTML =
   '共 '+DATA.length+' 只标的 ｜ 平均最优档保守安全垫 '+avg+'% ｜ 行情每日早晚由集思录+腾讯刷新，交易时段叠加浏览器端实时行情（东财/腾讯双源）｜ 上市价按保守/激进模型价估算，可在单页测算中自定义 ｜ 安全垫/含权量为理论值，小仓位因碎面损耗实际更低 ｜ 可流通规模=发行规模−锁定股东持股×每股配售÷1e8（持股≥5%/实控人/一致行动人 6 个月锁定）'
 
 // ===== 实时行情模块：交易时段浏览器端自动刷新（腾讯 qt.gtimg 主源 + 东财 push2 兜底）=====
-(function(){
+;(function(){
   if (typeof DATA === 'undefined' || !DATA || !DATA.length) return;
   var pad = function(n){ return (n < 10 ? '0' : '') + n; };
   function isTradingNow(){
