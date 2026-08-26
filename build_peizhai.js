@@ -5,7 +5,12 @@ const BOARD = process.env.BOARD_PATH ? path.resolve(__dirname, process.env.BOARD
 const TPL = process.env.TPL_PATH ? path.resolve(__dirname, process.env.TPL_PATH) : 'C:/Users/戴尔/.workbuddy/skills/可转债潜伏配债/template.html';
 const OUT = process.env.PEIZHAI_OUT ? path.resolve(__dirname, process.env.PEIZHAI_OUT) : 'D:/WeGameApps/common_apps/peizhai';
 
-const GEN_DATE = '2026-08-15';
+// ★ 根子修复：日期常量动态取当天，杜绝任何重建留下旧日期残留
+const _d = new Date();
+const _p = n => String(n).padStart(2,'0');
+const TODAY = _d.getFullYear() + '-' + _p(_d.getMonth()+1) + '-' + _p(_d.getDate());
+const GEN_DATE = TODAY;
+const PRICE_DATE = TODAY;
 const BOARD_TITLE_MAP = {'上海主板':'沪市主板','深圳主板':'深市主板','创业板':'深市创业板','科创板':'沪市科创板'};
 
 // —— 1) 读取汇总看板 HTML 内嵌的 DATA（其唯一 const DATA 声明即运行时数据）——
@@ -114,6 +119,9 @@ console.log('bonds written:', ok);
 // 点击明细：用 Blob 内联打开新窗口（线上/离线单文件都能用，不依赖 bonds/ 子目录）。
 // bonds/ 文件仍照常生成，作为可独立部署的镜像备份。
 let board = fs.readFileSync(BOARD, 'utf8');
+// ★ 根子修复：把 board 模板里的 PRICE_DATE/GEN_DATE 强制刷新为当天，杜绝任何重建留下旧日期残留
+board = board.replace(/const PRICE_DATE = '[^']*';/, "const PRICE_DATE = '" + TODAY + "';");
+board = board.replace(/const GEN_DATE = '[^']*';/, "const GEN_DATE = '" + TODAY + "';");
 const blobBlock = "    const blob = new Blob([h], {type:'text/html'});\n    const url = URL.createObjectURL(blob);\n    window.open(url, '_blank');\n    setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);";
 const navLine = "    window.location.href = './bonds/' + String(d.name).replace(/[\\/\\\\?:*<>|\"\\s]/g,'') + '.html';";
 if (board.includes(navLine)){
