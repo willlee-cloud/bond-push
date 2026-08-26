@@ -255,7 +255,7 @@
   <div class="card">
     <div class="section-h">一、参数录入</div>
     <div class="hint">修改任意参数，下方测算结果与风险评级将实时联动刷新。带（可自定义）的为预期上市价，其余为标的公告数据。</div>
-    <div class="live-status idle" id="liveStatus" title="交易时段 09:15–11:30 / 13:00–15:00 每 3s 自动刷新（腾讯 qt.gtimg 主源 + 东财 push2 兜底）"><span class="dot"></span><span id="liveStatusText">实时价 · 正在连接行情源</span></div>
+    <div class="live-status idle" id="liveStatus" title="交易时段 09:15–11:30 / 13:00–15:00 每 3s 自动刷新（腾讯 qt.gtimg 主源 + 东财 push2 兜底）"><span class="dot"></span><span id="liveStatusText">实时价 14.28 · 2026-08-26 收盘已锁定（与输入框一致，无需刷新）</span></div>
     <div class="form-grid">
       <div class="field"><label>股票代码</label><input id="code" value="603339"></div>
       <div class="field"><label>股票名称</label><input id="name" value="四方科技"></div>
@@ -263,9 +263,9 @@
       <div class="field">
         <label>标的当日收盘价（确权基准价）<span class="mode-badge auto" id="priceModeBadge" title="点击切换：自动=实时价驱动，手动=你手填价测算">自动</span></label>
         <div class="price-row">
-          <input id="price" type="number" step="0.01" value="13.77" data-mode="auto">
+          <input id="price" type="number" step="0.01" value="14.28" data-mode="auto">
           <span class="u">元</span>
-          <span class="live-tick" id="priceLiveTick">—</span>
+          <span class="live-tick" id="priceLiveTick">实时参考 14.28（build-time 锁定）</span>
         </div>
       </div>
       <div class="field"><label>官方每股配售金额（4位小数）</label><input id="perShare" type="number" step="0.0001" value="3.3064"><span class="u">元/股</span></div>
@@ -282,7 +282,7 @@
     </div>
     <div class="core-params">
       <div class="cp"><div class="k">单张转债盈利 = 上市价 − 100</div><div class="v num-tabular" id="profitPerBond">40.0 元</div></div>
-      <div class="cp"><div class="k">理论安全垫（满配·忽略碎面损耗）</div><div class="v num-tabular" id="theoCushion">9.60%</div></div>
+      <div class="cp"><div class="k">理论安全垫（满配·忽略碎面损耗）</div><div class="v num-tabular" id="theoCushion">9.26%</div></div>
       <div class="cp"><div class="k">制表日期</div><div class="v num-tabular" id="tableDateValue">2026-08-26</div></div>
     </div>
     <button class="btn-recompute" onclick="recompute(true)" type="button">立即重算</button>
@@ -307,7 +307,7 @@
             <th>该档评级</th>
           </tr>
         </thead>
-        <tbody id="tierBody" class="num-tabular"><tr><td class="tier">100</td><td class="num">1,377</td><td class="num">330.64</td><td class="num">0</td><td class="num">0.00</td><td class="cushion">0.00%</td><td class="stars r1">★</td><td class="r1">极致垃圾</td></tr><tr><td class="tier">200</td><td class="num">2,754</td><td class="num">661.28</td><td class="num">0</td><td class="num">0.00</td><td class="cushion">0.00%</td><td class="stars r1">★</td><td class="r1">极致垃圾</td></tr><tr><td class="tier">300</td><td class="num">4,131</td><td class="num">991.92</td><td class="num">0</td><td class="num">0.00</td><td class="cushion">0.00%</td><td class="stars r1">★</td><td class="r1">极致垃圾</td></tr><tr><td class="tier">400</td><td class="num">5,508</td><td class="num">1,322.56</td><td class="num">1,000</td><td class="num">400.00</td><td class="cushion">7.26%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">500</td><td class="num">6,885</td><td class="num">1,653.20</td><td class="num">1,000</td><td class="num">400.00</td><td class="cushion">5.81%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">600</td><td class="num">8,262</td><td class="num">1,983.84</td><td class="num">1,000</td><td class="num">400.00</td><td class="cushion">4.84%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">700</td><td class="num">9,639</td><td class="num">2,314.48</td><td class="num">2,000</td><td class="num">800.00</td><td class="cushion">8.30%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">800</td><td class="num">11,016</td><td class="num">2,645.12</td><td class="num">2,000</td><td class="num">800.00</td><td class="cushion">7.26%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">900</td><td class="num">12,393</td><td class="num">2,975.76</td><td class="num">2,000</td><td class="num">800.00</td><td class="cushion">6.46%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">1000</td><td class="num">13,770</td><td class="num">3,306.40</td><td class="num">3,000</td><td class="num">1,200.00</td><td class="cushion">8.71%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">2000</td><td class="num">27,540</td><td class="num">6,612.80</td><td class="num">6,000</td><td class="num">2,400.00</td><td class="cushion">8.71%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">3000</td><td class="num">41,310</td><td class="num">9,919.20</td><td class="num">9,000</td><td class="num">3,600.00</td><td class="cushion">8.71%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">4000</td><td class="num">55,080</td><td class="num">13,225.60</td><td class="num">13,000</td><td class="num">5,200.00</td><td class="cushion">9.44%</td><td class="stars r5">★★★★★</td><td class="r5">极致优质</td></tr></tbody>
+        <tbody id="tierBody" class="num-tabular"><tr><td class="tier">100</td><td class="num">1,428</td><td class="num">330.64</td><td class="num">0</td><td class="num">0.00</td><td class="cushion">0.00%</td><td class="stars r1">★</td><td class="r1">极致垃圾</td></tr><tr><td class="tier">200</td><td class="num">2,856</td><td class="num">661.28</td><td class="num">0</td><td class="num">0.00</td><td class="cushion">0.00%</td><td class="stars r1">★</td><td class="r1">极致垃圾</td></tr><tr><td class="tier">300</td><td class="num">4,284</td><td class="num">991.92</td><td class="num">0</td><td class="num">0.00</td><td class="cushion">0.00%</td><td class="stars r1">★</td><td class="r1">极致垃圾</td></tr><tr><td class="tier">400</td><td class="num">5,712</td><td class="num">1,322.56</td><td class="num">1,000</td><td class="num">400.00</td><td class="cushion">7.00%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">500</td><td class="num">7,140</td><td class="num">1,653.20</td><td class="num">1,000</td><td class="num">400.00</td><td class="cushion">5.60%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">600</td><td class="num">8,568</td><td class="num">1,983.84</td><td class="num">1,000</td><td class="num">400.00</td><td class="cushion">4.67%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">700</td><td class="num">9,996</td><td class="num">2,314.48</td><td class="num">2,000</td><td class="num">800.00</td><td class="cushion">8.00%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">800</td><td class="num">11,424</td><td class="num">2,645.12</td><td class="num">2,000</td><td class="num">800.00</td><td class="cushion">7.00%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">900</td><td class="num">12,852</td><td class="num">2,975.76</td><td class="num">2,000</td><td class="num">800.00</td><td class="cushion">6.22%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">1000</td><td class="num">14,280</td><td class="num">3,306.40</td><td class="num">3,000</td><td class="num">1,200.00</td><td class="cushion">8.40%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">2000</td><td class="num">28,560</td><td class="num">6,612.80</td><td class="num">6,000</td><td class="num">2,400.00</td><td class="cushion">8.40%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">3000</td><td class="num">42,840</td><td class="num">9,919.20</td><td class="num">9,000</td><td class="num">3,600.00</td><td class="cushion">8.40%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">4000</td><td class="num">57,120</td><td class="num">13,225.60</td><td class="num">13,000</td><td class="num">5,200.00</td><td class="cushion">9.10%</td><td class="stars r5">★★★★★</td><td class="r5">极致优质</td></tr></tbody>
       </table>
     </div>
     <div class="hint" style="margin-top:12px;">
@@ -320,7 +320,7 @@
     <div class="section-h">三、风险评级结论</div>
     <div class="verdict">
       <div><span class="big-stars" id="headlineStars">★★★★★</span><span class="label" id="headlineLabel">极致优质</span></div>
-      <div class="line">基准安全垫（满配理论）：<b id="headlineCushion">9.60%</b> ｜ 评级阈值：≥9%★★★★★ ｜ 7–9%★★★★ ｜ 4–7%★★★ ｜ 2–4%★★ ｜ &lt;2%★</div>
+      <div class="line">基准安全垫（满配理论）：<b id="headlineCushion">9.26%</b> ｜ 评级阈值：≥9%★★★★★ ｜ 7–9%★★★★ ｜ 4–7%★★★ ｜ 2–4%★★ ｜ &lt;2%★</div>
       <div class="line">注：基准安全垫按「忽略碎面损耗」测算，代表大资金满配下的理想安全垫；小仓位实际安全垫见上表各档，会低于基准值。</div>
     </div>
   </div>

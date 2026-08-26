@@ -247,7 +247,7 @@
 
   <div class="page-head">
     <div class="eyebrow">可转债潜伏配债 · 量化测算</div>
-    <h1>深市创业抢权配售 · 金道科技</h1>
+    <h1>深市创业抢权配售 · 云意电气</h1>
     <div class="sub">参数可自定义 · 全档位自动演算 · 风险评级对标</div>
     <div class="watch-badge empty" id="watchBadge"><span class="dot"></span><span id="watchBadgeText">已关注 — 天</span></div>
   </div>
@@ -255,34 +255,34 @@
   <div class="card">
     <div class="section-h">一、参数录入</div>
     <div class="hint">修改任意参数，下方测算结果与风险评级将实时联动刷新。带（可自定义）的为预期上市价，其余为标的公告数据。</div>
-    <div class="live-status idle" id="liveStatus" title="交易时段 09:15–11:30 / 13:00–15:00 每 3s 自动刷新（腾讯 qt.gtimg 主源 + 东财 push2 兜底）"><span class="dot"></span><span id="liveStatusText">实时价 21.16 · 2026-08-26 收盘已锁定（与输入框一致，无需刷新）</span></div>
+    <div class="live-status idle" id="liveStatus" title="交易时段 09:15–11:30 / 13:00–15:00 每 3s 自动刷新（腾讯 qt.gtimg 主源 + 东财 push2 兜底）"><span class="dot"></span><span id="liveStatusText">实时价 11.11 · 2026-08-26 收盘已锁定（与输入框一致，无需刷新）</span></div>
     <div class="form-grid">
-      <div class="field"><label>股票代码</label><input id="code" value="301279"></div>
-      <div class="field"><label>股票名称</label><input id="name" value="金道科技"></div>
-      <div class="field"><label>对应转债名称</label><input id="bondName" value="金道转债"></div>
+      <div class="field"><label>股票代码</label><input id="code" value="300304"></div>
+      <div class="field"><label>股票名称</label><input id="name" value="云意电气"></div>
+      <div class="field"><label>对应转债名称</label><input id="bondName" value="null"></div>
       <div class="field">
         <label>标的当日收盘价（确权基准价）<span class="mode-badge auto" id="priceModeBadge" title="点击切换：自动=实时价驱动，手动=你手填价测算">自动</span></label>
         <div class="price-row">
-          <input id="price" type="number" step="0.01" value="21.16" data-mode="auto">
+          <input id="price" type="number" step="0.01" value="11.11" data-mode="auto">
           <span class="u">元</span>
-          <span class="live-tick" id="priceLiveTick">实时参考 21.16（build-time 锁定）</span>
+          <span class="live-tick" id="priceLiveTick">实时参考 11.11（build-time 锁定）</span>
         </div>
       </div>
-      <div class="field"><label>官方每股配售金额（4位小数）</label><input id="perShare" type="number" step="0.0001" value="1.8107"><span class="u">元/股</span></div>
-      <div class="field"><label>加表日期</label><input id="addDate" value="2026-08-14" placeholder="YYYY-MM-DD"></div>
+      <div class="field"><label>官方每股配售金额（4位小数）</label><input id="perShare" type="number" step="0.0001" value="0"><span class="u">元/股</span></div>
+      <div class="field"><label>加表日期</label><input id="addDate" value="" placeholder="YYYY-MM-DD"></div>
       <div class="field"><label>股权登记日</label><input id="regDate" value="—"></div>
       <div class="field"><label>配债缴款日</label><input id="payDate" value="—"></div>
-      <div class="field"><label>转债发行总规模</label><input id="issueSize" value="3.06"><span class="u">亿元</span></div>
-      <div class="field"><label>转债信用评级</label><input id="rating" value="AA"></div>
-      <div class="field"><label>正股最新转股价</label><input id="convPrice" type="number" step="0.01" value="30.6"><span class="u">元</span></div>
-      <div class="field"><label>转债预期上市价格（可自定义）</label><input id="listingPrice" type="number" step="0.1" value="200"><span class="u">元（默认激进价，可手动改为保守价）</span></div>
-      <div class="field" title="控股股东、实控人及其一致行动人（即使单个<5%只要属一致行动人也计入）合计持股数"><label>锁定持股数</label><input id="lockShares" type="number" step="1" value="89700000"><span class="u">股</span></div>
+      <div class="field"><label>转债发行总规模</label><input id="issueSize" value="15.47"><span class="u">亿元</span></div>
+      <div class="field"><label>转债信用评级</label><input id="rating" value="-"></div>
+      <div class="field"><label>正股最新转股价</label><input id="convPrice" type="number" step="0.01" value="11.56"><span class="u">元</span></div>
+      <div class="field"><label>转债预期上市价格（可自定义）</label><input id="listingPrice" type="number" step="0.1" value="130"><span class="u">元（默认激进价，可手动改为保守价）</span></div>
+      <div class="field" title="控股股东、实控人及其一致行动人（即使单个<5%只要属一致行动人也计入）合计持股数"><label>锁定持股数</label><input id="lockShares" type="number" step="1" value=""><span class="u">股</span></div>
       <div class="field"><label>锁定股东配售参与比例</label><input id="lockRatio" type="number" step="1" value="100"><span class="u">%（默认100，放弃则调低）</span></div>
-      <div class="field"><label>转债可流通规模（自动倒推·不可改）</label><input id="floatScale" type="number" step="0.01" readonly value="1.44"><span class="u">亿元</span></div>
+      <div class="field"><label>转债可流通规模（自动倒推·不可改）</label><input id="floatScale" type="number" step="0.01" readonly value=""><span class="u">亿元</span></div>
     </div>
     <div class="core-params">
-      <div class="cp"><div class="k">单张转债盈利 = 上市价 − 100</div><div class="v num-tabular" id="profitPerBond">100.0 元</div></div>
-      <div class="cp"><div class="k">理论安全垫（满配·忽略碎面损耗）</div><div class="v num-tabular" id="theoCushion">8.56%</div></div>
+      <div class="cp"><div class="k">单张转债盈利 = 上市价 − 100</div><div class="v num-tabular" id="profitPerBond">—</div></div>
+      <div class="cp"><div class="k">理论安全垫（满配·忽略碎面损耗）</div><div class="v num-tabular" id="theoCushion">—</div></div>
       <div class="cp"><div class="k">制表日期</div><div class="v num-tabular" id="tableDateValue">2026-08-26</div></div>
     </div>
     <button class="btn-recompute" onclick="recompute(true)" type="button">立即重算</button>
@@ -307,7 +307,7 @@
             <th>该档评级</th>
           </tr>
         </thead>
-        <tbody id="tierBody" class="num-tabular"><tr><td class="tier">100</td><td class="num">2,116</td><td class="num">181.07</td><td class="num">100</td><td class="num">100.00</td><td class="cushion">4.73%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">200</td><td class="num">4,232</td><td class="num">362.14</td><td class="num">300</td><td class="num">300.00</td><td class="cushion">7.09%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">300</td><td class="num">6,348</td><td class="num">543.21</td><td class="num">500</td><td class="num">500.00</td><td class="cushion">7.88%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">400</td><td class="num">8,464</td><td class="num">724.28</td><td class="num">700</td><td class="num">700.00</td><td class="cushion">8.27%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">500</td><td class="num">10,580</td><td class="num">905.35</td><td class="num">900</td><td class="num">900.00</td><td class="cushion">8.51%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">600</td><td class="num">12,696</td><td class="num">1,086.42</td><td class="num">1,000</td><td class="num">1,000.00</td><td class="cushion">7.88%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">700</td><td class="num">14,812</td><td class="num">1,267.49</td><td class="num">1,200</td><td class="num">1,200.00</td><td class="cushion">8.10%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">800</td><td class="num">16,928</td><td class="num">1,448.56</td><td class="num">1,400</td><td class="num">1,400.00</td><td class="cushion">8.27%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">900</td><td class="num">19,044</td><td class="num">1,629.63</td><td class="num">1,600</td><td class="num">1,600.00</td><td class="cushion">8.40%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">1000</td><td class="num">21,160</td><td class="num">1,810.70</td><td class="num">1,800</td><td class="num">1,800.00</td><td class="cushion">8.51%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">2000</td><td class="num">42,320</td><td class="num">3,621.40</td><td class="num">3,600</td><td class="num">3,600.00</td><td class="cushion">8.51%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">3000</td><td class="num">63,480</td><td class="num">5,432.10</td><td class="num">5,400</td><td class="num">5,400.00</td><td class="cushion">8.51%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr><tr><td class="tier">4000</td><td class="num">84,640</td><td class="num">7,242.80</td><td class="num">7,200</td><td class="num">7,200.00</td><td class="cushion">8.51%</td><td class="stars r4">★★★★</td><td class="r4">优质稳健</td></tr></tbody>
+        <tbody id="tierBody" class="num-tabular"><tr><td class="tier">100</td><td class="num">1,111</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">200</td><td class="num">2,222</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">300</td><td class="num">3,333</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">400</td><td class="num">4,444</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">500</td><td class="num">5,555</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">600</td><td class="num">6,666</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">700</td><td class="num">7,777</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">800</td><td class="num">8,888</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">900</td><td class="num">9,999</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">1000</td><td class="num">11,110</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">2000</td><td class="num">22,220</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">3000</td><td class="num">33,330</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">4000</td><td class="num">44,440</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr></tbody>
       </table>
     </div>
     <div class="hint" style="margin-top:12px;">
@@ -319,8 +319,8 @@
   <div class="card">
     <div class="section-h">三、风险评级结论</div>
     <div class="verdict">
-      <div><span class="big-stars" id="headlineStars">★★★★</span><span class="label" id="headlineLabel">优质稳健</span></div>
-      <div class="line">基准安全垫（满配理论）：<b id="headlineCushion">8.56%</b> ｜ 评级阈值：≥9%★★★★★ ｜ 7–9%★★★★ ｜ 4–7%★★★ ｜ 2–4%★★ ｜ &lt;2%★</div>
+      <div><span class="big-stars" id="headlineStars">—</span><span class="label" id="headlineLabel">方案未定</span></div>
+      <div class="line">基准安全垫（满配理论）：<b id="headlineCushion">—</b> ｜ 评级阈值：≥9%★★★★★ ｜ 7–9%★★★★ ｜ 4–7%★★★ ｜ 2–4%★★ ｜ &lt;2%★</div>
       <div class="line">注：基准安全垫按「忽略碎面损耗」测算，代表大资金满配下的理想安全垫；小仓位实际安全垫见上表各档，会低于基准值。</div>
     </div>
   </div>
