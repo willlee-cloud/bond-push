@@ -255,7 +255,7 @@
   <div class="card">
     <div class="section-h">一、参数录入</div>
     <div class="hint">修改任意参数，下方测算结果与风险评级将实时联动刷新。带（可自定义）的为预期上市价，其余为标的公告数据。</div>
-    <div class="live-status idle" id="liveStatus" title="交易时段 09:15–11:30 / 13:00–15:00 每 3s 自动刷新（腾讯 qt.gtimg 主源 + 东财 push2 兜底）"><span class="dot"></span><span id="liveStatusText">实时价 18.84 · 2026-08-26 收盘已锁定（与输入框一致，无需刷新）</span></div>
+    <div class="live-status idle" id="liveStatus" title="交易时段 09:15–11:30 / 13:00–15:00 每 3s 自动刷新（腾讯 qt.gtimg 主源 + 东财 push2 兜底）"><span class="dot"></span><span id="liveStatusText">实时价 19.16 · 2026-08-27 收盘已锁定（与输入框一致，无需刷新）</span></div>
     <div class="form-grid">
       <div class="field"><label>股票代码</label><input id="code" value="300428"></div>
       <div class="field"><label>股票名称</label><input id="name" value="立中集团"></div>
@@ -263,9 +263,9 @@
       <div class="field">
         <label>标的当日收盘价（确权基准价）<span class="mode-badge auto" id="priceModeBadge" title="点击切换：自动=实时价驱动，手动=你手填价测算">自动</span></label>
         <div class="price-row">
-          <input id="price" type="number" step="0.01" value="18.84" data-mode="auto">
+          <input id="price" type="number" step="0.01" value="19.16" data-mode="auto">
           <span class="u">元</span>
-          <span class="live-tick" id="priceLiveTick">实时参考 18.84（build-time 锁定）</span>
+          <span class="live-tick" id="priceLiveTick">实时参考 19.16（build-time 锁定）</span>
         </div>
       </div>
       <div class="field"><label>官方每股配售金额（4位小数）</label><input id="perShare" type="number" step="0.0001" value="0"><span class="u">元/股</span></div>
@@ -283,7 +283,7 @@
     <div class="core-params">
       <div class="cp"><div class="k">单张转债盈利 = 上市价 − 100</div><div class="v num-tabular" id="profitPerBond">—</div></div>
       <div class="cp"><div class="k">理论安全垫（满配·忽略碎面损耗）</div><div class="v num-tabular" id="theoCushion">—</div></div>
-      <div class="cp"><div class="k">制表日期</div><div class="v num-tabular" id="tableDateValue">2026-08-26</div></div>
+      <div class="cp"><div class="k">制表日期</div><div class="v num-tabular" id="tableDateValue">2026-08-27</div></div>
     </div>
     <button class="btn-recompute" onclick="recompute(true)" type="button">立即重算</button>
     <button class="btn-print" onclick="window.print()" type="button">打印 / 导出 PDF</button>
@@ -307,7 +307,7 @@
             <th>该档评级</th>
           </tr>
         </thead>
-        <tbody id="tierBody" class="num-tabular"><tr><td class="tier">100</td><td class="num">1,884</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">200</td><td class="num">3,768</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">300</td><td class="num">5,652</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">400</td><td class="num">7,536</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">500</td><td class="num">9,420</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">600</td><td class="num">11,304</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">700</td><td class="num">13,188</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">800</td><td class="num">15,072</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">900</td><td class="num">16,956</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">1000</td><td class="num">18,840</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">2000</td><td class="num">37,680</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">3000</td><td class="num">56,520</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">4000</td><td class="num">75,360</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr></tbody>
+        <tbody id="tierBody" class="num-tabular"><tr><td class="tier">100</td><td class="num">1,916</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">200</td><td class="num">3,832</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">300</td><td class="num">5,748</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">400</td><td class="num">7,664</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">500</td><td class="num">9,580</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">600</td><td class="num">11,496</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">700</td><td class="num">13,412</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">800</td><td class="num">15,328</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">900</td><td class="num">17,244</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">1000</td><td class="num">19,160</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">2000</td><td class="num">38,320</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">3000</td><td class="num">57,480</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr><tr><td class="tier">4000</td><td class="num">76,640</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="cushion">—</td><td class="stars ">—</td><td class="">—</td></tr></tbody>
       </table>
     </div>
     <div class="hint" style="margin-top:12px;">
