@@ -73,8 +73,8 @@
   tbody tr{cursor:pointer; transition:background .14s ease;}
   tbody tr:hover{background:var(--amber-tint);}
   tbody tr.row-expanded{background:var(--amber-tint);}
-  tbody tr.search-found td{background:rgba(224,168,46,.45) !important; outline:2px solid var(--amber);}
-  tbody tr.search-found:hover td{background:rgba(224,168,46,.55) !important;}
+  tbody tr.search-found td{background:#f9e8b0 !important; color:var(--amber-ink) !important; box-shadow:inset 0 0 0 2px #c28e0e !important;}
+  tbody tr.search-found:hover td{background:#f5dc8e !important;}
   .grp td{border:none; padding:0; height:0;}
   .grp-row td{font-weight:800; color:#fff; padding:7px 12px; font-size:13.5px; letter-spacing:.04em; text-align:left; border:none;}
   .g-green{background:var(--grp-green);} .g-blue{background:var(--grp-blue);} .g-orange{background:var(--grp-orange);}
@@ -3640,7 +3640,7 @@ function doSearch(){
     tbody.querySelectorAll('tr').forEach(tr => tr.classList.remove('search-found'));
     found.classList.add('search-found');
     found.scrollIntoView({behavior: 'smooth', block: 'center'});
-    setTimeout(() => found.classList.remove('search-found'), 3500);
+    setTimeout(() => found.classList.remove('search-found'), 8000);
   }
 }
 
