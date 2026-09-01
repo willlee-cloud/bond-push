@@ -73,6 +73,8 @@
   tbody tr{cursor:pointer; transition:background .14s ease;}
   tbody tr:hover{background:var(--amber-tint);}
   tbody tr.row-expanded{background:var(--amber-tint);}
+  tbody tr.search-found td{background:rgba(224,168,46,.45) !important; outline:2px solid var(--amber);}
+  tbody tr.search-found:hover td{background:rgba(224,168,46,.55) !important;}
   .grp td{border:none; padding:0; height:0;}
   .grp-row td{font-weight:800; color:#fff; padding:7px 12px; font-size:13.5px; letter-spacing:.04em; text-align:left; border:none;}
   .g-green{background:var(--grp-green);} .g-blue{background:var(--grp-blue);} .g-orange{background:var(--grp-orange);}
@@ -144,6 +146,9 @@
       <option value="gain">加表后涨幅（高→低）</option>
       <option value="reg">股权登记日（近→远）</option>
     </select>
+    <label>搜索个股</label>
+    <input type="text" id="searchInput" placeholder="代码或名称" style="width:130px;">
+    <button id="searchBtn" type="button" style="font-family:inherit;font-size:14px;padding:7px 14px;border:1px solid var(--line);border-radius:9px;background:var(--amber);color:var(--amber-ink);font-weight:700;cursor:pointer;transition:filter .15s;">搜索</button>
   </div>
 
   <div class="stage-legend">
@@ -3602,6 +3607,43 @@ function toggleExpand(tr, r){
   tr.parentNode.insertBefore(dr, tr.nextSibling);
 }
 
+function doSearch(){
+  const raw = document.getElementById('searchInput').value.trim();
+  if (!raw) return;
+  // 先重置进度筛选，确保目标在全部标的中可见
+  document.getElementById('filterStage').value = '';
+  render();
+  const tbody = document.getElementById('tbody');
+  const q = raw.replace(/\s/g, '').toLowerCase();
+  let found = null;
+  // 优先精确匹配代码或名称
+  for (const tr of tbody.querySelectorAll('tr')){
+    const codeTd = tr.querySelector('td.click[data-code]');
+    const nameTd = tr.querySelector('td.name-cell');
+    if (!codeTd || !nameTd) continue;
+    const code = codeTd.textContent.trim();
+    const name = nameTd.textContent.trim();
+    if (code === raw || name === raw) { found = tr; break; }
+  }
+  // 次优模糊匹配
+  if (!found){
+    for (const tr of tbody.querySelectorAll('tr')){
+      const codeTd = tr.querySelector('td.click[data-code]');
+      const nameTd = tr.querySelector('td.name-cell');
+      if (!codeTd || !nameTd) continue;
+      const code = codeTd.textContent.trim();
+      const name = nameTd.textContent.trim().toLowerCase();
+      if (code.includes(raw) || name.includes(q)) { found = tr; break; }
+    }
+  }
+  if (found){
+    tbody.querySelectorAll('tr').forEach(tr => tr.classList.remove('search-found'));
+    found.classList.add('search-found');
+    found.scrollIntoView({behavior: 'smooth', block: 'center'});
+    setTimeout(() => found.classList.remove('search-found'), 3500);
+  }
+}
+
 function render(){
   const fs = document.getElementById('filterStage').value;
   const sort = document.getElementById('sortBy').value;
@@ -3757,6 +3799,8 @@ function render(){
 
 document.getElementById('filterStage').addEventListener('change', render);
 document.getElementById('sortBy').addEventListener('change', render);
+document.getElementById('searchBtn').addEventListener('click', doSearch);
+document.getElementById('searchInput').addEventListener('keydown', function(e){ if (e.key === 'Enter') doSearch(); });
 render();
 
 const avg = (DATA.reduce((s,d)=>s+(d.optimalCushionCons||0),0)/DATA.length*100).toFixed(2);
