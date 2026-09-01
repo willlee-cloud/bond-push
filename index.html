@@ -3617,8 +3617,9 @@ function doSearch(){
   const q = raw.replace(/\s/g, '').toLowerCase();
   let found = null;
   // 优先精确匹配代码或名称
+  // 注意：name-cell 与 code 列都带 class="click" data-code，code 列需排除 name-cell
   for (const tr of tbody.querySelectorAll('tr')){
-    const codeTd = tr.querySelector('td.click[data-code]');
+    const codeTd = tr.querySelector('td.click[data-code]:not(.name-cell)');
     const nameTd = tr.querySelector('td.name-cell');
     if (!codeTd || !nameTd) continue;
     const code = codeTd.textContent.trim();
@@ -3628,7 +3629,7 @@ function doSearch(){
   // 次优模糊匹配
   if (!found){
     for (const tr of tbody.querySelectorAll('tr')){
-      const codeTd = tr.querySelector('td.click[data-code]');
+      const codeTd = tr.querySelector('td.click[data-code]:not(.name-cell)');
       const nameTd = tr.querySelector('td.name-cell');
       if (!codeTd || !nameTd) continue;
       const code = codeTd.textContent.trim();
