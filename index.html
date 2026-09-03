@@ -29,8 +29,8 @@
     font-family:"Manrope","PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,-apple-system,"Segoe UI",sans-serif;
     background:var(--bg); color:var(--ink); margin:0; padding:18px 10px 48px; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
   }
-  .wrap{max-width:1680px; margin:0 auto; padding:0 4px;}
-  .topbar{display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:6px;}
+  .wrap{max-width:1680px; margin:0 auto; padding:0 4px; display:flex; flex-direction:column; min-height:calc(100vh - 66px);}
+  .topbar{display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:6px; flex:none;}
   h1{font-size:36px; font-weight:800; letter-spacing:-.02em; margin:0; color:var(--ink); line-height:1.12; padding-left:18px; border-left:6px solid var(--amber);}
   .eyebrow{font-size:11.5px; letter-spacing:.2em; color:var(--amber-deep); font-weight:700; text-transform:uppercase; margin-bottom:10px;}
   .meta{font-size:13px; color:var(--muted); font-family:"JetBrains Mono","SF Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;}
@@ -49,12 +49,12 @@
   .tab-group .tab-btn:hover:not(.active){background:var(--amber-tint);}
   .card{
     background:var(--surface); border:1px solid var(--line); border-radius:14px;
-    box-shadow:0 24px 48px -20px rgba(20,28,46,.10); padding:14px 10px; margin-bottom:20px; overflow:visible;
+    box-shadow:0 24px 48px -20px rgba(20,28,46,.10); padding:14px 10px; margin-bottom:20px;
+    flex:1 1 auto; display:flex; flex-direction:column; min-height:0;
   }
-  .scroll{overflow-x:auto; overflow-y:clip;}
-  /* 字号放大后，窄屏防御：保持桌面布局不变，仅手机端允许表格横向滚动，避免窄列挤压 */
+  .scroll{flex:1 1 auto; overflow:auto; min-height:0; -webkit-overflow-scrolling:touch;}
+  /* 窄屏防御：保持桌面布局不变，仅手机端缩小表格最小宽度 */
   @media (max-width:600px){
-    .scroll{overflow-x:auto; overflow-y:clip; -webkit-overflow-scrolling:touch;}
     #board{min-width:1200px;}
     h1{font-size:26px;}
     .detail-grid{grid-template-columns:repeat(2, 1fr); gap:4px 16px;}
@@ -104,7 +104,7 @@
   .click:hover{text-decoration:underline; color:var(--amber-deep);}
   tbody td.hl-row, tbody td.hl-col{background:rgba(224,168,46,.18); outline:1px solid var(--amber);}
   thead th.hl-col{background:#e8b84a !important;}
-  .foot{font-size:13px; color:var(--muted); margin-top:16px; line-height:1.75;}
+  .foot{font-size:13px; color:var(--muted); margin-top:16px; line-height:1.75; flex:none;}
   .legend{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;}
   .legend span{font-size:12.5px; padding:2px 8px; border-radius:6px; color:#fff;}
   .star-mark{font-size:11.5px; color:var(--amber-deep);}
