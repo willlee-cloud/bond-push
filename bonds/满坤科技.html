@@ -255,7 +255,7 @@
   <div class="card">
     <div class="section-h">一、参数录入</div>
     <div class="hint">修改任意参数，下方测算结果与风险评级将实时联动刷新。带（可自定义）的为预期上市价，其余为标的公告数据。</div>
-    <div class="live-status idle" id="liveStatus" title="交易时段 09:15–11:30 / 13:00–15:00 每 3s 自动刷新（腾讯 qt.gtimg 主源 + 东财 push2 兜底）"><span class="dot"></span><span id="liveStatusText">实时价 38.38 · 2026-09-02 收盘已锁定（与输入框一致，无需刷新）</span></div>
+    <div class="live-status idle" id="liveStatus" title="交易时段 09:15–11:30 / 13:00–15:00 每 3s 自动刷新（腾讯 qt.gtimg 主源 + 东财 push2 兜底）"><span class="dot"></span><span id="liveStatusText">实时价 39.12 · 2026-09-03 收盘已锁定（与输入框一致，无需刷新）</span></div>
     <div class="form-grid">
       <div class="field"><label>股票代码</label><input id="code" value="301132"></div>
       <div class="field"><label>股票名称</label><input id="name" value="满坤科技"></div>
@@ -263,9 +263,9 @@
       <div class="field">
         <label>标的当日收盘价（确权基准价）<span class="mode-badge auto" id="priceModeBadge" title="点击切换：自动=实时价驱动，手动=你手填价测算">自动</span></label>
         <div class="price-row">
-          <input id="price" type="number" step="0.01" value="38.38" data-mode="auto">
+          <input id="price" type="number" step="0.01" value="39.12" data-mode="auto">
           <span class="u">元</span>
-          <span class="live-tick" id="priceLiveTick">实时参考 38.38（build-time 锁定）</span>
+          <span class="live-tick" id="priceLiveTick">实时参考 39.12（build-time 锁定）</span>
         </div>
       </div>
       <div class="field"><label>官方每股配售金额（4位小数）</label><input id="perShare" type="number" step="0.0001" value="5.1321"><span class="u">元/股</span></div>
@@ -282,8 +282,8 @@
     </div>
     <div class="core-params">
       <div class="cp"><div class="k">单张转债盈利 = 上市价 − 100</div><div class="v num-tabular" id="profitPerBond">40.0 元</div></div>
-      <div class="cp"><div class="k">理论安全垫（满配·忽略碎面损耗）</div><div class="v num-tabular" id="theoCushion">5.35%</div></div>
-      <div class="cp"><div class="k">制表日期</div><div class="v num-tabular" id="tableDateValue">2026-09-02</div></div>
+      <div class="cp"><div class="k">理论安全垫（满配·忽略碎面损耗）</div><div class="v num-tabular" id="theoCushion">5.25%</div></div>
+      <div class="cp"><div class="k">制表日期</div><div class="v num-tabular" id="tableDateValue">2026-09-03</div></div>
     </div>
     <button class="btn-recompute" onclick="recompute(true)" type="button">立即重算</button>
     <button class="btn-print" onclick="window.print()" type="button">打印 / 导出 PDF</button>
@@ -307,7 +307,7 @@
             <th>该档评级</th>
           </tr>
         </thead>
-        <tbody id="tierBody" class="num-tabular"><tr><td class="tier">100</td><td class="num">3,838</td><td class="num">513.21</td><td class="num">500</td><td class="num">200.00</td><td class="cushion">5.21%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">200</td><td class="num">7,676</td><td class="num">1,026.42</td><td class="num">1,000</td><td class="num">400.00</td><td class="cushion">5.21%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">300</td><td class="num">11,514</td><td class="num">1,539.63</td><td class="num">1,500</td><td class="num">600.00</td><td class="cushion">5.21%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">400</td><td class="num">15,352</td><td class="num">2,052.84</td><td class="num">2,000</td><td class="num">800.00</td><td class="cushion">5.21%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">500</td><td class="num">19,190</td><td class="num">2,566.05</td><td class="num">2,500</td><td class="num">1,000.00</td><td class="cushion">5.21%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">600</td><td class="num">23,028</td><td class="num">3,079.26</td><td class="num">3,000</td><td class="num">1,200.00</td><td class="cushion">5.21%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">700</td><td class="num">26,866</td><td class="num">3,592.47</td><td class="num">3,500</td><td class="num">1,400.00</td><td class="cushion">5.21%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">800</td><td class="num">30,704</td><td class="num">4,105.68</td><td class="num">4,100</td><td class="num">1,640.00</td><td class="cushion">5.34%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">900</td><td class="num">34,542</td><td class="num">4,618.89</td><td class="num">4,600</td><td class="num">1,840.00</td><td class="cushion">5.33%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">1000</td><td class="num">38,380</td><td class="num">5,132.10</td><td class="num">5,100</td><td class="num">2,040.00</td><td class="cushion">5.32%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">2000</td><td class="num">76,760</td><td class="num">10,264.20</td><td class="num">10,200</td><td class="num">4,080.00</td><td class="cushion">5.32%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">3000</td><td class="num">115,140</td><td class="num">15,396.30</td><td class="num">15,300</td><td class="num">6,120.00</td><td class="cushion">5.32%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">4000</td><td class="num">153,520</td><td class="num">20,528.40</td><td class="num">20,500</td><td class="num">8,200.00</td><td class="cushion">5.34%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr></tbody>
+        <tbody id="tierBody" class="num-tabular"><tr><td class="tier">100</td><td class="num">3,912</td><td class="num">513.21</td><td class="num">500</td><td class="num">200.00</td><td class="cushion">5.11%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">200</td><td class="num">7,824</td><td class="num">1,026.42</td><td class="num">1,000</td><td class="num">400.00</td><td class="cushion">5.11%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">300</td><td class="num">11,736</td><td class="num">1,539.63</td><td class="num">1,500</td><td class="num">600.00</td><td class="cushion">5.11%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">400</td><td class="num">15,648</td><td class="num">2,052.84</td><td class="num">2,000</td><td class="num">800.00</td><td class="cushion">5.11%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">500</td><td class="num">19,560</td><td class="num">2,566.05</td><td class="num">2,500</td><td class="num">1,000.00</td><td class="cushion">5.11%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">600</td><td class="num">23,472</td><td class="num">3,079.26</td><td class="num">3,000</td><td class="num">1,200.00</td><td class="cushion">5.11%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">700</td><td class="num">27,384</td><td class="num">3,592.47</td><td class="num">3,500</td><td class="num">1,400.00</td><td class="cushion">5.11%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">800</td><td class="num">31,296</td><td class="num">4,105.68</td><td class="num">4,100</td><td class="num">1,640.00</td><td class="cushion">5.24%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">900</td><td class="num">35,208</td><td class="num">4,618.89</td><td class="num">4,600</td><td class="num">1,840.00</td><td class="cushion">5.23%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">1000</td><td class="num">39,120</td><td class="num">5,132.10</td><td class="num">5,100</td><td class="num">2,040.00</td><td class="cushion">5.21%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">2000</td><td class="num">78,240</td><td class="num">10,264.20</td><td class="num">10,200</td><td class="num">4,080.00</td><td class="cushion">5.21%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">3000</td><td class="num">117,360</td><td class="num">15,396.30</td><td class="num">15,300</td><td class="num">6,120.00</td><td class="cushion">5.21%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr><tr><td class="tier">4000</td><td class="num">156,480</td><td class="num">20,528.40</td><td class="num">20,500</td><td class="num">8,200.00</td><td class="cushion">5.24%</td><td class="stars r3">★★★</td><td class="r3">中性博弈</td></tr></tbody>
       </table>
     </div>
     <div class="hint" style="margin-top:12px;">
@@ -320,7 +320,7 @@
     <div class="section-h">三、风险评级结论</div>
     <div class="verdict">
       <div><span class="big-stars" id="headlineStars">★★★</span><span class="label" id="headlineLabel">中性博弈</span></div>
-      <div class="line">基准安全垫（满配理论）：<b id="headlineCushion">5.35%</b> ｜ 评级阈值：≥9%★★★★★ ｜ 7–9%★★★★ ｜ 4–7%★★★ ｜ 2–4%★★ ｜ &lt;2%★</div>
+      <div class="line">基准安全垫（满配理论）：<b id="headlineCushion">5.25%</b> ｜ 评级阈值：≥9%★★★★★ ｜ 7–9%★★★★ ｜ 4–7%★★★ ｜ 2–4%★★ ｜ &lt;2%★</div>
       <div class="line">注：基准安全垫按「忽略碎面损耗」测算，代表大资金满配下的理想安全垫；小仓位实际安全垫见上表各档，会低于基准值。</div>
     </div>
   </div>
