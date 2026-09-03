@@ -3681,7 +3681,6 @@ function render(){
   const fs = document.getElementById('filterStage').value;
   const sort = document.getElementById('sortBy').value;
   let rows = DATA.map(d=>({...d, ...compute(d)}));
-  rows = rows.filter(r => r.stage !== '已申购·待上市');
   if(viewMode === 'pending'){
     rows = rows.filter(r => !isHistoryRow(r));
   } else if(viewMode === 'history'){
