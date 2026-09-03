@@ -3845,6 +3845,12 @@ function render(){
   });
 }
 
+const avg = (DATA.reduce((s,d)=>s+(d.optimalCushionCons||0),0)/DATA.length*100).toFixed(2);
+function updateFoot(shown){
+  document.getElementById('foot').innerHTML =
+    '当前显示 '+(shown!=null?shown:DATA.length)+' 只｜总计 '+DATA.length+' 只 ｜ 平均最优档保守安全垫 '+avg+'% ｜ 行情每日早晚由集思录+腾讯刷新，交易时段叠加浏览器端实时行情（东财/腾讯双源）｜ 上市价按保守/激进模型价估算，可在单页测算中自定义 ｜ 安全垫/含权量为理论值，小仓位因碎面损耗实际更低 ｜ 可流通规模=发行规模−锁定股东持股×每股配售÷1e8（持股≥5%/实控人/一致行动人 6 个月锁定）';
+}
+
 document.getElementById('filterStage').addEventListener('change', render);
 document.getElementById('sortBy').addEventListener('change', render);
 document.getElementById('searchBtn').addEventListener('click', doSearch);
@@ -3857,12 +3863,6 @@ document.getElementById('viewTabs').addEventListener('click', function(e){
   render();
 });
 render();
-
-const avg = (DATA.reduce((s,d)=>s+(d.optimalCushionCons||0),0)/DATA.length*100).toFixed(2);
-function updateFoot(shown){
-  document.getElementById('foot').innerHTML =
-    '当前显示 '+(shown!=null?shown:DATA.length)+' 只｜总计 '+DATA.length+' 只 ｜ 平均最优档保守安全垫 '+avg+'% ｜ 行情每日早晚由集思录+腾讯刷新，交易时段叠加浏览器端实时行情（东财/腾讯双源）｜ 上市价按保守/激进模型价估算，可在单页测算中自定义 ｜ 安全垫/含权量为理论值，小仓位因碎面损耗实际更低 ｜ 可流通规模=发行规模−锁定股东持股×每股配售÷1e8（持股≥5%/实控人/一致行动人 6 个月锁定）';
-}
 updateFoot();
 
 // ===== 实时行情模块：交易时段浏览器端自动刷新（腾讯 qt.gtimg 主源 + 东财 push2 兜底）=====
