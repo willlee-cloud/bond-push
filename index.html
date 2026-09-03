@@ -3703,6 +3703,16 @@ function render(){
   const tbody = document.getElementById('tbody');
   tbody.innerHTML='';
   let order=0;
+  if(rows.length === 0){
+    const emptyTr = document.createElement('tr');
+    emptyTr.innerHTML = '<td colspan="24" style="padding:52px 12px;text-align:center;color:var(--muted);font-family:inherit;font-size:15px;line-height:1.8;">' +
+      (viewMode === 'history'
+        ? '暂无历史转债 — 已上市且满 7 个交易日的标的会自动归到此处'
+        : '当前筛选条件没有匹配的转债，试试切换进度或清空搜索') + '</td>';
+    tbody.appendChild(emptyTr);
+    updateFoot(0);
+    return;
+  }
   rows.forEach(r=>{
     const tr = document.createElement('tr');
     const noScheme = !(r.perShare > 0);   // 方案未定（无每股配售）→ 派生列用横杠，不误导
