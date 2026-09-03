@@ -51,11 +51,10 @@
     background:var(--surface); border:1px solid var(--line); border-radius:14px;
     box-shadow:0 24px 48px -20px rgba(20,28,46,.10); padding:14px 10px; margin-bottom:20px; overflow:visible;
   }
-  .scroll{overflow-x:auto;}
+  .scroll{overflow-x:auto; overflow-y:clip;}
   /* 字号放大后，窄屏防御：保持桌面布局不变，仅手机端允许表格横向滚动，避免窄列挤压 */
   @media (max-width:600px){
-    .card{overflow:hidden;}
-    .scroll{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+    .scroll{overflow-x:auto; overflow-y:clip; -webkit-overflow-scrolling:touch;}
     #board{min-width:1200px;}
     h1{font-size:26px;}
     .detail-grid{grid-template-columns:repeat(2, 1fr); gap:4px 16px;}
