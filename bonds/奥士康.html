@@ -255,7 +255,7 @@
   <div class="card">
     <div class="section-h">一、参数录入</div>
     <div class="hint">修改任意参数，下方测算结果与风险评级将实时联动刷新。带（可自定义）的为预期上市价，其余为标的公告数据。</div>
-    <div class="live-status idle" id="liveStatus" title="交易时段 09:15–11:30 / 13:00–15:00 每 3s 自动刷新（腾讯 qt.gtimg 主源 + 东财 push2 兜底）"><span class="dot"></span><span id="liveStatusText">实时价 63.43 · 2026-09-03 收盘已锁定（与输入框一致，无需刷新）</span></div>
+    <div class="live-status idle" id="liveStatus" title="交易时段 09:15–11:30 / 13:00–15:00 每 3s 自动刷新（腾讯 qt.gtimg 主源 + 东财 push2 兜底）"><span class="dot"></span><span id="liveStatusText">实时价 62.08 · 2026-09-04 收盘已锁定（与输入框一致，无需刷新）</span></div>
     <div class="form-grid">
       <div class="field"><label>股票代码</label><input id="code" value="002913"></div>
       <div class="field"><label>股票名称</label><input id="name" value="奥士康"></div>
@@ -263,9 +263,9 @@
       <div class="field">
         <label>标的当日收盘价（确权基准价）<span class="mode-badge auto" id="priceModeBadge" title="点击切换：自动=实时价驱动，手动=你手填价测算">自动</span></label>
         <div class="price-row">
-          <input id="price" type="number" step="0.01" value="63.43" data-mode="auto">
+          <input id="price" type="number" step="0.01" value="62.08" data-mode="auto">
           <span class="u">元</span>
-          <span class="live-tick" id="priceLiveTick">实时参考 63.43（build-time 锁定）</span>
+          <span class="live-tick" id="priceLiveTick">实时参考 62.08（build-time 锁定）</span>
         </div>
       </div>
       <div class="field"><label>官方每股配售金额（4位小数）</label><input id="perShare" type="number" step="0.0001" value="3.1513"><span class="u">元/股</span></div>
@@ -282,8 +282,8 @@
     </div>
     <div class="core-params">
       <div class="cp"><div class="k">单张转债盈利 = 上市价 − 100</div><div class="v num-tabular" id="profitPerBond">57.3 元</div></div>
-      <div class="cp"><div class="k">理论安全垫（满配·忽略碎面损耗）</div><div class="v num-tabular" id="theoCushion">2.85%</div></div>
-      <div class="cp"><div class="k">制表日期</div><div class="v num-tabular" id="tableDateValue">2026-09-03</div></div>
+      <div class="cp"><div class="k">理论安全垫（满配·忽略碎面损耗）</div><div class="v num-tabular" id="theoCushion">2.91%</div></div>
+      <div class="cp"><div class="k">制表日期</div><div class="v num-tabular" id="tableDateValue">2026-09-04</div></div>
     </div>
     <button class="btn-recompute" onclick="recompute(true)" type="button">立即重算</button>
     <button class="btn-print" onclick="window.print()" type="button">打印 / 导出 PDF</button>
@@ -307,7 +307,7 @@
             <th>该档评级</th>
           </tr>
         </thead>
-        <tbody id="tierBody" class="num-tabular"><tr><td class="tier">100</td><td class="num">6,343</td><td class="num">315.13</td><td class="num">300</td><td class="num">171.90</td><td class="cushion">2.71%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">200</td><td class="num">12,686</td><td class="num">630.26</td><td class="num">600</td><td class="num">343.80</td><td class="cushion">2.71%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">300</td><td class="num">19,029</td><td class="num">945.39</td><td class="num">900</td><td class="num">515.70</td><td class="cushion">2.71%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">400</td><td class="num">25,372</td><td class="num">1,260.52</td><td class="num">1,200</td><td class="num">687.60</td><td class="cushion">2.71%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">500</td><td class="num">31,715</td><td class="num">1,575.65</td><td class="num">1,500</td><td class="num">859.50</td><td class="cushion">2.71%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">600</td><td class="num">38,058</td><td class="num">1,890.78</td><td class="num">1,800</td><td class="num">1,031.40</td><td class="cushion">2.71%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">700</td><td class="num">44,401</td><td class="num">2,205.91</td><td class="num">2,200</td><td class="num">1,260.60</td><td class="cushion">2.84%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">800</td><td class="num">50,744</td><td class="num">2,521.04</td><td class="num">2,500</td><td class="num">1,432.50</td><td class="cushion">2.82%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">900</td><td class="num">57,087</td><td class="num">2,836.17</td><td class="num">2,800</td><td class="num">1,604.40</td><td class="cushion">2.81%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">1000</td><td class="num">63,430</td><td class="num">3,151.30</td><td class="num">3,100</td><td class="num">1,776.30</td><td class="cushion">2.80%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">2000</td><td class="num">126,860</td><td class="num">6,302.60</td><td class="num">6,300</td><td class="num">3,609.90</td><td class="cushion">2.85%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">3000</td><td class="num">190,290</td><td class="num">9,453.90</td><td class="num">9,400</td><td class="num">5,386.20</td><td class="cushion">2.83%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">4000</td><td class="num">253,720</td><td class="num">12,605.20</td><td class="num">12,600</td><td class="num">7,219.80</td><td class="cushion">2.85%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr></tbody>
+        <tbody id="tierBody" class="num-tabular"><tr><td class="tier">100</td><td class="num">6,208</td><td class="num">315.13</td><td class="num">300</td><td class="num">171.90</td><td class="cushion">2.77%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">200</td><td class="num">12,416</td><td class="num">630.26</td><td class="num">600</td><td class="num">343.80</td><td class="cushion">2.77%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">300</td><td class="num">18,624</td><td class="num">945.39</td><td class="num">900</td><td class="num">515.70</td><td class="cushion">2.77%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">400</td><td class="num">24,832</td><td class="num">1,260.52</td><td class="num">1,200</td><td class="num">687.60</td><td class="cushion">2.77%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">500</td><td class="num">31,040</td><td class="num">1,575.65</td><td class="num">1,500</td><td class="num">859.50</td><td class="cushion">2.77%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">600</td><td class="num">37,248</td><td class="num">1,890.78</td><td class="num">1,800</td><td class="num">1,031.40</td><td class="cushion">2.77%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">700</td><td class="num">43,456</td><td class="num">2,205.91</td><td class="num">2,200</td><td class="num">1,260.60</td><td class="cushion">2.90%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">800</td><td class="num">49,664</td><td class="num">2,521.04</td><td class="num">2,500</td><td class="num">1,432.50</td><td class="cushion">2.88%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">900</td><td class="num">55,872</td><td class="num">2,836.17</td><td class="num">2,800</td><td class="num">1,604.40</td><td class="cushion">2.87%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">1000</td><td class="num">62,080</td><td class="num">3,151.30</td><td class="num">3,100</td><td class="num">1,776.30</td><td class="cushion">2.86%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">2000</td><td class="num">124,160</td><td class="num">6,302.60</td><td class="num">6,300</td><td class="num">3,609.90</td><td class="cushion">2.91%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">3000</td><td class="num">186,240</td><td class="num">9,453.90</td><td class="num">9,400</td><td class="num">5,386.20</td><td class="cushion">2.89%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr><tr><td class="tier">4000</td><td class="num">248,320</td><td class="num">12,605.20</td><td class="num">12,600</td><td class="num">7,219.80</td><td class="cushion">2.91%</td><td class="stars r2">★★</td><td class="r2">风险偏弱</td></tr></tbody>
       </table>
     </div>
     <div class="hint" style="margin-top:12px;">
@@ -320,7 +320,7 @@
     <div class="section-h">三、风险评级结论</div>
     <div class="verdict">
       <div><span class="big-stars" id="headlineStars">★★</span><span class="label" id="headlineLabel">风险偏弱</span></div>
-      <div class="line">基准安全垫（满配理论）：<b id="headlineCushion">2.85%</b> ｜ 评级阈值：≥9%★★★★★ ｜ 7–9%★★★★ ｜ 4–7%★★★ ｜ 2–4%★★ ｜ &lt;2%★</div>
+      <div class="line">基准安全垫（满配理论）：<b id="headlineCushion">2.91%</b> ｜ 评级阈值：≥9%★★★★★ ｜ 7–9%★★★★ ｜ 4–7%★★★ ｜ 2–4%★★ ｜ &lt;2%★</div>
       <div class="line">注：基准安全垫按「忽略碎面损耗」测算，代表大资金满配下的理想安全垫；小仓位实际安全垫见上表各档，会低于基准值。</div>
     </div>
   </div>
