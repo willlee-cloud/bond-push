@@ -413,7 +413,7 @@
     const P  = parseFloat(document.getElementById('price').value) || 0;
     const A  = parseFloat(document.getElementById('perShare').value) || 0;
     const stageVal = (document.getElementById('stageHidden') || {value:''}).value || '';
-    const noScheme = !(A > 0) || stageVal.indexOf('终止') >= 0;   // 方案未定（无每股配售）或已终止 → 获配/安全垫用横杠，不误导
+    const noScheme = !(A > 0);   // 仅「方案未定」才隐藏；终止态仍保留测算数据作参考
     const L  = parseFloat(document.getElementById('listingPrice').value) || DEFAULT_LISTING;
     const profitPerBond = L - 100;
 
